@@ -322,7 +322,7 @@ export const WORDS: RawWord[] = [
     'cloud,rain,sky'],
   ['mountain', 'nature', '⛰️', '/ˈmaʊntn/',
     'mountain;гора;montaña|la;montanha|a;Berg|der;montagne|la;montagna|la;góra;dağ;山||shān;山||yama;산||san;جبل||jabal;पहाड़||pahāṛ;gunung;núi',
-    'There is snow on top of the mountain.|На вершині гори лежить сніг.|Hay nieve en la cima de la montaña.|Auf dem Gipfel des Berges liegt Schnee.|Il y a de la neige au sommet de la montagne.',
+    'There is snow on top of the mountain.|На вершині гори лежить сніг.|Hay nieve en la cima de la montaña.|Auf dem Gipfel des Berges liegt Schnee.|La neige couvre le sommet de la montagne.',
     'hill,volcano,snow'],
   ['hill', 'nature', '⛰️', '/hɪl/',
     'hill;пагорб;colina|la;colina|a;Hügel|der;colline|la;collina|la;wzgórze;tepe;小山||xiǎoshān;丘||oka;언덕||eondeok;تل||tall;पहाड़ी||pahāṛī;bukit;ngọn đồi',
