@@ -37,6 +37,14 @@ export default function Compose() {
   const [photo, setPhoto] = useState<string | undefined>(draft.photo);
   const [concept, setConcept] = useState<string | undefined>(draft.concept);
   const [city, setCity] = useState<{ place: string; lat: number; lng: number } | null>(null);
+  // new posts get the city automatically so they show up on the world map (remove it with ×)
+  useEffect(() => {
+    if (parent) return;
+    let live = true;
+    setLocating(true);
+    getMyCity().then((r) => { if (live && r) setCity((c) => c ?? r); }).finally(() => live && setLocating(false));
+    return () => { live = false; };
+  }, []);
   const [locating, setLocating] = useState(false);
   const [picker, setPicker] = useState(false);
   const [posting, setPosting] = useState(false);
