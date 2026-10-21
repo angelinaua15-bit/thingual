@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import { Txt } from './ui';
 import { fonts } from '../theme/tokens';
 
-/** Thingual mark: glass lens inside a speech bubble, framed by a viewfinder. Source: assets/brand/logo-source.js */
+/** Thingual mark “Planet of words”: a coral planet (the thing) with a ring of letters from many languages. Source: assets/brand/concepts/concepts-source.js (concept B) */
 export function LogoMark({ size = 48 }: { size?: number }) {
   return <Image source={require('../../assets/brand/mark.webp')} style={{ width: size, height: size }} contentFit="contain" />;
 }
