@@ -1,25 +1,81 @@
 {
   "expo": {
-    "name": "thingual",
+    "name": "Thingual",
     "slug": "thingual",
+    "scheme": "thingual",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "description": "Learn languages from the things around you — and see how the whole world says them.",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0E0E0E"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "app.thingual",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Thingual uses the camera to recognise objects and show their names in the language you learn.",
+        "NSPhotoLibraryUsageDescription": "Choose a photo to learn the words in it.",
+        "NSLocationWhenInUseUsageDescription": "Your posts show only your city, never the exact place.",
+        "NSMicrophoneUsageDescription": "Used to check your pronunciation.",
+        "NSSpeechRecognitionUsageDescription": "Used to check your pronunciation."
+      }
     },
     "android": {
+      "package": "app.thingual",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0E0E0E",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
+      "permissions": [
+        "CAMERA",
+        "ACCESS_COARSE_LOCATION",
+        "RECORD_AUDIO"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "output": "single",
+      "bundler": "metro",
+      "name": "Thingual",
+      "themeColor": "#0E0E0E",
+      "backgroundColor": "#FAFAF8"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-splash-screen",
+      "expo-image",
+      "expo-localization",
+      "expo-sharing",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Thingual uses the camera to recognise objects and show their names in the language you learn."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Choose a photo to learn the words in it."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Your posts show only your city, never the exact place."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
     }
   }
 }
