@@ -388,5 +388,18 @@ export const uk: Strings = {
     soon: 'Скоро',
     soonNote: 'Покупки за гроші відкриються після релізу в App Store і Google Play.',
   },
+  explore: {
+    title: 'Усі слова',
+    count: '{n} слів · {t} тем',
+    all: 'Усі',
+    search: 'Пошук будь-якою мовою',
+    addAll: 'Додати всі {n}',
+    allAdded: 'Усі вже у твоїх словах',
+    added: 'Додано {n} слів',
+    open: 'Каталог слів',
+    openSub: '{n} слів у {t} темах — додавай цілу тему одразу',
+    empty: 'Нічого не знайдено',
+    topics: { food: 'Їжа', fruits: 'Фрукти й овочі', kitchen: 'Кухня', home: 'Дім', tools: 'Інструменти', clothes: 'Одяг', body: 'Тіло', health: 'Здоров’я', animals: 'Тварини', nature: 'Природа', transport: 'Транспорт', city: 'Місто', travel: 'Подорожі й покупки', school: 'Школа й офіс', tech: 'Техніка', sports: 'Спорт та ігри', music: 'Музика' },
+  },
   limits: { left: 'Сьогодні залишилось {n}' },
 };

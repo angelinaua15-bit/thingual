@@ -78,7 +78,7 @@ export default function MapTab() {
   const suggestions = useMemo(() => {
     const query = q.trim().toLowerCase();
     if (!query) return [];
-    return CONCEPTS.filter((cc) => Object.values(cc.labels).some((l) => l.word.toLowerCase().startsWith(query))).slice(0, 6);
+    return CONCEPTS.filter((cc) => Object.values(cc.labels).some((l) => l.word?.toLowerCase().startsWith(query))).slice(0, 6);
   }, [q]);
 
   return (

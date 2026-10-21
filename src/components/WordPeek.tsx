@@ -105,8 +105,9 @@ export function ConceptPicker({ visible, onClose, onPick, photo }: { visible: bo
   const [q, setQ] = useState('');
   const list = useMemo(() => {
     const query = q.trim().toLowerCase();
-    if (!query) return CONCEPTS;
-    return CONCEPTS.filter((cc) => Object.values(cc.labels).some((l) => l.word.toLowerCase().includes(query) || l.roman?.toLowerCase().includes(query)));
+    // keep the sheet light: the most common words first, search for the rest
+    if (!query) return CONCEPTS.slice(0, 60);
+    return CONCEPTS.filter((cc) => Object.values(cc.labels).some((l) => l.word?.toLowerCase().includes(query) || l.roman?.toLowerCase().includes(query))).slice(0, 60);
   }, [q]);
   return (
     <Sheet visible={visible} onClose={onClose} title={t('camera.pickConcept')}>

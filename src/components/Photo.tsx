@@ -9,12 +9,22 @@ import { coverFor } from '../data/photos';
 import { fullWord, labelOf } from '../data/concepts';
 import { LangCode } from '../data/languages';
 import { useResolvedPhoto } from '../lib/photoStore';
+import { isEmojiUrl } from '../data/emoji';
 
 const BLUR = 'L6Bg#2?=Q:w}y9yBtLMxRCofsCWB';
 
 export function Photo({ uri, style, contentFit = 'cover', transition = 300 }: { uri?: string; style?: StyleProp<ImageStyle>; contentFit?: 'cover' | 'contain'; transition?: number }) {
-  const { c } = useTheme();
+  const { c, isDark } = useTheme();
   const src = useResolvedPhoto(uri);
+  if (isEmojiUrl(src)) {
+    // 3D illustration on a soft gradient — used for words that don't have a real photo yet
+    return (
+      <View style={[{ overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }, style as StyleProp<ViewStyle>]}>
+        <LinearGradient colors={isDark ? ['#17363F', '#0E2530'] : ['#F4F1EA', '#E6EEF0']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+        <Image source={{ uri: src }} style={{ width: '58%', height: '58%', maxWidth: 220, maxHeight: 220 }} contentFit="contain" transition={transition} />
+      </View>
+    );
+  }
   return (
     <Image
       source={src ? { uri: src } : undefined}

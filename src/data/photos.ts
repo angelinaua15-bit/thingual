@@ -3,6 +3,8 @@
  * Each entry: concept id, photo path, photographer, place label, lat, lng, author language.
  * Places are city level only (the app never stores exact coordinates).
  */
+import { emojiUrl } from './emoji';
+import { conceptById } from './concepts';
 export type PhotoCredit = {
   id: string;
   concept: string;
@@ -210,9 +212,10 @@ export const PHOTOS: PhotoCredit[] = ROWS.map(([concept, path, author, place, la
 }));
 
 export const photosFor = (concept: string) => PHOTOS.filter((p) => p.concept === concept);
+/** Real photo when we have one, otherwise the 3D illustration of the word. */
 export const coverFor = (concept: string, w = 600) => {
   const p = PHOTOS.find((x) => x.concept === concept);
-  return p ? unsplash(p.path, w) : undefined;
+  return p ? unsplash(p.path, w) : emojiUrl(conceptById(concept)?.emoji);
 };
 
 /** Backgrounds for onboarding and empty states. */

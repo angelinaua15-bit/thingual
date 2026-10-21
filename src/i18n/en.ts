@@ -386,6 +386,19 @@ export const en = {
     soon: 'Soon',
     soonNote: 'Purchases with real money will open after the release in the App Store and Google Play.',
   },
+  explore: {
+    title: 'All words',
+    count: '{n} words · {t} topics',
+    all: 'All',
+    search: 'Search in any language',
+    addAll: 'Add all {n}',
+    allAdded: 'All in your words',
+    added: 'Added {n} words',
+    open: 'Word catalogue',
+    openSub: '{n} words in {t} topics — add a whole topic at once',
+    empty: 'Nothing found',
+    topics: { food: 'Food', fruits: 'Fruit & veg', kitchen: 'Kitchen', home: 'Home', tools: 'Tools', clothes: 'Clothes', body: 'Body', health: 'Health', animals: 'Animals', nature: 'Nature', transport: 'Transport', city: 'City', travel: 'Travel & shopping', school: 'School & office', tech: 'Tech', sports: 'Sports & games', music: 'Music' },
+  },
   limits: { left: '{n} left today' },
 };
 

@@ -1,3 +1,5 @@
+import { Image } from 'expo-image';
+import { emojiUrl } from '../../src/data/emoji';
 import { shareFile } from '../../src/lib/share';
 import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Share, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
@@ -11,8 +13,7 @@ import { toast } from '../../src/components/Overlay';
 import { useTheme, fonts, radius, space, TAB_BAR_HEIGHT } from '../../src/theme/tokens';
 import { useT, languageName } from '../../src/i18n';
 import { useApp, SavedWord } from '../../src/store/useApp';
-import { conceptById, fullWord, labelOf, PLACES } from '../../src/data/concepts';
-import { THEMED_SETS } from '../../src/data/social';
+import { conceptById, fullWord, labelOf, PLACES, CONCEPTS, TOPICS, TOPIC_EMOJI, conceptsInTopic } from '../../src/data/concepts';
 import { coverFor, SCENES } from '../../src/data/photos';
 import { mastery, formatInterval, isDue } from '../../src/lib/srs';
 import { haptic } from '../../src/lib/feedback';
@@ -148,11 +149,29 @@ export default function Dictionary() {
             </View>
           )}
 
-          {/* themed sets */}
+          {/* word catalogue by topic */}
           <View style={{ paddingHorizontal: space.m, marginTop: space.xl }}>
-            <Txt v="headline" style={{ marginBottom: 12 }}>{t('dictionary.sets')}</Txt>
-            <View style={{ gap: 12 }}>
-              {THEMED_SETS.map((set, i) => <SetCard key={set.id} set={set} i={i} />)}
+            <PressableScale onPress={() => router.push('/explore')} style={[styles.catalog, { backgroundColor: c.ink }]}>
+              <View style={{ flex: 1 }}>
+                <Txt v="headline" color={c.background}>{t('explore.open')}</Txt>
+                <Txt v="caption" color={c.background} style={{ opacity: 0.75, marginTop: 2 }}>{t('explore.openSub', { n: CONCEPTS.length, t: TOPICS.length })}</Txt>
+              </View>
+              <View style={{ flexDirection: 'row' }}>
+                {(['animals', 'food', 'travel'] as const).map((tp, k) => (
+                  <Image key={tp} source={{ uri: emojiUrl(TOPIC_EMOJI[tp][1]) }} style={{ width: 40, height: 40, marginLeft: k ? -10 : 0 }} />
+                ))}
+              </View>
+            </PressableScale>
+            <View style={styles.topicGrid}>
+              {TOPICS.map((tp, i) => (
+                <Animated.View key={tp} entering={FadeInDown.delay(Math.min(i, 10) * 30)} style={{ width: '31.5%', flexGrow: 1 }}>
+                  <PressableScale onPress={() => router.push({ pathname: '/explore', params: { topic: tp } })} style={[styles.topic, { backgroundColor: c.surface, borderColor: c.divider }]}>
+                    <Image source={{ uri: emojiUrl(TOPIC_EMOJI[tp][1]) }} style={{ width: 36, height: 36 }} />
+                    <Txt v="captionMedium" numberOfLines={1}>{t(`explore.topics.${tp}`)}</Txt>
+                    <Txt v="caption" color={c.textTertiary}>{conceptsInTopic(tp).length}</Txt>
+                  </PressableScale>
+                </Animated.View>
+              ))}
             </View>
           </View>
         </View>
@@ -185,48 +204,10 @@ function WordRow({ w, i }: { w: SavedWord; i: number }) {
   );
 }
 
-function SetCard({ set, i }: { set: (typeof THEMED_SETS)[number]; i: number }) {
-  const { c } = useTheme();
-  const { t } = useT();
-  const words = useApp((x) => x.words);
-  const saveWord = useApp((x) => x.saveWord);
-  const missing = set.concepts.filter((id) => !words[id]);
-  return (
-    <Animated.View entering={FadeInDown.delay(i * 60)}>
-      <PressableScale
-        onPress={() => {
-          if (!missing.length) return;
-          missing.forEach((id) => saveWord(id, '', 'set'));
-          haptic.success();
-          toast(t('dictionary.added'));
-        }}
-        style={[styles.set, { backgroundColor: c.surface, borderColor: c.divider }]}
-      >
-        <View style={{ flexDirection: 'row' }}>
-          {set.concepts.slice(0, 3).map((id, k) => (
-            <View key={id} style={{ width: 52, height: 52, borderRadius: 14, overflow: 'hidden', marginLeft: k ? -16 : 0, borderWidth: 2, borderColor: c.surface }}>
-              <Photo uri={coverFor(id, 200)} style={{ width: '100%', height: '100%' }} />
-            </View>
-          ))}
-        </View>
-        <View style={{ flex: 1 }}>
-          <Txt v="bodyMedium">{t(`dictionary.setNames.${set.id}`)}</Txt>
-          <Txt v="caption" color={c.textSecondary}>{set.concepts.length} {t('common.words')}</Txt>
-        </View>
-        {missing.length ? (
-          <View style={[styles.add, { backgroundColor: c.accentSoft }]}>
-            <Plus size={14} color={c.accent} />
-            <Txt v="captionMedium" color={c.accent}>{missing.length}</Txt>
-          </View>
-        ) : (
-          <Txt v="captionMedium" color={c.success}>{t('dictionary.added')}</Txt>
-        )}
-      </PressableScale>
-    </Animated.View>
-  );
-}
-
 const styles = StyleSheet.create({
+  catalog: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 18, borderRadius: radius.l },
+  topicGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
+  topic: { alignItems: 'center', gap: 4, paddingVertical: 14, paddingHorizontal: 6, borderRadius: radius.m, borderWidth: StyleSheet.hairlineWidth },
   search: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: radius.s, paddingHorizontal: 12, height: 44 },
   input: { flex: 1, fontFamily: fonts.regular, fontSize: 16, height: 44 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
