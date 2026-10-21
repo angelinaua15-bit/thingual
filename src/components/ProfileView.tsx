@@ -14,6 +14,8 @@ import { useLikedSet, useNet } from '../lib/queries';
 import { pickImage } from '../lib/pickImage';
 import { haptic } from '../lib/feedback';
 import { LangCode } from '../data/languages';
+import { Flame } from './Flame';
+import { visibleStreak, FlameId } from '../lib/streak';
 import { useApp } from '../store/useApp';
 
 /** Threads-style profile header + posts/replies tabs. Used for "Me" and other users. */
@@ -82,7 +84,18 @@ export function ProfileView({ uid, header, footer }: { uid: string; header?: Rea
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
           <View style={{ flex: 1 }}>
             <Txt style={{ fontFamily: fonts.serif, fontSize: 34, lineHeight: 38, color: c.text }} numberOfLines={2}>{p.name || p.handle}</Txt>
-            <Txt v="callout" color={c.textSecondary} style={{ marginTop: 2 }}>@{p.handle}</Txt>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 2 }}>
+              <Txt v="callout" color={c.textSecondary}>@{p.handle}</Txt>
+              {(() => {
+                const n = visibleStreak({ count: p.streak ?? 0, last: p.streak_day ?? undefined });
+                return n > 0 ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                    <Flame size={14} skin={(p.flame as FlameId) ?? 'classic'} animate={false} />
+                    <Txt v="captionMedium">{n}</Txt>
+                  </View>
+                ) : null;
+              })()}
+            </View>
           </View>
           <Pressable onPress={changeAvatar} disabled={!isMe} accessibilityLabel={t('social.changePhoto')}>
             <Avatar seed={p.id} size={84} label={p.name || p.handle} uri={p.avatar_url} />

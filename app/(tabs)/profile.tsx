@@ -8,12 +8,13 @@ import { ProfileView } from '../../src/components/ProfileView';
 import { useTheme, fonts, radius, space, TAB_BAR_HEIGHT } from '../../src/theme/tokens';
 import { useT } from '../../src/i18n';
 import { useApp } from '../../src/store/useApp';
-import { dateKey } from '../../src/data/social';
 import { useNet } from '../../src/lib/queries';
+import { StreakPills } from '../../src/components/StreakBits';
+import { visibleStreak } from '../../src/lib/streak';
 
 const ACH = [
   { id: 'first-word', icon: BookOpen }, { id: '25-words', icon: Languages }, { id: '100-words', icon: Trophy }, { id: 'first-post', icon: Camera },
-  { id: 'streak-7', icon: Flame }, { id: 'drop-30', icon: Sparkles }, { id: 'ten-countries', icon: Globe2 }, { id: 'five-langs', icon: Award },
+  { id: 'streak-7', icon: Flame }, { id: 'streak-30', icon: Flame }, { id: 'drop-30', icon: Sparkles }, { id: 'ten-countries', icon: Globe2 }, { id: 'five-langs', icon: Award },
 ];
 
 export default function Profile() {
@@ -25,14 +26,13 @@ export default function Profile() {
   const learnStreak = useApp((x) => x.learnStreak);
   const drops = useApp((x) => x.drops);
   const achievements = useApp((x) => x.achievements);
-  const streakActive = learnStreak.last === dateKey() || learnStreak.last === dateKey(new Date(Date.now() - 86400000));
 
   const stats = (
     <Animated.View entering={FadeInDown.delay(120)} style={{ paddingHorizontal: space.m }}>
       <View style={[styles.stats, { backgroundColor: c.surface, borderColor: c.divider }]}>
         <Stat n={Object.keys(words).length} label={t('profile.words')} />
         <View style={{ width: StyleSheet.hairlineWidth, backgroundColor: c.divider }} />
-        <Stat n={streakActive ? learnStreak.count : 0} label={t('profile.streak')} />
+        <Stat n={visibleStreak(learnStreak)} label={t('profile.streak')} onPress={() => router.push('/streak')} />
         <View style={{ width: StyleSheet.hairlineWidth, backgroundColor: c.divider }} />
         <Stat n={Object.keys(drops).length} label={t('profile.drops')} color={c.drop} />
       </View>
@@ -57,7 +57,7 @@ export default function Profile() {
         <Pressable onPress={() => router.push('/people')} hitSlop={10} accessibilityLabel={t('social.findPeople')}>
           <UserPlus size={22} color={c.text} />
         </Pressable>
-        <View style={{ flex: 1 }} />
+        <View style={{ flex: 1, alignItems: 'center' }}><StreakPills /></View>
         <Pressable onPress={() => router.push('/activity')} hitSlop={10} accessibilityLabel={t('social.activity')}>
           <Bell size={22} color={c.text} />
         </Pressable>
@@ -79,13 +79,13 @@ export default function Profile() {
   );
 }
 
-function Stat({ n, label, color }: { n: number; label: string; color?: string }) {
+function Stat({ n, label, color, onPress }: { n: number; label: string; color?: string; onPress?: () => void }) {
   const { c } = useTheme();
   return (
-    <View style={{ flex: 1, alignItems: 'center', paddingVertical: 12 }}>
+    <Pressable onPress={onPress} disabled={!onPress} style={{ flex: 1, alignItems: 'center', paddingVertical: 12 }}>
       <Txt style={{ fontFamily: fonts.serif, fontSize: 30, color: color ?? c.text }}>{n}</Txt>
       <Txt v="caption" color={c.textSecondary}>{label}</Txt>
-    </View>
+    </Pressable>
   );
 }
 

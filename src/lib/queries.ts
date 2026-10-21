@@ -33,12 +33,28 @@ export function useBootstrap() {
         }
         qc.setQueryData(['me'], me);
         useNet.getState().set({ status: 'ok', uid });
+        syncStreak();
       } catch {
         useNet.getState().set({ status: 'offline' });
       }
     })();
   }, [onboarded]);
 }
+
+/** Mirror the flame to the public profile so friends see it. */
+let lastSynced = '';
+function syncStreak() {
+  const s = useApp.getState();
+  const key = `${s.learnStreak.count}|${s.learnStreak.last ?? ''}|${s.flame}`;
+  if (key === lastSynced || useNet.getState().status !== 'ok') return;
+  lastSynced = key;
+  updateProfile({ streak: s.learnStreak.count, streak_day: s.learnStreak.last ?? null, flame: s.flame })
+    .then((me) => qc.setQueryData(['me'], me))
+    .catch(() => { lastSynced = ''; });
+}
+useApp.subscribe((s, prev) => {
+  if (s.learnStreak !== prev.learnStreak || s.flame !== prev.flame) syncStreak();
+});
 
 export function useMe() {
   const status = useNet((s) => s.status);

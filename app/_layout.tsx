@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler';
 import React, { useEffect } from 'react';
-import { Platform, View } from 'react-native';
+import { AppState, Platform, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -14,6 +14,7 @@ import { ToastHost } from '../src/components/Overlay';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { qc, useBootstrap } from '../src/lib/queries';
 import { useNotificationSchedule } from '../src/lib/notifications';
+import { StreakCelebration } from '../src/components/StreakBits';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -36,6 +37,10 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync().catch(() => {});
+    if (!ready) return;
+    useApp.getState().checkStreak();
+    const sub = AppState.addEventListener('change', (st) => st === 'active' && useApp.getState().checkStreak());
+    return () => sub.remove();
   }, [ready]);
 
   if (!ready) return <View style={{ flex: 1, backgroundColor: c.background }} />;
@@ -56,8 +61,11 @@ export default function RootLayout() {
           <Stack.Screen name="compose" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="edit-profile" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="postcard/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="streak" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="shop" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="age" options={{ presentation: 'transparentModal', animation: 'fade' }} />
         </Stack>
+        <StreakCelebration />
         <ToastHost />
       </SafeAreaProvider>
     </GestureHandlerRootView>

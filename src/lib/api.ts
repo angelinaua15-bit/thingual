@@ -12,6 +12,9 @@ export type Profile = {
   followers_count: number;
   following_count: number;
   posts_count: number;
+  streak?: number;
+  streak_day?: string | null;
+  flame?: string;
   created_at: string;
 };
 
@@ -100,7 +103,7 @@ export async function createProfile(p: { handle: string; name: string; native_la
   throw new Error('handle');
 }
 
-export async function updateProfile(patch: Partial<Pick<Profile, 'handle' | 'name' | 'bio' | 'avatar_url' | 'native_lang' | 'learning_lang' | 'age_group'>>) {
+export async function updateProfile(patch: Partial<Pick<Profile, 'handle' | 'name' | 'bio' | 'avatar_url' | 'native_lang' | 'learning_lang' | 'age_group' | 'streak' | 'streak_day' | 'flame'>>) {
   const id = await ensureSession();
   const { data, error } = await supabase.from('profiles').update(patch).eq('id', id).select().single();
   if (error) throw error;

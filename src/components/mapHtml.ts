@@ -4,11 +4,14 @@ export type MapPoint = { id: string; lat: number; lng: number; photo: string; la
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]!);
 
-/** Leaflet (bundled, no CDN) + MarkerCluster on a muted CARTO basemap, so photos are the colour on the map. */
+/** Leaflet (bundled, no CDN) + MarkerCluster on Esri's muted grey canvas basemap (no API key), so photos are the colour on the map. */
 export function buildMapHtml(points: MapPoint[], opts: { dark: boolean; wordsMode: boolean; center?: [number, number]; zoom?: number }) {
   const tiles = opts.dark
-    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-    : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+    ? 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'
+    : 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}';
+  const labels = opts.dark
+    ? 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}'
+    : 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}';
   const bg = opts.dark ? '#0E0E0E' : '#F2F1ED';
   const safe = points.map((p) => ({ ...p, label: esc(p.label), sub: p.sub ? esc(p.sub) : undefined, photo: encodeURI(p.photo) }));
   const data = JSON.stringify(safe).replace(/</g, '\\u003c');
@@ -19,7 +22,6 @@ export function buildMapHtml(points: MapPoint[], opts: { dark: boolean; wordsMod
 <style>
 html,body,#map{margin:0;height:100%;width:100%;background:${bg}}
 .leaflet-container{background:${bg};font-family:Inter,system-ui,sans-serif}
-${opts.dark ? '' : '.leaflet-tile-pane{filter:saturate(.35) brightness(1.03)}'}
 .pin{width:48px;height:48px;border-radius:50%;border:3px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.3);background-size:cover;background-position:center;background-color:#ddd;transition:transform .2s cubic-bezier(.2,.8,.2,1);cursor:pointer}
 .pin:hover{transform:scale(1.12)}
 .pin.hl{border-color:#FF6B35}
@@ -41,7 +43,8 @@ var pts=${data};var wordsMode=${opts.wordsMode ? 'true' : 'false'};
 function send(m){var s=JSON.stringify(m);if(window.ReactNativeWebView){window.ReactNativeWebView.postMessage(s)}else{parent.postMessage(s,'*')}}
 var map=L.map('map',{worldCopyJump:true,zoomSnap:.5,minZoom:2,maxZoom:15,zoomControl:false}).setView(${JSON.stringify(opts.center ?? [35, 15])},${opts.zoom ?? 2});
 L.control.zoom({position:'bottomright'}).addTo(map);
-L.tileLayer('${tiles}',{subdomains:'abcd',maxZoom:19,attribution:'© OpenStreetMap © CARTO'}).addTo(map);
+L.tileLayer('${tiles}',{maxZoom:16,attribution:'Tiles © Esri — Esri, HERE, Garmin, © OpenStreetMap'}).addTo(map);
+L.tileLayer('${labels}',{maxZoom:16,pane:'overlayPane'}).addTo(map);
 var group=L.markerClusterGroup({showCoverageOnHover:false,maxClusterRadius:56,spiderfyOnMaxZoom:true,
  iconCreateFunction:function(c){return L.divIcon({html:'<div class="cl pop">'+c.getChildCount()+'</div>',className:'',iconSize:[48,48]})}});
 pts.forEach(function(p,i){

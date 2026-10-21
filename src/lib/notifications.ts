@@ -29,7 +29,7 @@ export function useNotificationSchedule() {
         if (!perm.granted) return;
         if (notify.review) {
           await Notifications.scheduleNotificationAsync({
-            content: { title: 'Thingual', body: translate(ui, 'learn.start') },
+            content: { title: '🔥 Thingual', body: translate(ui, 'streak.keepAlive') },
             trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour: notify.reviewHour, minute: 0 },
           });
         }

@@ -14,6 +14,9 @@ import { isDue, mastery } from '../../src/lib/srs';
 import { dateKey } from '../../src/data/social';
 import { speak, stopSpeaking } from '../../src/lib/feedback';
 import { lang } from '../../src/data/languages';
+import { Flame } from '../../src/components/Flame';
+import { StreakPills } from '../../src/components/StreakBits';
+import { doneToday, visibleStreak } from '../../src/lib/streak';
 
 const EX = [
   { id: 'recall', icon: Layers }, { id: 'listen', icon: Ear }, { id: 'choose', icon: ImageIcon }, { id: 'type', icon: Keyboard },
@@ -45,18 +48,27 @@ export default function Learn() {
     return out;
   }, [history]);
   const maxMin = Math.max(5, ...week.map((w) => w.minutes));
-  const streakActive = learnStreak.last === dateKey() || learnStreak.last === dateKey(new Date(Date.now() - 86400000));
+  const streakN = visibleStreak(learnStreak);
+  const streakDone = doneToday(learnStreak);
 
   return (
     <Screen>
       <ScrollView contentContainerStyle={{ paddingHorizontal: space.m, paddingBottom: TAB_BAR_HEIGHT + 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
-        <Txt v="display" style={{ marginTop: space.s }}>{t('learn.title')}</Txt>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: space.s }}>
+          <Txt v="display" style={{ flex: 1 }}>{t('learn.title')}</Txt>
+          <StreakPills />
+        </View>
 
         {/* streaks */}
         <View style={{ flexDirection: 'row', gap: 10, marginTop: space.m }}>
-          <Animated.View entering={FadeInDown.delay(60)} style={[styles.stat, { backgroundColor: c.surface, borderColor: c.divider }]}>
-            <Txt style={{ fontFamily: fonts.serif, fontSize: 40, lineHeight: 44, color: streakActive ? c.text : c.textTertiary }}>{streakActive ? learnStreak.count : 0}</Txt>
-            <Txt v="caption" color={c.textSecondary}>{streakActive && learnStreak.count ? t('learn.streak', { n: learnStreak.count }) : t('learn.noStreak')}</Txt>
+          <Animated.View entering={FadeInDown.delay(60)} style={{ flex: 1 }}>
+            <PressableScale onPress={() => router.push('/streak')} style={[styles.stat, { backgroundColor: c.surface, borderColor: c.divider, flexDirection: 'row', alignItems: 'center', gap: 10 }]}>
+              <Flame size={34} active={streakDone} />
+              <View style={{ flex: 1 }}>
+                <Txt style={{ fontFamily: fonts.serif, fontSize: 40, lineHeight: 44, color: streakN ? c.text : c.textTertiary }}>{streakN}</Txt>
+                <Txt v="caption" color={c.textSecondary}>{streakN ? t('streak.days') : t('learn.noStreak')}</Txt>
+              </View>
+            </PressableScale>
           </Animated.View>
           <Animated.View entering={FadeInDown.delay(120)} style={[styles.stat, { backgroundColor: c.dropSoft, borderColor: 'transparent' }]}>
             <Txt style={{ fontFamily: fonts.serif, fontSize: 40, lineHeight: 44, color: c.drop }}>{dropStreak.count}</Txt>
