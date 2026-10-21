@@ -9,7 +9,7 @@ const files = [path.join(root, 'src/data/concepts.ts'), ...fs.readdirSync(path.j
 const emojis = new Set();
 for (const f of files) {
   const s = fs.readFileSync(f, 'utf8');
-  for (const m of s.matchAll(/\['[a-z0-9-]+', '[a-z]+', '([^']+)'/g)) emojis.add(m[1]);
+  for (const m of s.matchAll(/\['[a-z0-9-]+', '[a-z]+', '([^'a-z\/][^']{0,12})'/g)) emojis.add(m[1]);
   for (const m of s.matchAll(/[a-z]+: \['[a-z]+', '([^']+)'\]/g)) emojis.add(m[1]);
 }
 const out = path.join(root, 'public/emoji');
