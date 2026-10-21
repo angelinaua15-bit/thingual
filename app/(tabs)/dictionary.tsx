@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Share, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
 import { router } from 'expo-router';
 import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated';
-import { Download, FolderPlus, Plus, Search } from 'lucide-react-native';
+import { Download, FolderPlus, Plus, Search } from '../../src/components/icons';
 import { Screen, Txt, Chip, Segmented, EmptyState, PressableScale, PlusBadge, Button } from '../../src/components/ui';
 import { Photo, WordTile, MasteryRing, photoForWord } from '../../src/components/Photo';
 import { CollectionSheet } from '../../src/components/CollectionSheet';

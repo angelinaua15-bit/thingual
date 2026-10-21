@@ -3,7 +3,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Check, Share2, Snowflake, Sparkle, X } from 'lucide-react-native';
+import { Check, Share2, Snowflake, Sparkle, X } from '../src/components/icons';
 import { Txt, Button, PressableScale, ProgressBar } from '../src/components/ui';
 import { Flame } from '../src/components/Flame';
 import { StreakCard, useShareStreak } from '../src/components/StreakBits';

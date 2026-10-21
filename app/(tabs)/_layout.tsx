@@ -4,7 +4,7 @@ import { Tabs, type BottomTabBarProps } from 'expo-router/js-tabs';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
-import { BookOpen, Camera, Globe2, GraduationCap, User } from 'lucide-react-native';
+import { BookOpen, Camera, Globe2, GraduationCap, User } from '../../src/components/icons';
 import { useTheme, fonts } from '../../src/theme/tokens';
 import { useT } from '../../src/i18n';
 import { Txt } from '../../src/components/ui';

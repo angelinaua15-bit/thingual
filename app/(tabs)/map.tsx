@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import Animated, { FadeIn, FadeInDown, SlideInDown, SlideOutDown } from 'react-native-reanimated';
-import { Languages, Lock, LocateFixed, PenSquare, Search, UserPlus, X } from 'lucide-react-native';
+import { Languages, Lock, LocateFixed, PenSquare, Search, UserPlus, X } from '../../src/components/icons';
 import { Txt, Chip, Segmented, Button, Avatar, PressableScale, EmptyState } from '../../src/components/ui';
 import { Photo } from '../../src/components/Photo';
 import { WorldMap } from '../../src/components/WorldMap';

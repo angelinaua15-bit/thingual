@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, interpolate, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, withSpring, Extrapolation } from 'react-native-reanimated';
-import { ArrowLeft, Bookmark, FolderPlus, Image as ImageIcon, Map, Mic, Send, Share2, Trash2, Turtle, Volume2 } from 'lucide-react-native';
+import { ArrowLeft, Bookmark, FolderPlus, Image as ImageIcon, Map, Mic, Send, Share2, Trash2, Turtle, Volume2 } from '../../src/components/icons';
 import { Button, PressableScale, Txt, Chip } from '../../src/components/ui';
 import { Photo, photoForWord } from '../../src/components/Photo';
 import { CollectionSheet } from '../../src/components/CollectionSheet';

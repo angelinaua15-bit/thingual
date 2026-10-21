@@ -3,7 +3,7 @@ import { Alert, Platform, Pressable, ScrollView, Share, TextInput, View } from '
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
-import { ArrowLeft, X } from 'lucide-react-native';
+import { ArrowLeft, X } from '../src/components/icons';
 import { Group, ListRow, Toggle, Txt, Segmented, Chip, Button } from '../src/components/ui';
 import { Sheet, toast } from '../src/components/Overlay';
 import { useTheme, fonts, radius, space } from '../src/theme/tokens';

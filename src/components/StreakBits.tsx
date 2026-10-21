@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import ViewShot from 'react-native-view-shot';
 import Animated, { FadeIn, FadeInDown, FadeInUp, FadeOut, FadeOutUp, ZoomIn, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming, Easing } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Share2, Snowflake, Sparkle } from 'lucide-react-native';
+import { Share2, Snowflake, Sparkle } from './icons';
 import { Txt, Button, PressableScale } from './ui';
 import { Flame } from './Flame';
 import { toast } from './Overlay';

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
-import { ArrowRight, Ear, Headphones, Image as ImageIcon, Keyboard, Mic, Puzzle, Search, Type as TypeIcon, Layers } from 'lucide-react-native';
+import { ArrowRight, Ear, Headphones, Image as ImageIcon, Keyboard, Mic, Puzzle, Search, Type as TypeIcon, Layers } from '../../src/components/icons';
 import { Screen, Txt, Button, PressableScale, ProgressBar, PlusBadge } from '../../src/components/ui';
 import { Photo, photoForWord } from '../../src/components/Photo';
 import { Sheet } from '../../src/components/Overlay';

@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   Easing, FadeIn, FadeInDown, FadeInUp, FadeOut, ZoomIn, useAnimatedStyle, useSharedValue, withRepeat, withTiming, withDelay, withSequence, withSpring,
 } from 'react-native-reanimated';
-import { Camera, Check, ChevronLeft, Volume2, X } from 'lucide-react-native';
+import { Camera, Check, ChevronLeft, Volume2, X } from '../src/components/icons';
 import { Button, PressableScale, Txt, ProgressBar, Avatar } from '../src/components/ui';
 import { TextInput } from 'react-native';
 import { pickImage } from '../src/lib/pickImage';

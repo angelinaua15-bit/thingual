@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { ArrowLeft, Search } from 'lucide-react-native';
+import { ArrowLeft, Search } from '../src/components/icons';
 import { Avatar, Button, Txt } from '../src/components/ui';
 import { toast } from '../src/components/Overlay';
 import { useTheme, fonts, radius, space } from '../src/theme/tokens';

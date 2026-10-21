@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { router } from 'expo-router';
-import { Bookmark, BookmarkCheck, Search, Volume2 } from 'lucide-react-native';
+import { Bookmark, BookmarkCheck, Search, Volume2 } from './icons';
 import { Sheet, toast } from './Overlay';
 import { Button, Txt, PressableScale } from './ui';
 import { Photo, photoForWord } from './Photo';

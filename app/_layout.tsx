@@ -25,10 +25,14 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
 }
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
-    Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold,
-    InstrumentSerif_400Regular, InstrumentSerif_400Regular_Italic,
-  });
+  // On the web the fonts come from /fonts/fonts.css (small woff2 subsets, font-display: swap),
+  // so the first screen never waits for ~2 MB of TTF files.
+  const [nativeFonts] = useFonts(
+    Platform.OS === 'web'
+      ? {}
+      : { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, InstrumentSerif_400Regular, InstrumentSerif_400Regular_Italic },
+  );
+  const fontsLoaded = Platform.OS === 'web' || nativeFonts;
   const hydrated = useApp((s) => s.hydrated);
   const { c, isDark } = useTheme();
   const ready = fontsLoaded && hydrated;
@@ -38,6 +42,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (ready) SplashScreen.hideAsync().catch(() => {});
     if (!ready) return;
+    if (Platform.OS === 'web' && typeof document !== 'undefined') document.getElementById('boot')?.remove();
     useApp.getState().checkStreak();
     const sub = AppState.addEventListener('change', (st) => st === 'active' && useApp.getState().checkStreak());
     return () => sub.remove();

@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'reac
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, CornerLeftUp } from 'lucide-react-native';
+import { ArrowLeft, CornerLeftUp } from '../../src/components/icons';
 import { Avatar, Txt } from '../../src/components/ui';
 import { PostCard } from '../../src/components/PostCard';
 import { useTheme, space } from '../../src/theme/tokens';

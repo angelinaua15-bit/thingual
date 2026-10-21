@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import Animated, { FadeIn, FadeInDown, FadeOut, ZoomIn } from 'react-native-reanimated';
-import { CameraOff, Check, ChevronDown, ImageIcon, RefreshCw, SwitchCamera } from 'lucide-react-native';
+import { CameraOff, Check, ChevronDown, ImageIcon, RefreshCw, SwitchCamera } from '../../src/components/icons';
 import { Txt, Button } from '../../src/components/ui';
 import { Photo } from '../../src/components/Photo';
 import { WordPeek, ConceptPicker } from '../../src/components/WordPeek';

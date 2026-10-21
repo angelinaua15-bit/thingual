@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Check, Crown, RotateCcw, Snowflake, Sparkle, X } from 'lucide-react-native';
+import { Check, Crown, RotateCcw, Snowflake, Sparkle, X } from '../src/components/icons';
 import { Txt, Button } from '../src/components/ui';
 import { Flame } from '../src/components/Flame';
 import { toast } from '../src/components/Overlay';

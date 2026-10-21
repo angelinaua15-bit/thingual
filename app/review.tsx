@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   FadeIn, FadeInDown, FadeInUp, SlideInRight, SlideOutLeft, ZoomIn, interpolate, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming,
 } from 'react-native-reanimated';
-import { Check, Mic, Volume2, X } from 'lucide-react-native';
+import { Check, Mic, Volume2, X } from '../src/components/icons';
 import { Button, PressableScale, ProgressBar, Txt } from '../src/components/ui';
 import { Photo, photoForWord } from '../src/components/Photo';
 import { useTheme, fonts, radius, space } from '../src/theme/tokens';

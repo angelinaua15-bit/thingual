@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
-import { Check, Plus } from 'lucide-react-native';
+import { Check, Plus } from './icons';
 import { Sheet, toast } from './Overlay';
 import { Button, Txt } from './ui';
 import { useTheme, fonts, radius } from '../theme/tokens';

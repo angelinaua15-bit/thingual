@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, Share, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
-import { BookmarkPlus, Heart, MapPin, MessageCircle, MoreHorizontal, Send, Volume2 } from 'lucide-react-native';
+import { BookmarkPlus, Heart, MapPin, MessageCircle, MoreHorizontal, Send, Volume2 } from './icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { Avatar, Txt, PressableScale } from './ui';
 import { Photo } from './Photo';

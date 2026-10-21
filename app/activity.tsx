@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { ArrowLeft, Heart, MessageCircle, UserPlus } from 'lucide-react-native';
+import { ArrowLeft, Heart, MessageCircle, UserPlus } from '../src/components/icons';
 import { Avatar, Txt } from '../src/components/ui';
 import { Photo } from '../src/components/Photo';
 import { useTheme, space } from '../src/theme/tokens';

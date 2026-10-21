@@ -2,7 +2,7 @@ import React from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Award, Bell, BookOpen, Camera, Flame, Globe2, Languages, Settings, Sparkles, Trophy, UserPlus } from 'lucide-react-native';
+import { Award, Bell, BookOpen, Camera, Flame, Globe2, Languages, Settings, Sparkles, Trophy, UserPlus } from '../../src/components/icons';
 import { Screen, Txt, Button } from '../../src/components/ui';
 import { ProfileView } from '../../src/components/ProfileView';
 import { useTheme, fonts, radius, space, TAB_BAR_HEIGHT } from '../../src/theme/tokens';

@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
-import { Check, RefreshCw, Volume2, X } from 'lucide-react-native';
+import { Check, RefreshCw, Volume2, X } from '../src/components/icons';
 import { Button, Txt, PressableScale } from '../src/components/ui';
 import { Photo, photoForWord } from '../src/components/Photo';
 import { TimerRing, toast, monoStyle } from '../src/components/Overlay';

@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Animated, { FadeIn, FadeInDown, FadeInUp, ZoomIn } from 'react-native-reanimated';
-import { ImageIcon, Lock, RotateCcw, ShieldCheck, X } from 'lucide-react-native';
+import { ImageIcon, Lock, RotateCcw, ShieldCheck, X } from '../src/components/icons';
 import { Button, Txt, Segmented } from '../src/components/ui';
 import { Photo } from '../src/components/Photo';
 import { TimerRing, toast, monoStyle } from '../src/components/Overlay';

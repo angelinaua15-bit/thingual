@@ -4,7 +4,7 @@ import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown, useAnimatedProps,
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 import { create } from 'zustand';
-import { Check } from 'lucide-react-native';
+import { Check } from './icons';
 import { useTheme, radius, fonts } from '../theme/tokens';
 import { Txt } from './ui';
 

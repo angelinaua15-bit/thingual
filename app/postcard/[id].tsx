@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 import * as Sharing from 'expo-sharing';
 import ViewShot from 'react-native-view-shot';
-import { Share2, X } from 'lucide-react-native';
+import { Share2, X } from '../../src/components/icons';
 import { Button, Txt, Segmented, Chip } from '../../src/components/ui';
 import { Photo, photoForWord } from '../../src/components/Photo';
 import { useTheme, fonts, radius, space } from '../../src/theme/tokens';

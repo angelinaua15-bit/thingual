@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, Share, StyleSheet, View } from 'react-nat
 import { router } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { Camera } from 'lucide-react-native';
+import { Camera } from './icons';
 import { Avatar, Button, Txt, Segmented } from './ui';
 import { PostCard } from './PostCard';
 import { toast } from './Overlay';

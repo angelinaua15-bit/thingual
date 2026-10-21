@@ -6,7 +6,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } fr
 import { SafeAreaView, Edge } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image as ExpoImage } from 'expo-image';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight } from './icons';
 import { fonts, radius, space, type, useTheme } from '../theme/tokens';
 import { haptic } from '../lib/feedback';
 import { avatarColors } from '../data/social';
