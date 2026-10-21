@@ -4,7 +4,7 @@
  * Places are city level only (the app never stores exact coordinates).
  */
 import { emojiUrl } from './emoji';
-import { conceptById } from './concepts';
+import { conceptById, TOPIC_EMOJI } from './concepts';
 export type PhotoCredit = {
   id: string;
   concept: string;
@@ -215,7 +215,9 @@ export const photosFor = (concept: string) => PHOTOS.filter((p) => p.concept ===
 /** Real photo when we have one, otherwise the 3D illustration of the word. */
 export const coverFor = (concept: string, w = 600) => {
   const p = PHOTOS.find((x) => x.concept === concept);
-  return p ? unsplash(p.path, w) : emojiUrl(conceptById(concept)?.emoji);
+  if (p) return unsplash(p.path, w);
+  const c = conceptById(concept);
+  return c ? emojiUrl(c.emoji || TOPIC_EMOJI[c.topic][1]) : undefined;
 };
 
 /** Backgrounds for onboarding and empty states. */
