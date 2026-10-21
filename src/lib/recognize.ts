@@ -1,4 +1,6 @@
 import { CONCEPTS } from '../data/concepts';
+import { supabase } from './supabase';
+import { ensureSession } from './api';
 
 export type Recognition = {
   concept: string | null;
@@ -7,11 +9,15 @@ export type Recognition = {
   source: 'server' | 'none';
 };
 
-/** Supabase Edge Function `recognize` (see supabase/functions/recognize). */
-export const RECOGNIZE_URL = process.env.EXPO_PUBLIC_RECOGNIZE_URL ?? '';
-const ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
+/**
+ * AI recognition runs in the Supabase Edge Function `recognize` (supabase/functions/recognize).
+ * The Anthropic key lives only in Supabase → Edge Functions → Secrets (ANTHROPIC_API_KEY),
+ * never in the app. If the secret is missing the function answers `no_key` and we fall back
+ * to the word picker.
+ */
+let available = true;
 
-export const backendConnected = () => !!RECOGNIZE_URL;
+export const backendConnected = () => available;
 
 /**
  * Two-step recognition from the spec:
@@ -20,19 +26,19 @@ export const backendConnected = () => !!RECOGNIZE_URL;
  * Without a server, the app asks the user to pick the word (the "low confidence" path).
  */
 export async function recognize(input: { base64?: string }): Promise<Recognition> {
-  if (RECOGNIZE_URL && input.base64) {
+  if (available && input.base64) {
     try {
-      const res = await fetch(RECOGNIZE_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(ANON_KEY ? { Authorization: `Bearer ${ANON_KEY}` } : {}) },
-        body: JSON.stringify({ image: input.base64, concepts: CONCEPTS.map((c) => c.id) }),
+      await ensureSession();
+      const { data, error } = await supabase.functions.invoke('recognize', {
+        body: { image: input.base64, concepts: CONCEPTS.map((c) => c.id) },
       });
-      if (res.ok) {
-        const data = (await res.json()) as { concept: string | null; confidence: number; alternatives?: string[] };
-        return { concept: data.concept, confidence: data.confidence ?? 0, alternatives: data.alternatives ?? [], source: 'server' };
+      if (!error && data) {
+        const d = data as { concept: string | null; confidence?: number; alternatives?: string[]; error?: string };
+        if (d.error === 'no_key') available = false;
+        return { concept: d.concept ?? null, confidence: d.confidence ?? 0, alternatives: d.alternatives ?? [], source: d.error ? 'none' : 'server' };
       }
     } catch {
-      // fall through to manual pick
+      // network or auth problem: fall through to manual pick
     }
   }
   return { concept: null, confidence: 0, alternatives: [], source: 'none' };

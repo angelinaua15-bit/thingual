@@ -44,23 +44,15 @@ npx expo start          # QR-код для Expo Go, або натисни w дл
 
 У браузері розпізнавання працює прямо на пристрої: TensorFlow.js + COCO-SSD шукає предмети в живому відео й ставить на них точки. На телефоні в Expo Go камера робить фото, а слово визначає сервер розпізнавання (якщо підключений) або ти обираєш його сама. Живі точки в нативній версії потребують development build з моделлю на пристрої.
 
-## Розпізнавання на сервері (необов’язково)
+## AI-розпізнавання
 
-Без сервера застосунок працює в демо-режимі: на демо-фото слово відоме, а для власних фото відкривається вибір слова (шлях «низька впевненість» з ТЗ). Щоб увімкнути справжнє AI-розпізнавання:
+Функція `recognize` уже розгорнута в Supabase (код — `supabase/functions/recognize`). Їй потрібен лише ключ Anthropic:
 
-```bash
-supabase link --project-ref <твій-проєкт>
-supabase db push                                  # схема з supabase/migrations
-supabase secrets set ANTHROPIC_API_KEY=sk-...
-supabase functions deploy recognize
-```
+1. Візьми ключ на [console.anthropic.com](https://console.anthropic.com) → API Keys.
+2. Supabase → проєкт `thingual` → **Edge Functions → Secrets** → додай `ANTHROPIC_API_KEY`.
+3. Необов’язково: `VISION_MODEL` (за замовчуванням `claude-haiku-5-5`).
 
-Потім створи `.env` за прикладом `.env.example`:
-
-```
-EXPO_PUBLIC_RECOGNIZE_URL=https://<project>.supabase.co/functions/v1/recognize
-EXPO_PUBLIC_SUPABASE_ANON_KEY=<anon key>
-```
+Ключ живе тільки на сервері, у застосунку й репозиторії його немає. Без ключа камера пропонує обрати слово вручну.
 
 ## Структура
 

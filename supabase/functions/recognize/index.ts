@@ -1,6 +1,6 @@
 // Supabase Edge Function: recognise the object in a cropped photo and map it to a concept id.
 // Deploy:  supabase functions deploy recognize
-// Secret:  supabase secrets set ANTHROPIC_API_KEY=...
+// Secret:  Supabase dashboard → Edge Functions → Secrets → ANTHROPIC_API_KEY
 // The photo fragment is processed in memory and never stored (spec §4, §8).
 
 const MODEL = Deno.env.get('VISION_MODEL') ?? 'claude-haiku-5-5';
@@ -11,12 +11,14 @@ Deno.serve(async (req) => {
     const { image, concepts } = (await req.json()) as { image: string; concepts: string[] };
     if (!image || !Array.isArray(concepts)) return json({ error: 'image and concepts are required' }, 400);
     if (image.length > 4_000_000) return json({ error: 'image too large' }, 413);
+    const key = Deno.env.get('ANTHROPIC_API_KEY');
+    if (!key) return json({ concept: null, confidence: 0, alternatives: [], error: 'no_key' });
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
-        'x-api-key': Deno.env.get('ANTHROPIC_API_KEY') ?? '',
+        'x-api-key': key,
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
@@ -39,7 +41,7 @@ Deno.serve(async (req) => {
         ],
       }),
     });
-    if (!res.ok) return json({ concept: null, confidence: 0, alternatives: [] }, 200);
+    if (!res.ok) return json({ concept: null, confidence: 0, alternatives: [], error: 'api_' + res.status }, 200);
     const data = await res.json();
     const text: string = data?.content?.[0]?.text ?? '{}';
     const parsed = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
@@ -56,7 +58,7 @@ Deno.serve(async (req) => {
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, content-type, apikey',
+  'Access-Control-Allow-Headers': 'authorization, content-type, apikey, x-client-info',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...cors, 'content-type': 'application/json' } });
