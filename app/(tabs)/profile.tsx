@@ -2,7 +2,7 @@ import React from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Award, Bell, BookOpen, Camera, Flame, Globe2, Languages, Settings, Sparkles, Trophy, UserPlus } from '../../src/components/icons';
+import { Award, Bell, BookOpen, Camera, Flame, Globe2, Languages, Settings, Sparkles, Trophy, UserPlus, Moon, Sun } from '../../src/components/icons';
 import { Screen, Txt, Button } from '../../src/components/ui';
 import { ProfileView } from '../../src/components/ProfileView';
 import { useTheme, fonts, radius, space, TAB_BAR_HEIGHT } from '../../src/theme/tokens';
@@ -19,7 +19,9 @@ const ACH = [
 ];
 
 export default function Profile() {
-  const { c } = useTheme();
+  const { c, isDark } = useTheme();
+  const updateSettings = useApp((x) => x.updateSettings);
+  const toggleTheme = () => updateSettings({ theme: isDark ? 'light' : 'dark' });
   const { t } = useT();
   const uid = useNet((s) => s.uid);
   const status = useNet((s) => s.status);
@@ -60,6 +62,9 @@ export default function Profile() {
           <UserPlus size={22} color={c.text} />
         </Pressable>
         <View style={{ flex: 1, alignItems: 'center' }}><StreakPills /></View>
+        <Pressable onPress={toggleTheme} hitSlop={10} accessibilityLabel={t('settings.appearance')}>
+          {isDark ? <Sun size={22} color={c.text} /> : <Moon size={22} color={c.text} />}
+        </Pressable>
         <Pressable onPress={() => router.push('/activity')} hitSlop={10} accessibilityLabel={t('social.activity')}>
           <Bell size={22} color={c.text} />
         </Pressable>

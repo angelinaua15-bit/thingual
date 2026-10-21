@@ -1,3 +1,4 @@
+import { BrandBackground } from './BrandBackground';
 import React, { ReactNode } from 'react';
 import {
   ActivityIndicator, Pressable, PressableProps, StyleProp, StyleSheet, Switch, Text, TextProps, TextStyle, View, ViewStyle,
@@ -22,9 +23,10 @@ export function Txt({ v = 'body', color, style, center, ...rest }: TextProps & {
 
 /* ---------------- Screen ---------------- */
 export function Screen({ children, edges = ['top'], style }: { children: ReactNode; edges?: Edge[]; style?: StyleProp<ViewStyle> }) {
-  const { c } = useTheme();
+  const { c, isDark } = useTheme();
   return (
     <SafeAreaView edges={edges} style={[{ flex: 1, backgroundColor: c.background }, style]}>
+      {isDark && <BrandBackground />}
       {children}
     </SafeAreaView>
   );

@@ -24,7 +24,7 @@ function TabBar({ state, navigateToTab }: BottomTabBarProps) {
       {Platform.OS === 'ios' ? (
         <BlurView intensity={onCamera ? 30 : 60} tint={onCamera || isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
       ) : (
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: onCamera ? 'rgba(0,0,0,0.55)' : isDark ? 'rgba(14,14,14,0.94)' : 'rgba(250,250,248,0.94)' }]} />
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: onCamera ? 'rgba(0,0,0,0.55)' : isDark ? 'rgba(11,33,41,0.94)' : 'rgba(250,250,248,0.94)' }]} />
       )}
       {!onCamera && <View style={[styles.hairline, { backgroundColor: c.divider }]} />}
       <View style={styles.row}>
@@ -59,7 +59,7 @@ function CamButton({ focused }: { focused: boolean }) {
   const { c } = useTheme();
   const a = useAnimatedStyle(() => ({ transform: [{ scale: withSpring(focused ? 1.06 : 1) }] }));
   return (
-    <Animated.View style={[styles.cam, { backgroundColor: focused ? '#FFFFFF' : c.text, borderColor: focused ? 'rgba(255,255,255,0.35)' : 'transparent' }, a]}>
+    <Animated.View style={[styles.cam, { backgroundColor: focused ? '#FFFFFF' : c.ink, borderColor: focused ? 'rgba(255,255,255,0.35)' : 'transparent' }, a]}>
       <Camera size={22} color={focused ? '#141414' : c.background} strokeWidth={2} />
     </Animated.View>
   );

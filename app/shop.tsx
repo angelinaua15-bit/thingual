@@ -45,7 +45,7 @@ export default function Shop() {
       </View>
       <ScrollView contentContainerStyle={{ padding: space.m, paddingBottom: insets.bottom + 40, maxWidth: 560, width: '100%', alignSelf: 'center' }}>
         {/* balance */}
-        <Animated.View entering={FadeInDown} style={[styles.balance, { backgroundColor: c.text }]}>
+        <Animated.View entering={FadeInDown} style={[styles.balance, { backgroundColor: c.ink }]}>
           <Txt v="overline" color={c.background} style={{ opacity: 0.6 }}>{t('shop.balance')}</Txt>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 }}>
             <Sparkle size={30} color="#F59F00" fill="#F59F00" />

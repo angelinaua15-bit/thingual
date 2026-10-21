@@ -1,3 +1,4 @@
+import { BrandBackground } from '../src/components/BrandBackground';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { goBack } from '../src/lib/nav';
@@ -9,7 +10,7 @@ import { Check, RefreshCw, Volume2, X } from '../src/components/icons';
 import { Button, Txt, PressableScale } from '../src/components/ui';
 import { Photo, photoForWord } from '../src/components/Photo';
 import { TimerRing, toast, monoStyle } from '../src/components/Overlay';
-import { useTheme, fonts, radius, space } from '../src/theme/tokens';
+import { useTheme, fonts, radius, space, BRAND } from '../src/theme/tokens';
 import { useT } from '../src/i18n';
 import { useApp } from '../src/store/useApp';
 import { CONCEPTS, fullWord, labelOf } from '../src/data/concepts';
@@ -93,7 +94,8 @@ export default function Find() {
   const tile = (Math.min(width, 520) - space.m * 2 - 16) / 3;
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#0E0E0E', paddingTop: insets.top, paddingBottom: insets.bottom }}>
+    <View style={{ flex: 1, backgroundColor: BRAND.deep, paddingTop: insets.top, paddingBottom: insets.bottom }}>
+      <BrandBackground />
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, height: 52 }}>
         <Pressable onPress={() => goBack()} hitSlop={12}><X size={22} color="#fff" /></Pressable>
         <View style={{ flex: 1 }} />

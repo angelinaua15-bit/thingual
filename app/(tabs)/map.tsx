@@ -262,7 +262,7 @@ function Feed() {
           )
         }
       />
-      <PressableScale onPress={() => router.push('/compose')} style={[styles.fab, { backgroundColor: c.text, bottom: TAB_BAR_HEIGHT + 18 }]}>
+      <PressableScale onPress={() => router.push('/compose')} style={[styles.fab, { backgroundColor: c.ink, bottom: TAB_BAR_HEIGHT + 18 }]}>
         <PenSquare size={22} color={c.background} />
       </PressableScale>
     </View>

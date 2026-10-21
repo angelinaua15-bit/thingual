@@ -1,3 +1,4 @@
+import { BrandBackground } from '../src/components/BrandBackground';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, ImageStyle, StyleProp } from 'react-native';
 import { goBack } from '../src/lib/nav';
@@ -13,7 +14,7 @@ import { TimerRing, toast, monoStyle } from '../src/components/Overlay';
 import { WorldMap } from '../src/components/WorldMap';
 import { PostCard } from '../src/components/PostCard';
 import { LiveCamera, type CameraStatus, type LiveCameraHandle } from '../src/components/LiveCamera';
-import { useTheme, fonts, radius, space } from '../src/theme/tokens';
+import { useTheme, fonts, radius, space, BRAND } from '../src/theme/tokens';
 import { useT } from '../src/i18n';
 import { useApp } from '../src/store/useApp';
 import { dropFor, dropReleaseTime, DROP_WINDOW_MS, dateKey } from '../src/data/social';
@@ -89,7 +90,8 @@ export default function Drop() {
   if (mine.data) return <Reveal concept={concept} />;
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#0E0E0E' }}>
+    <View style={{ flex: 1, backgroundColor: BRAND.deep }}>
+      <BrandBackground />
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Pressable onPress={() => goBack()} hitSlop={12} style={styles.close}><X size={22} color="#fff" /></Pressable>
         <View style={{ flex: 1, alignItems: 'center' }}><Txt v="overline" color="#FF8A5B">{t('drop.title')}</Txt></View>

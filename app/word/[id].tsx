@@ -88,7 +88,7 @@ export default function WordScreen() {
                 <Txt v="body" color={c.textSecondary}>{nat.word}</Txt>
               </View>
               <View style={{ flexDirection: 'row', gap: 10, marginTop: 18 }}>
-                <PressableScale onPress={() => speak(l.word, target)} style={[styles.audio, { backgroundColor: c.text }]}>
+                <PressableScale onPress={() => speak(l.word, target)} style={[styles.audio, { backgroundColor: c.ink }]}>
                   <Volume2 size={20} color={c.background} />
                   <Txt v="bodyMedium" color={c.background}>{l.article ? fullWord(concept.id, target) : l.word}</Txt>
                 </PressableScale>

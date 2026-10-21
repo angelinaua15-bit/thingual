@@ -1,3 +1,5 @@
+import { Logo } from '../src/components/Logo';
+import { BrandBackground } from '../src/components/BrandBackground';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, ImageStyle, StyleProp } from 'react-native';
 import { router } from 'expo-router';
@@ -13,7 +15,7 @@ import { TextInput } from 'react-native';
 import { pickImage } from '../src/lib/pickImage';
 import { normalizeHandle } from '../src/lib/api';
 import { Photo } from '../src/components/Photo';
-import { useTheme, fonts, radius, space } from '../src/theme/tokens';
+import { useTheme, fonts, radius, space, BRAND } from '../src/theme/tokens';
 import { useApp, Goal, Level } from '../src/store/useApp';
 import { translate, translateArr, languageName } from '../src/i18n';
 import { LANGUAGES, LangCode, UI_LANGUAGES } from '../src/data/languages';
@@ -58,7 +60,8 @@ export default function Onboarding() {
   const progressIdx = ORDER.indexOf(step);
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#0E0E0E' }}>
+    <View style={{ flex: 1, backgroundColor: BRAND.deep }}>
+      <BrandBackground />
       {step === 'welcome' && <Welcome t={t} onStart={() => go('native')} />}
       {step !== 'welcome' && (
         <Frame
@@ -115,10 +118,11 @@ export default function Onboarding() {
 function Frame({ children, onBack, progress, dark }: { children: React.ReactNode; onBack?: () => void; progress: number; dark?: boolean }) {
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
-  const bg = dark ? '#0E0E0E' : c.background;
+  const bg = dark ? '#0A1D30' : c.background;
   const fg = dark ? '#FFFFFF' : c.text;
   return (
     <View style={{ flex: 1, backgroundColor: bg, paddingTop: insets.top }}>
+      {dark && <BrandBackground />}
       <View style={styles.topBar}>
         <Pressable onPress={onBack} disabled={!onBack} hitSlop={12} style={{ width: 32, opacity: onBack ? 1 : 0 }}>
           <ChevronLeft size={24} color={fg} />
@@ -177,7 +181,8 @@ function Welcome({ t, onStart }: { t: (k: string) => string; onStart: () => void
     return [items.slice(0, 6), items.slice(6, 12), items.slice(12, 18)];
   }, []);
   return (
-    <View style={{ flex: 1, backgroundColor: '#0E0E0E', overflow: 'hidden' }}>
+    <View style={{ flex: 1, backgroundColor: BRAND.deep, overflow: 'hidden' }}>
+      <BrandBackground />
       <View style={{ position: 'absolute', top: -40, left: (width - w) / 2 + 10, flexDirection: 'row', gap: 10, transform: [{ rotate: '-6deg' }], height: height + 200 }}>
         <Marquee items={cols[0]} speed={60000} width={colW} />
         <View style={{ marginTop: -colW * 0.6 }}>
@@ -186,13 +191,13 @@ function Welcome({ t, onStart }: { t: (k: string) => string; onStart: () => void
         <Marquee items={cols[2]} speed={55000} width={colW} />
       </View>
       <LinearGradient
-        colors={['rgba(14,14,14,0)', 'rgba(14,14,14,0.6)', '#0E0E0E']}
+        colors={['rgba(10,29,48,0)', 'rgba(10,29,48,0.65)', '#0A1D30']}
         locations={[0, 0.35, 0.62]}
         style={[StyleSheet.absoluteFill, { top: height * 0.25 }]}
       />
       <View style={{ position: 'absolute', left: 24, right: 24, bottom: insets.bottom + 24, maxWidth: 520, alignSelf: 'center', width: Math.min(width - 48, 520) }}>
         <Animated.View entering={FadeInDown.delay(150).duration(700)}>
-          <Txt v="overline" color="rgba(255,255,255,0.6)" style={{ marginBottom: 14 }}>Thingual</Txt>
+          <View style={{ marginBottom: 18 }}><Logo size={34} /></View>
         </Animated.View>
         <Animated.View entering={FadeInDown.delay(300).duration(800)}>
           <Txt style={{ fontFamily: fonts.serif, fontSize: 58, lineHeight: 58, color: '#fff', letterSpacing: -1 }}>{t('onboarding.welcomeTitle')}</Txt>
@@ -249,7 +254,7 @@ function LanguagePicker({ title, value, onChange, onNext, cta, exclude, showSamp
 
 function BottomCta({ title, onPress, disabled, dark }: { title: string; onPress: () => void; disabled?: boolean; dark?: boolean }) {
   const { c } = useTheme();
-  const bg = dark ? '#0E0E0E' : c.background;
+  const bg = dark ? '#0A1D30' : c.background;
   return (
     <View style={styles.bottomCta}>
       <LinearGradient colors={[`${bg}00`, bg]} style={{ height: 32 }} />

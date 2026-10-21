@@ -20,28 +20,34 @@ const light = {
   errorSoft: 'rgba(224,49,49,0.10)',
   overlay: 'rgba(14,14,14,0.45)',
   scrim: 'rgba(0,0,0,0.55)',
+  /** deep brand surface for hero cards and the main buttons */
+  ink: '#0F2E33',
   mapStyle: 'light' as 'light' | 'dark',
 };
 
+/** Brand: deep green → deep navy (the logo background). */
+export const BRAND = { green: '#0F5240', navy: '#0B2350', deep: '#0C2A33', grad: ['#0E3B32', '#0B2238', '#0A1A33'] as const };
+
 const dark: typeof light = {
-  background: '#0E0E0E',
-  surface: '#1A1A1A',
-  surfaceAlt: '#222220',
-  text: '#F2F2F0',
-  textSecondary: '#9A9A9A',
-  textTertiary: '#6E6E6A',
-  divider: '#2A2A2A',
-  accent: '#748FFC',
-  accentSoft: 'rgba(116,143,252,0.16)',
-  onAccent: '#0E0E0E',
+  background: '#0B2129',
+  surface: '#112E36',
+  surfaceAlt: '#17363F',
+  text: '#EEF4F1',
+  textSecondary: '#9FB5B0',
+  textTertiary: '#6D8682',
+  divider: '#21414A',
+  accent: '#7C9BFF',
+  accentSoft: 'rgba(124,155,255,0.16)',
+  onAccent: '#0B2129',
   drop: '#FF8A5B',
   dropSoft: 'rgba(255,138,91,0.16)',
   success: '#51CF66',
   successSoft: 'rgba(81,207,102,0.16)',
   error: '#FF6B6B',
   errorSoft: 'rgba(255,107,107,0.14)',
-  overlay: 'rgba(0,0,0,0.55)',
-  scrim: 'rgba(0,0,0,0.65)',
+  overlay: 'rgba(3,14,18,0.6)',
+  scrim: 'rgba(3,14,18,0.7)',
+  ink: '#EEF4F1',
   mapStyle: 'dark',
 };
 

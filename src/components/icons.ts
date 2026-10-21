@@ -59,3 +59,5 @@ export { default as User } from 'lucide-react-native/icons/user';
 export { default as UserPlus } from 'lucide-react-native/icons/user-plus';
 export { default as Volume2 } from 'lucide-react-native/icons/volume-2';
 export { default as X } from 'lucide-react-native/icons/x';
+export { default as Sun } from 'lucide-react-native/icons/sun';
+export { default as Moon } from 'lucide-react-native/icons/moon';

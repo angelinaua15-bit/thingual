@@ -8,11 +8,11 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "description": "Learn languages from the things around you — and see how the whole world says them.",
+    "description": "Learn languages from the things around you \u2014 and see how the whole world says them.",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0E0E0E"
+      "backgroundColor": "#0C2A33"
     },
     "ios": {
       "supportsTablet": true,
@@ -28,7 +28,7 @@
     "android": {
       "package": "app.thingual",
       "adaptiveIcon": {
-        "backgroundColor": "#0E0E0E",
+        "backgroundColor": "#0C2A33",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -45,13 +45,21 @@
       "output": "single",
       "bundler": "metro",
       "name": "Thingual",
-      "themeColor": "#0E0E0E",
+      "themeColor": "#0C2A33",
       "backgroundColor": "#FAFAF8"
     },
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-splash-screen",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#0C2A33"
+        }
+      ],
       "expo-image",
       "expo-localization",
       "expo-sharing",

@@ -60,7 +60,7 @@ export default function Postcard() {
       <ScrollView contentContainerStyle={{ alignItems: 'center', padding: space.m, paddingBottom: insets.bottom + 24 }}>
         <Animated.View layout={LinearTransition.springify()} entering={FadeIn}>
           <ViewShot ref={ref as never} options={{ format: 'png', quality: 1 }}>
-            <View collapsable={false} style={{ width: cardW, height: cardH, borderRadius: radius.l, overflow: 'hidden', backgroundColor: '#0E0E0E' }}>
+            <View collapsable={false} style={{ width: cardW, height: cardH, borderRadius: radius.l, overflow: 'hidden', backgroundColor: '#0C2A33' }}>
               <Photo uri={photoForWord(concept.id, word?.photo, 900)} style={StyleSheet.absoluteFill as StyleProp<ImageStyle>} />
               <LinearGradient colors={['transparent', 'rgba(0,0,0,0.78)']} style={[StyleSheet.absoluteFill, { top: '35%' }]} />
               <View style={{ position: 'absolute', left: 18, right: 18, bottom: 18 }}>

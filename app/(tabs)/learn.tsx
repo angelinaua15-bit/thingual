@@ -78,7 +78,7 @@ export default function Learn() {
         </View>
 
         {/* today */}
-        <Animated.View entering={FadeInDown.delay(180)} style={[styles.today, { backgroundColor: c.text }]}>
+        <Animated.View entering={FadeInDown.delay(180)} style={[styles.today, { backgroundColor: c.ink }]}>
           {list.length === 0 ? (
             <>
               <Txt v="headline" color={c.background}>{t('learn.emptyTitle')}</Txt>
