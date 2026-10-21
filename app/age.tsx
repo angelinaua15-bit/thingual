@@ -8,6 +8,7 @@ import { toast } from '../src/components/Overlay';
 import { useTheme, radius } from '../src/theme/tokens';
 import { useT } from '../src/i18n';
 import { useApp, AgeGroup } from '../src/store/useApp';
+import { updateProfile } from '../src/lib/api';
 
 /** Age gate before the first public post: only an age group is stored (spec §3). */
 export default function AgeGate() {
@@ -17,6 +18,7 @@ export default function AgeGate() {
   const setAge = useApp((x) => x.setAgeGroup);
   const pick = (a: AgeGroup) => {
     setAge(a);
+    updateProfile({ age_group: a }).catch(() => {});
     if (a === 'under13') toast(t('age.kidsNote'), 'default');
     router.back();
   };

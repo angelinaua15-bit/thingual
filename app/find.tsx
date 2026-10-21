@@ -13,10 +13,12 @@ import { useT } from '../src/i18n';
 import { useApp } from '../src/store/useApp';
 import { CONCEPTS, fullWord, labelOf } from '../src/data/concepts';
 import { recognize, backendConnected } from '../src/lib/recognize';
+import { detectUri, detectorSupported } from '../src/lib/detect';
 import { haptic, speak } from '../src/lib/feedback';
 
 const DURATION = 60;
-const HOME_THINGS = ['cup', 'spoon', 'key', 'book', 'shoes', 'lamp', 'pillow', 'bottle', 'chair', 'glasses', 'phone', 'plate', 'clock', 'backpack', 'apple', 'mirror'];
+/** Things found in most homes — all of them recognisable by the on-device model. */
+const HOME_THINGS = ['cup', 'spoon', 'fork', 'book', 'bottle', 'chair', 'phone', 'clock', 'backpack', 'apple', 'bowl', 'laptop', 'keyboard', 'mouse', 'scissors', 'toothbrush', 'vase', 'glass', 'plant', 'banana'];
 
 /** "Find it nearby": we name a word — 60 seconds to find and photograph the object. */
 export default function Find() {
@@ -68,6 +70,13 @@ export default function Find() {
       if (!pic) return;
       const uri = Platform.OS === 'web' ? `data:image/jpeg;base64,${pic.base64}` : pic.uri;
       setShot(uri);
+      const dets = await detectUri(uri);
+      if (dets.some((d) => d.concept === target)) return win(uri);
+      if (detectorSupported && !backendConnected()) {
+        toast(t('camera.nothingFound'), 'default');
+        setShot(null);
+        return;
+      }
       if (backendConnected()) {
         const r = await recognize({ base64: pic.base64 });
         if (r.concept === target || r.alternatives.includes(target)) win(uri);
@@ -117,7 +126,7 @@ export default function Find() {
             <View style={{ position: 'absolute', bottom: 16, left: 16, right: 16, gap: 10, alignItems: 'center' }}>
               {!shot ? (
                 <Pressable onPress={capture} style={styles.shutter}><View style={styles.shutterInner} /></Pressable>
-              ) : !backendConnected() ? (
+              ) : !backendConnected() && !detectorSupported ? (
                 <View style={{ flexDirection: 'row', gap: 10, alignSelf: 'stretch' }}>
                   <Button title={t('drop.retake')} variant="secondary" size="m" style={{ flex: 1 }} onPress={() => setShot(null)} />
                   <Button title={t('learn.found')} variant="inverse" size="m" icon={<Check size={16} color="#141414" />} style={{ flex: 1 }} onPress={() => win(shot)} />

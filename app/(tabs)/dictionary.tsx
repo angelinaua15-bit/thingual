@@ -26,7 +26,6 @@ export default function Dictionary() {
   const s = useApp((x) => x.settings);
   const words = useApp((x) => x.words);
   const collections = useApp((x) => x.collections);
-  const premium = useApp((x) => x.premium);
   const setActive = useApp((x) => x.setActiveTarget);
   const [view, setView] = useState<View_>('grid');
   const [filter, setFilter] = useState<Filter>('all');
@@ -56,10 +55,6 @@ export default function Dictionary() {
   const tileW = (contentW - (cols - 1) * 12) / cols;
 
   const exportCsv = async () => {
-    if (!premium) {
-      router.push('/paywall');
-      return;
-    }
     const rows = all.map((w) => [fullWord(w.conceptId, target), labelOf(w.conceptId, s.native)?.word ?? '', w.note ?? ''].map((v) => `"${v.replace(/"/g, '""')}"`).join(','));
     await Share.share({ message: ['front,back,note', ...rows].join('\n') });
   };
@@ -75,7 +70,6 @@ export default function Dictionary() {
             </View>
             <Pressable onPress={exportCsv} hitSlop={8} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
               <Download size={18} color={c.textSecondary} />
-              {!premium && <PlusBadge />}
             </Pressable>
           </View>
           {s.targets.length > 1 && (
@@ -193,16 +187,13 @@ function WordRow({ w, i }: { w: SavedWord; i: number }) {
 function SetCard({ set, i }: { set: (typeof THEMED_SETS)[number]; i: number }) {
   const { c } = useTheme();
   const { t } = useT();
-  const premium = useApp((x) => x.premium);
   const words = useApp((x) => x.words);
   const saveWord = useApp((x) => x.saveWord);
   const missing = set.concepts.filter((id) => !words[id]);
-  const locked = !set.free && !premium;
   return (
     <Animated.View entering={FadeInDown.delay(i * 60)}>
       <PressableScale
         onPress={() => {
-          if (locked) return router.push('/paywall');
           if (!missing.length) return;
           missing.forEach((id) => saveWord(id, '', 'set'));
           haptic.success();
@@ -221,7 +212,7 @@ function SetCard({ set, i }: { set: (typeof THEMED_SETS)[number]; i: number }) {
           <Txt v="bodyMedium">{t(`dictionary.setNames.${set.id}`)}</Txt>
           <Txt v="caption" color={c.textSecondary}>{set.concepts.length} {t('common.words')}</Txt>
         </View>
-        {locked ? <PlusBadge /> : missing.length ? (
+        {missing.length ? (
           <View style={[styles.add, { backgroundColor: c.accentSoft }]}>
             <Plus size={14} color={c.accent} />
             <Txt v="captionMedium" color={c.accent}>{missing.length}</Txt>

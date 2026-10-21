@@ -5,20 +5,22 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, interpolate, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, withSpring, Extrapolation } from 'react-native-reanimated';
 import { ArrowLeft, Bookmark, FolderPlus, Image as ImageIcon, Map, Mic, Send, Share2, Trash2, Turtle, Volume2 } from 'lucide-react-native';
-import { Button, PressableScale, Txt, Chip, PlusBadge } from '../../src/components/ui';
+import { Button, PressableScale, Txt, Chip } from '../../src/components/ui';
 import { Photo, photoForWord } from '../../src/components/Photo';
 import { CollectionSheet } from '../../src/components/CollectionSheet';
 import { toast } from '../../src/components/Overlay';
 import { useTheme, fonts, radius, space } from '../../src/theme/tokens';
 import { useT, languageName } from '../../src/i18n';
-import { useApp, FREE_LIMITS } from '../../src/store/useApp';
+import { useApp } from '../../src/store/useApp';
+import { useQuery } from '@tanstack/react-query';
+import { conceptPosts } from '../../src/lib/api';
+import { openComposer } from '../../src/lib/draft';
+import { photosFor, unsplash } from '../../src/data/photos';
 import { conceptById, fullWord, labelOf } from '../../src/data/concepts';
-import { LANGUAGES, lang } from '../../src/data/languages';
-import { WORLD_POSTS } from '../../src/data/social';
+import { LANGUAGES, lang, LangCode } from '../../src/data/languages';
 import { haptic, speak } from '../../src/lib/feedback';
 import { mastery, formatInterval } from '../../src/lib/srs';
 import { listenOnce, similarity, speechRecognitionAvailable } from '../../src/lib/speech';
-import { ensureCanPublish, getMyCity } from '../../src/lib/publish';
 
 export default function WordScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -32,7 +34,6 @@ export default function WordScreen() {
   const saveWord = useApp((x) => x.saveWord);
   const removeWord = useApp((x) => x.removeWord);
   const setNote = useApp((x) => x.setNote);
-  const publish = useApp((x) => x.publish);
   const [showOriginal, setShowOriginal] = useState(false);
   const [colOpen, setColOpen] = useState(false);
   const [note, setNoteLocal] = useState(word?.note ?? '');
@@ -56,20 +57,10 @@ export default function WordScreen() {
   const heroUri = showOriginal || !ownPhoto ? photoForWord(concept.id, undefined, 1200) : ownPhoto;
   const example = (concept.examples as Record<string, string | undefined>)[target];
   const exampleNative = (concept.examples as Record<string, string | undefined>)[s.native] ?? concept.examples.en;
-  const worldPosts = WORLD_POSTS.filter((p) => p.concept === concept.id);
+  const unsplashPhotos = photosFor(concept.id);
   const level = word ? mastery(word.card) : 0;
 
-  const onPublish = async () => {
-    if (!ownPhoto || ownPhoto.startsWith('https://images.unsplash.com')) {
-      toast(t('drop.locked'), 'default');
-      return;
-    }
-    if (!ensureCanPublish()) return;
-    const city = await getMyCity();
-    publish({ concept: concept.id, photo: ownPhoto, authorLang: target, isDrop: false, place: city?.place, lat: city?.lat, lng: city?.lng });
-    haptic.success();
-    toast(t('drop.posted'));
-  };
+  const onPublish = () => openComposer(router as never, { photo: ownPhoto, concept: concept.id });
 
   return (
     <View style={{ flex: 1, backgroundColor: c.background }}>
@@ -160,22 +151,19 @@ export default function WordScreen() {
               </ScrollView>
             </Animated.View>
 
-            {/* world photos */}
-            {worldPosts.length > 0 && (
-              <Animated.View entering={FadeInDown.delay(220)} style={{ marginTop: space.l }}>
-                <Txt v="headline" style={{ marginBottom: 12 }}>{t('word.fromWorld')}</Txt>
+            {/* photos from people (real posts) and from Unsplash */}
+            <PeoplePhotos conceptId={concept.id} />
+            {unsplashPhotos.length > 0 && (
+              <Animated.View entering={FadeInDown.delay(240)} style={{ marginTop: space.l }}>
+                <Txt v="headline" style={{ marginBottom: 12 }}>{t('social.fromUnsplash')}</Txt>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
-                  {worldPosts.map((p) => (
-                    <PressableScale key={p.id} onPress={() => router.push({ pathname: '/post/[id]', params: { id: p.id } })} style={{ width: 150 }}>
+                  {unsplashPhotos.map((p) => (
+                    <View key={p.id} style={{ width: 150 }}>
                       <View style={{ width: 150, height: 190, borderRadius: radius.m, overflow: 'hidden' }}>
-                        <Photo uri={p.photo} style={{ width: '100%', height: '100%' }} />
-                        <LinearGradient colors={['transparent', 'rgba(0,0,0,0.6)']} style={[StyleSheet.absoluteFill, { top: '50%' }]} />
-                        <View style={{ position: 'absolute', left: 10, bottom: 8, right: 10 }}>
-                          <Txt style={{ fontFamily: fonts.serif, fontSize: 20, color: '#fff' }} numberOfLines={1}>{labelOf(p.concept, p.authorLang)?.word}</Txt>
-                          <Txt v="caption" color="rgba(255,255,255,0.8)" numberOfLines={1} style={{ fontSize: 11 }}>{p.place}</Txt>
-                        </View>
+                        <Photo uri={unsplash(p.path, 400)} style={{ width: '100%', height: '100%' }} />
                       </View>
-                    </PressableScale>
+                      <Txt v="caption" color={c.textSecondary} numberOfLines={1} style={{ marginTop: 4, fontSize: 11 }}>{p.author}{p.place ? ` · ${p.place}` : ''}</Txt>
+                    </View>
                   ))}
                 </ScrollView>
               </Animated.View>
@@ -214,7 +202,7 @@ export default function WordScreen() {
               <View style={{ marginTop: space.l, gap: 10 }}>
                 <ActionRow icon={<FolderPlus size={20} color={c.text} />} label={t('word.addToCollection')} onPress={() => setColOpen(true)} />
                 <ActionRow icon={<Share2 size={20} color={c.text} />} label={t('word.postcard')} onPress={() => router.push({ pathname: '/postcard/[id]', params: { id: concept.id } })} />
-                <ActionRow icon={<Send size={20} color={c.text} />} label={t('word.publish')} onPress={onPublish} disabled={!ownPhoto || ownPhoto.startsWith('https://')} />
+                <ActionRow icon={<Send size={20} color={c.text} />} label={t('word.publish')} onPress={onPublish} disabled={!ownPhoto || ownPhoto.startsWith('https://images.unsplash.com')} />
                 <ActionRow icon={<Trash2 size={20} color={c.error} />} label={t('word.remove')} danger onPress={() => { removeWord(concept.id); router.back(); }} />
               </View>
             )}
@@ -269,7 +257,6 @@ function Pronunciation({ word }: { word: string }) {
   const { c } = useTheme();
   const { t } = useT();
   const s = useApp((x) => x.settings);
-  const premium = useApp((x) => x.premium);
   const [state, setState] = useState<'idle' | 'listening' | 'done'>('idle');
   const [score, setScore] = useState<number | null>(null);
   const [heard, setHeard] = useState('');
@@ -281,11 +268,6 @@ function Pronunciation({ word }: { word: string }) {
   const start = () => {
     if (!available) {
       speak(word, s.active);
-      return;
-    }
-    if (!useApp.getState().usePronunciation()) {
-      toast(t('word.pronunciationLimit', { n: FREE_LIMITS.pronunciationPerDay }), 'default');
-      router.push('/paywall');
       return;
     }
     setState('listening');
@@ -309,7 +291,6 @@ function Pronunciation({ word }: { word: string }) {
     <Animated.View entering={FadeInDown.delay(140)} style={[styles.card, { backgroundColor: c.surface, borderColor: c.divider }]}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
         <Txt v="overline" color={c.textSecondary} style={{ flex: 1 }}>{t('word.practise')}</Txt>
-        {!premium && <PlusBadge />}
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         <Pressable onPressIn={start} onPressOut={() => stopRef.current()} accessibilityLabel={t('word.holdToSpeak')}>
@@ -346,3 +327,28 @@ const styles = StyleSheet.create({
   saveBar: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 20, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth },
   mic: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center' },
 });
+
+function PeoplePhotos({ conceptId }: { conceptId: string }) {
+  const { t } = useT();
+  const q = useQuery({ queryKey: ['conceptPosts', conceptId], queryFn: () => conceptPosts(conceptId) });
+  if (!q.data?.length) return null;
+  return (
+    <Animated.View entering={FadeInDown.delay(220)} style={{ marginTop: space.l }}>
+      <Txt v="headline" style={{ marginBottom: 12 }}>{t('social.fromPeople')}</Txt>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+        {q.data.map((p) => (
+          <PressableScale key={p.id} onPress={() => router.push({ pathname: '/post/[id]', params: { id: p.id } })} style={{ width: 150 }}>
+            <View style={{ width: 150, height: 190, borderRadius: radius.m, overflow: 'hidden' }}>
+              <Photo uri={p.photo_url ?? undefined} style={{ width: '100%', height: '100%' }} />
+              <LinearGradient colors={['transparent', 'rgba(0,0,0,0.6)']} style={[StyleSheet.absoluteFill, { top: '50%' }]} />
+              <View style={{ position: 'absolute', left: 10, bottom: 8, right: 10 }}>
+                <Txt style={{ fontFamily: fonts.serif, fontSize: 20, color: '#fff' }} numberOfLines={1}>{labelOf(conceptId, (p.lang ?? 'en') as LangCode)?.word}</Txt>
+                <Txt v="caption" color="rgba(255,255,255,0.8)" numberOfLines={1} style={{ fontSize: 11 }}>@{p.author.handle}{p.place ? ` · ${p.place}` : ''}</Txt>
+              </View>
+            </View>
+          </PressableScale>
+        ))}
+      </ScrollView>
+    </Animated.View>
+  );
+}

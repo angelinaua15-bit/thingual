@@ -24,7 +24,6 @@ export default function Postcard() {
   const { width, height } = useWindowDimensions();
   const s = useApp((x) => x.settings);
   const word = useApp((x) => (id ? x.words[id] : undefined));
-  const premium = useApp((x) => x.premium);
   const concept = conceptById(id ?? '');
   const [format, setFormat] = useState<'story' | 'square'>('story');
   const [langs, setLangs] = useState<LangCode[]>([s.active, s.native, 'ja', 'fr', 'ar'].filter((v, i, a) => a.indexOf(v) === i).slice(0, 5) as LangCode[]);
@@ -72,7 +71,7 @@ export default function Postcard() {
                     </Txt>
                   ))}
                 </View>
-                {!premium && <Txt v="overline" color="rgba(255,255,255,0.55)" style={{ marginTop: 14 }}>Thingual</Txt>}
+                {<Txt v="overline" color="rgba(255,255,255,0.55)" style={{ marginTop: 14 }}>Thingual</Txt>}
               </View>
             </View>
           </ViewShot>

@@ -5,6 +5,7 @@ import {
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { SafeAreaView, Edge } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Image as ExpoImage } from 'expo-image';
 import { ChevronRight } from 'lucide-react-native';
 import { fonts, radius, space, type, useTheme } from '../theme/tokens';
 import { haptic } from '../lib/feedback';
@@ -206,8 +207,11 @@ export function SectionHeader({ title, action, onAction }: { title: string; acti
 }
 
 /* ---------------- Avatar ---------------- */
-export function Avatar({ seed, size = 40, label }: { seed: string; size?: number; label?: string }) {
+export function Avatar({ seed, size = 40, label, uri }: { seed: string; size?: number; label?: string; uri?: string | null }) {
   const [a, b] = avatarColors(seed);
+  if (uri) {
+    return <ExpoImage source={{ uri }} style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: '#ddd' }} contentFit="cover" transition={200} />;
+  }
   return (
     <LinearGradient colors={[a, b]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: size, height: size, borderRadius: size / 2, alignItems: 'center', justifyContent: 'center' }}>
       {label ? <Text style={{ color: '#fff', fontFamily: fonts.semibold, fontSize: size * 0.38 }}>{label.slice(0, 1).toUpperCase()}</Text> : null}

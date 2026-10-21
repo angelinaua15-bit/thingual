@@ -1,0 +1,3 @@
+-- Applied to the Supabase project via MCP on 2026-10-21. See the project for the live schema:
+-- profiles, follows, posts (with replies via parent_id), likes, reports, blocks,
+-- counter triggers, RLS policies, and storage buckets `avatars` / `posts`.

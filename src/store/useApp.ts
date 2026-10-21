@@ -4,7 +4,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { getLocales } from 'expo-localization';
 import { LangCode, LANGUAGES } from '../data/languages';
 import { newCard, review as srsReview, StoredCard, Answer } from '../lib/srs';
-import { Post, ReactionType, dateKey, nicknameFor, FRIENDS } from '../data/social';
+import { dateKey, nicknameFor } from '../data/social';
 import { conceptById, Place } from '../data/concepts';
 
 export type Level = 'beginner' | 'intermediate' | 'advanced';
@@ -41,11 +41,8 @@ export type Settings = {
   sounds: boolean;
   haptics: boolean;
   reduceMotion: boolean;
-  demoMode: boolean;
   weeklyFriendsSummary: boolean;
 };
-
-type Usage = { day: string; aiScans: number; pronunciation: number; week: string; scenes: number };
 
 type State = {
   hydrated: boolean;
@@ -53,21 +50,14 @@ type State = {
   goal?: Goal;
   quizScore?: number;
   settings: Settings;
-  profile: { id: string; nickname: string; ageGroup?: AgeGroup; linked?: 'apple' | 'google' | 'email'; createdAt: number };
-  premium: boolean;
+  profile: { id: string; nickname: string; displayName?: string; pendingAvatar?: string; ageGroup?: AgeGroup; createdAt: number };
   words: Record<string, SavedWord>;
   collections: Collection[];
   history: { day: string; reviewed: number; correct: number; minutes: number }[];
   learnStreak: Streak;
   dropStreak: Streak;
   freezesUsedWeek: { week: string; used: number };
-  myPosts: Post[];
-  drops: Record<string, string>; // dateKey -> post id
-  reactions: Record<string, ReactionType[]>; // postId -> my reactions
-  friends: string[];
-  blocked: string[];
-  reported: string[];
-  usage: Usage;
+  drops: Record<string, string>; // dateKey -> post id of my Daily Drop
   achievements: string[];
   familyMode: { enabled: boolean; pin?: string; childName?: string };
 };
@@ -87,25 +77,15 @@ type Actions = {
   createCollection: (name: string, conceptIds?: string[]) => string;
   toggleInCollection: (collectionId: string, conceptId: string) => void;
   deleteCollection: (id: string) => void;
-  publish: (post: Omit<Post, 'id' | 'author' | 'authorId' | 'createdAt' | 'mine'>) => Post;
-  deletePost: (id: string) => void;
-  react: (postId: string, r: ReactionType) => void;
-  addFriend: (id: string) => void;
-  block: (authorId: string) => void;
-  report: (postId: string) => void;
-  useAiScan: () => boolean;
-  useScene: () => boolean;
-  usePronunciation: () => boolean;
-  setPremium: (v: boolean) => void;
-  setNickname: (n: string) => void;
+  markDrop: (postId: string) => void;
   setAgeGroup: (a: AgeGroup) => void;
-  link: (m: 'apple' | 'google' | 'email') => void;
+  setLocalProfile: (p: Partial<State['profile']>) => void;
   setFamilyMode: (p: State['familyMode']) => void;
   unlock: (id: string) => void;
   resetAll: () => void;
 };
 
-export const FREE_LIMITS = { aiScansPerDay: 15, scenesPerWeek: 3, pronunciationPerDay: 5, freezesPerWeek: 1, targets: 1 };
+export const FREEZES_PER_WEEK = 1;
 
 const weekKey = (d = new Date()) => {
   const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -122,7 +102,7 @@ const detectLang = (): LangCode => {
   return (LANGUAGES.find((l) => l.code === code)?.code ?? 'en') as LangCode;
 };
 
-const bumpStreak = (s: Streak, freezes: State['freezesUsedWeek'], premium: boolean): { streak: Streak; freezes: State['freezesUsedWeek'] } => {
+const bumpStreak = (s: Streak, freezes: State['freezesUsedWeek']): { streak: Streak; freezes: State['freezesUsedWeek'] } => {
   const today = dateKey();
   if (s.last === today) return { streak: s, freezes };
   if (s.last === yesterdayKey()) return { streak: { count: s.count + 1, last: today }, freezes };
@@ -130,7 +110,7 @@ const bumpStreak = (s: Streak, freezes: State['freezesUsedWeek'], premium: boole
   const twoDays = dateKey(new Date(Date.now() - 2 * 86400000));
   const wk = weekKey();
   const used = freezes.week === wk ? freezes.used : 0;
-  const allowed = premium ? 3 : FREE_LIMITS.freezesPerWeek;
+  const allowed = FREEZES_PER_WEEK;
   if (s.last === twoDays && used < allowed) {
     return { streak: { count: s.count + 1, last: today }, freezes: { week: wk, used: used + 1 } };
   }
@@ -153,7 +133,6 @@ const initialSettings = (): Settings => {
     sounds: true,
     haptics: true,
     reduceMotion: false,
-    demoMode: true,
     weeklyFriendsSummary: true,
   };
 };
@@ -165,34 +144,15 @@ const initialState = (): State => {
     onboarded: false,
     settings: initialSettings(),
     profile: { id, nickname: nicknameFor(id), createdAt: Date.now() },
-    premium: false,
     words: {},
     collections: [],
     history: [],
     learnStreak: { count: 0 },
     dropStreak: { count: 0 },
     freezesUsedWeek: { week: weekKey(), used: 0 },
-    myPosts: [],
     drops: {},
-    reactions: {},
-    friends: FRIENDS.slice(0, 3).map((f) => f.id),
-    blocked: [],
-    reported: [],
-    usage: { day: dateKey(), aiScans: 0, pronunciation: 0, week: weekKey(), scenes: 0 },
     achievements: [],
     familyMode: { enabled: false },
-  };
-};
-
-const freshUsage = (u: Usage): Usage => {
-  const day = dateKey();
-  const week = weekKey();
-  return {
-    day,
-    week,
-    aiScans: u.day === day ? u.aiScans : 0,
-    pronunciation: u.day === day ? u.pronunciation : 0,
-    scenes: u.week === week ? u.scenes : 0,
   };
 };
 
@@ -223,9 +183,6 @@ export const useApp = create<State & Actions>()(
       addTarget: (l) =>
         set((s) => {
           if (s.settings.targets.includes(l)) return { settings: { ...s.settings, active: l } };
-          if (!s.premium && s.settings.targets.length >= FREE_LIMITS.targets) {
-            return { settings: { ...s.settings, targets: [l], active: l } };
-          }
           return { settings: { ...s.settings, targets: [...s.settings.targets, l].slice(0, 5), active: l } };
         }),
 
@@ -281,7 +238,7 @@ export const useApp = create<State & Actions>()(
           const i = history.findIndex((h) => h.day === day);
           if (i >= 0) history[i] = { day, reviewed: history[i].reviewed + reviewed, correct: history[i].correct + correct, minutes: history[i].minutes + minutes };
           else history.push({ day, reviewed, correct, minutes });
-          const { streak, freezes } = bumpStreak(s.learnStreak, s.freezesUsedWeek, s.premium);
+          const { streak, freezes } = bumpStreak(s.learnStreak, s.freezesUsedWeek);
           const achievements = [...s.achievements];
           if (streak.count >= 7 && !achievements.includes('streak-7')) achievements.push('streak-7');
           return { history: history.slice(-120), learnStreak: streak, freezesUsedWeek: freezes, achievements };
@@ -304,81 +261,25 @@ export const useApp = create<State & Actions>()(
 
       deleteCollection: (id) => set((s) => ({ collections: s.collections.filter((c) => c.id !== id) })),
 
-      publish: (p) => {
+      markDrop: (postId) => {
         const s = get();
-        const post: Post = {
-          ...p,
-          id: `m-${Date.now().toString(36)}`,
-          author: s.profile.nickname,
-          authorId: s.profile.id,
-          createdAt: Date.now(),
-          mine: true,
-        };
-        const patch: Partial<State> = { myPosts: [post, ...s.myPosts] };
-        if (p.isDrop) {
-          const { streak } = bumpStreak(s.dropStreak, s.freezesUsedWeek, s.premium);
-          patch.dropStreak = streak;
-          patch.drops = { ...s.drops, [dateKey()]: post.id };
-          if (streak.count >= 30) get().unlock('drop-30');
-        }
-        set(patch);
+        if (s.drops[dateKey()]) return;
+        const { streak } = bumpStreak(s.dropStreak, s.freezesUsedWeek);
+        set({ dropStreak: streak, drops: { ...s.drops, [dateKey()]: postId } });
         get().unlock('first-post');
-        return post;
+        if (streak.count >= 30) get().unlock('drop-30');
       },
 
-      deletePost: (id) => set((s) => ({ myPosts: s.myPosts.filter((p) => p.id !== id) })),
-
-      react: (postId, r) =>
-        set((s) => {
-          const cur = s.reactions[postId] ?? [];
-          return { reactions: { ...s.reactions, [postId]: cur.includes(r) ? cur.filter((x) => x !== r) : [...cur, r] } };
-        }),
-
-      addFriend: (id) => set((s) => (s.friends.includes(id) ? {} : { friends: [...s.friends, id] })),
-      block: (authorId) => set((s) => ({ blocked: [...new Set([...s.blocked, authorId])] })),
-      report: (postId) => set((s) => ({ reported: [...new Set([...s.reported, postId])] })),
-
-      useAiScan: () => {
-        const s = get();
-        const usage = freshUsage(s.usage);
-        if (!s.premium && usage.aiScans >= FREE_LIMITS.aiScansPerDay) {
-          set({ usage });
-          return false;
-        }
-        set({ usage: { ...usage, aiScans: usage.aiScans + 1 } });
-        return true;
-      },
-      useScene: () => {
-        const s = get();
-        const usage = freshUsage(s.usage);
-        if (!s.premium && usage.scenes >= FREE_LIMITS.scenesPerWeek) {
-          set({ usage });
-          return false;
-        }
-        set({ usage: { ...usage, scenes: usage.scenes + 1 } });
-        return true;
-      },
-      usePronunciation: () => {
-        const s = get();
-        const usage = freshUsage(s.usage);
-        if (!s.premium && usage.pronunciation >= FREE_LIMITS.pronunciationPerDay) {
-          set({ usage });
-          return false;
-        }
-        set({ usage: { ...usage, pronunciation: usage.pronunciation + 1 } });
-        return true;
-      },
-
-      setPremium: (v) => set({ premium: v }),
-      setNickname: (n) => set((s) => ({ profile: { ...s.profile, nickname: n.trim().slice(0, 24) || s.profile.nickname } })),
       setAgeGroup: (a) => set((s) => ({ profile: { ...s.profile, ageGroup: a } })),
-      link: (m) => set((s) => ({ profile: { ...s.profile, linked: m } })),
+      setLocalProfile: (p) => set((s) => ({ profile: { ...s.profile, ...p } })),
       setFamilyMode: (p) => set({ familyMode: p }),
       unlock: (id) => set((s) => (s.achievements.includes(id) ? {} : { achievements: [...s.achievements, id] })),
       resetAll: () => set({ ...initialState(), hydrated: true }),
     }),
     {
       name: 'thingual-v1',
+      version: 2,
+      migrate: (persisted) => persisted as State & Actions,
       storage: createJSONStorage(() => AsyncStorage),
       partialize: ({ hydrated, ...rest }) => rest as unknown as State & Actions,
       onRehydrateStorage: () => (state) => state?.setHydrated(),
@@ -386,5 +287,4 @@ export const useApp = create<State & Actions>()(
   ),
 );
 
-export const usageNow = () => freshUsage(useApp.getState().usage);
 export { weekKey };

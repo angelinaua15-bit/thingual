@@ -8,12 +8,13 @@ export type WorldMapProps = {
   points: MapPoint[];
   wordsMode?: boolean;
   onSelect?: (id: string) => void;
+  onBlank?: () => void;
   style?: StyleProp<ViewStyle>;
   center?: [number, number];
   zoom?: number;
 };
 
-export function WorldMap({ points, wordsMode = false, onSelect, style, center, zoom }: WorldMapProps) {
+export function WorldMap({ points, wordsMode = false, onSelect, onBlank, style, center, zoom }: WorldMapProps) {
   const { isDark } = useTheme();
   const html = useMemo(() => buildMapHtml(points, { dark: isDark, wordsMode, center, zoom }), [points, isDark, wordsMode, center, zoom]);
   return (
@@ -26,6 +27,7 @@ export function WorldMap({ points, wordsMode = false, onSelect, style, center, z
           try {
             const m = JSON.parse(e.nativeEvent.data);
             if (m.type === 'select') onSelect?.(m.id);
+        if (m.type === 'blank') onBlank?.();
           } catch {}
         }}
       />

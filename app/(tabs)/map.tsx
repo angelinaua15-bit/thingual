@@ -1,29 +1,26 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { Languages, Lock, MapPin, Search } from 'lucide-react-native';
-import { Txt, Chip, Segmented, Button, PressableScale, EmptyState } from '../../src/components/ui';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import Animated, { FadeIn, FadeInDown, SlideInDown, SlideOutDown } from 'react-native-reanimated';
+import { Languages, Lock, LocateFixed, PenSquare, Search, UserPlus, X } from 'lucide-react-native';
+import { Txt, Chip, Segmented, Button, Avatar, PressableScale, EmptyState } from '../../src/components/ui';
 import { Photo } from '../../src/components/Photo';
 import { WorldMap } from '../../src/components/WorldMap';
 import { PostCard } from '../../src/components/PostCard';
 import { useTheme, fonts, radius, space, TAB_BAR_HEIGHT } from '../../src/theme/tokens';
 import { useT } from '../../src/i18n';
 import { useApp } from '../../src/store/useApp';
-import { CHALLENGES, WORLD_POSTS, dropFor, dateKey, friendPosts, Post, THEMED_SETS } from '../../src/data/social';
+import { dropFor, dateKey } from '../../src/data/social';
 import { CONCEPTS, fullWord, labelOf } from '../../src/data/concepts';
-import { coverFor, unsplash, photosFor } from '../../src/data/photos';
+import { coverFor } from '../../src/data/photos';
+import { LangCode } from '../../src/data/languages';
+import { feed, followingIds, mapPosts, myDropToday, type PostRow } from '../../src/lib/api';
+import { useLikedSet, useNet } from '../../src/lib/queries';
 import { getMyCity } from '../../src/lib/publish';
 
-type Layer = 'drop' | 'any' | 'near' | 'friends';
-type FeedTab = 'friends' | 'world' | 'collections';
-
-const km = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
-  const R = 6371, d = Math.PI / 180;
-  const x = Math.sin(((b.lat - a.lat) * d) / 2) ** 2 + Math.cos(a.lat * d) * Math.cos(b.lat * d) * Math.sin(((b.lng - a.lng) * d) / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(x));
-};
+type Layer = 'drop' | 'all' | 'word' | 'following';
 
 export default function MapTab() {
   const { c } = useTheme();
@@ -31,45 +28,51 @@ export default function MapTab() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ concept?: string }>();
   const s = useApp((x) => x.settings);
-  const myPosts = useApp((x) => x.myPosts);
-  const blocked = useApp((x) => x.blocked);
-  const reported = useApp((x) => x.reported);
-  const drops = useApp((x) => x.drops);
-  const [mode, setMode] = useState<'map' | 'feed'>('map');
-  const [layer, setLayer] = useState<Layer>('drop');
+  const localDrop = useApp((x) => x.drops[dateKey()]);
+  const status = useNet((x) => x.status);
+  const uid = useNet((x) => x.uid);
+  const [mode, setMode] = useState<'map' | 'feed'>('feed');
+  const [layer, setLayer] = useState<Layer>('all');
   const [concept, setConcept] = useState<string>(dropFor());
   const [q, setQ] = useState('');
   const [words, setWords] = useState(false);
-  const [me, setMe] = useState<{ lat: number; lng: number; place: string } | null>(null);
-  const [feedTab, setFeedTab] = useState<FeedTab>('world');
-  const dropPosted = !!drops[dateKey()];
+  const [center, setCenter] = useState<{ lat: number; lng: number } | null>(null);
+  const [selected, setSelected] = useState<PostRow | null>(null);
   const today = dropFor();
 
   useEffect(() => {
     if (params.concept) {
       setMode('map');
-      setLayer('any');
+      setLayer('word');
       setConcept(params.concept);
     }
   }, [params.concept]);
 
-  const visible = (p: Post) => !blocked.includes(p.authorId) && !reported.includes(p.id);
-  const all = useMemo(() => [...myPosts, ...WORLD_POSTS].filter(visible), [myPosts, blocked, reported]);
+  const myDrop = useQuery({ queryKey: ['myDrop', dateKey()], queryFn: () => myDropToday(dateKey()), enabled: status === 'ok' });
+  const dropPosted = !!localDrop || !!myDrop.data;
+  const following = useQuery({ queryKey: ['followingIds', uid], queryFn: () => followingIds(), enabled: status === 'ok' });
 
-  const layerPosts = useMemo(() => {
-    if (layer === 'drop') return all.filter((p) => p.isDrop && p.concept === today);
-    if (layer === 'any') return all.filter((p) => p.concept === concept);
-    if (layer === 'friends') return [...myPosts, ...friendPosts()].filter(visible);
-    if (layer === 'near') return me ? all.filter((p) => p.lat !== undefined && km(me, { lat: p.lat!, lng: p.lng! }) < 400) : [];
-    return all;
-  }, [layer, concept, all, me]);
+  const posts = useQuery({
+    queryKey: ['map', layer, layer === 'word' ? concept : '', layer === 'following' ? following.data?.join(',') : ''],
+    queryFn: () =>
+      layer === 'drop' ? mapPosts({ dropDay: dateKey(), concept: today })
+        : layer === 'word' ? mapPosts({ concept })
+          : layer === 'following' ? mapPosts({ authors: [...(following.data ?? []), ...(uid ? [uid] : [])] })
+            : mapPosts({}),
+    enabled: mode === 'map' && status === 'ok' && (layer !== 'following' || !!following.data),
+  });
 
-  const points = layerPosts.filter((p) => p.lat !== undefined).map((p) => ({
-    id: p.id, lat: p.lat!, lng: p.lng!, photo: p.photo.replace('w=900', 'w=160'), label: labelOf(p.concept, p.authorLang)!.word, sub: p.authorLang, highlight: !!p.mine,
-  }));
-  const countries = new Set(layerPosts.map((p) => p.place?.split(',').pop()?.trim()).filter(Boolean)).size;
-  const langs = new Set(layerPosts.map((p) => p.authorLang)).size;
   const locked = layer === 'drop' && !dropPosted;
+  const points = useMemo(
+    () => (locked ? [] : (posts.data ?? []).map((p) => ({
+      id: p.id, lat: p.lat!, lng: p.lng!, photo: p.photo_url!, highlight: p.author_id === uid,
+      label: p.concept_id ? labelOf(p.concept_id, (p.lang ?? 'en') as LangCode)?.word ?? p.author.handle : p.author.handle,
+      sub: p.concept_id ? p.lang ?? '' : '',
+    }))),
+    [posts.data, locked, uid],
+  );
+  const byId = useMemo(() => new Map((posts.data ?? []).map((p) => [p.id, p])), [posts.data]);
+  const centerTuple = useMemo<[number, number] | undefined>(() => (center ? [center.lat, center.lng] : undefined), [center]);
 
   const suggestions = useMemo(() => {
     const query = q.trim().toLowerCase();
@@ -82,61 +85,80 @@ export default function MapTab() {
       {mode === 'map' ? (
         <View style={{ flex: 1 }}>
           <WorldMap
-            points={locked ? [] : points}
+            points={points}
             wordsMode={words}
-            onSelect={(id) => router.push({ pathname: '/post/[id]', params: { id } })}
-            center={layer === 'near' && me ? [me.lat, me.lng] : undefined}
-            zoom={layer === 'near' && me ? 7 : undefined}
+            center={centerTuple}
+            zoom={center ? 10 : undefined}
+            onSelect={(id) => setSelected(byId.get(id) ?? null)}
+            onBlank={() => setSelected(null)}
           />
           {locked && (
-            <Animated.View entering={FadeIn} style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', backgroundColor: c.overlay, padding: 32 }]}>
-              <View style={[styles.lockCard, { backgroundColor: c.surface }]}>
-                <View style={{ flexDirection: 'row', marginBottom: 14 }}>
-                  {photosFor(today).slice(0, 3).map((p, i) => (
-                    <View key={p.id} style={{ width: 56, height: 70, borderRadius: 12, overflow: 'hidden', marginLeft: i ? -18 : 0, transform: [{ rotate: `${(i - 1) * 8}deg` }], borderWidth: 2, borderColor: c.surface }}>
-                      <Photo uri={unsplash(p.path, 160)} style={{ width: '100%', height: '100%' }} />
-                    </View>
-                  ))}
-                </View>
-                <Txt v="overline" color={c.drop}>{t('drop.title')}</Txt>
+            <Animated.View entering={FadeIn} style={[StyleSheet.absoluteFill, styles.center, { backgroundColor: c.overlay, padding: 32 }]}>
+              <View style={[styles.card, { backgroundColor: c.surface }]}>
+                <Lock size={22} color={c.drop} />
+                <Txt v="overline" color={c.drop} style={{ marginTop: 10 }}>{t('drop.title')}</Txt>
                 <Txt style={{ fontFamily: fonts.serif, fontSize: 36, color: c.text, marginTop: 4 }}>{fullWord(today, s.active)}</Txt>
                 <Txt v="callout" color={c.textSecondary} center style={{ marginTop: 6, marginBottom: 16 }}>{t('drop.locked')}</Txt>
                 <Button title={t('drop.open')} variant="drop" onPress={() => router.push('/drop')} style={{ alignSelf: 'stretch' }} />
               </View>
             </Animated.View>
           )}
-          {layer === 'near' && !me && (
-            <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', padding: 32 }]}>
-              <View style={[styles.lockCard, { backgroundColor: c.surface }]}>
-                <MapPin size={26} color={c.text} />
-                <Txt v="callout" color={c.textSecondary} center style={{ marginVertical: 12 }}>{t('map.nearEmpty')}</Txt>
-                <Button title={t('map.allowLocation')} onPress={async () => setMe(await getMyCity())} style={{ alignSelf: 'stretch' }} />
+          {!locked && posts.isSuccess && points.length === 0 && (
+            <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.center, { padding: 32 }]}>
+              <View style={[styles.card, { backgroundColor: c.surface }]}>
+                <Txt v="headline" center>{t('map.empty')}</Txt>
+                <Txt v="callout" color={c.textSecondary} center style={{ marginTop: 6 }}>{t('map.emptySub')}</Txt>
               </View>
             </View>
           )}
+          {(posts.isLoading || status === 'idle') && <ActivityIndicator style={{ position: 'absolute', alignSelf: 'center', top: '50%' }} color={c.textSecondary} />}
+          {status === 'offline' && (
+            <View style={[StyleSheet.absoluteFill, styles.center]} pointerEvents="none">
+              <View style={[styles.card, { backgroundColor: c.surface }]}><Txt v="callout" center>{t('social.offline')}</Txt></View>
+            </View>
+          )}
+          <Pressable
+            onPress={async () => { const me = await getMyCity(); if (me) setCenter({ lat: me.lat, lng: me.lng }); }}
+            style={[styles.locate, { backgroundColor: c.surface, bottom: TAB_BAR_HEIGHT + 104 }]}
+            accessibilityLabel="locate"
+          >
+            <LocateFixed size={18} color={c.text} />
+          </Pressable>
+          {selected && <Preview post={selected} onClose={() => setSelected(null)} />}
         </View>
       ) : (
-        <Feed tab={feedTab} setTab={setFeedTab} dropPosted={dropPosted} />
+        <Feed />
       )}
 
       {/* top controls */}
       <View style={[styles.top, { paddingTop: insets.top + 8 }]} pointerEvents="box-none">
         <View style={{ maxWidth: 720, width: '100%', alignSelf: 'center', paddingHorizontal: 16, gap: 10 }} pointerEvents="box-none">
-          <Segmented
-            value={mode}
-            onChange={setMode}
-            options={[{ value: 'map', label: t('map.mapView') }, { value: 'feed', label: t('map.feedView') }]}
-            style={{ backgroundColor: mode === 'map' ? 'rgba(242,241,237,0.92)' : c.surfaceAlt }}
-          />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Segmented
+              value={mode}
+              onChange={(m) => { setMode(m); setSelected(null); }}
+              options={[{ value: 'feed', label: t('map.feedView') }, { value: 'map', label: t('map.mapView') }]}
+              style={{ flex: 1, backgroundColor: mode === 'map' ? 'rgba(242,241,237,0.94)' : c.surfaceAlt }}
+            />
+            <Pressable onPress={() => router.push('/people')} style={[styles.iconBtn, { backgroundColor: mode === 'map' ? 'rgba(242,241,237,0.94)' : c.surfaceAlt }]} accessibilityLabel={t('social.findPeople')}>
+              <UserPlus size={18} color="#141414" />
+            </Pressable>
+          </View>
           {mode === 'map' && (
             <>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-                {(['drop', 'any', 'near', 'friends'] as Layer[]).map((l) => (
-                  <Chip key={l} label={t(`map.layers.${l}`)} selected={layer === l} tone={l === 'drop' ? 'drop' : undefined} onPress={() => setLayer(l)} />
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {(['all', 'drop', 'word', 'following'] as Layer[]).map((l) => (
+                  <Chip
+                    key={l}
+                    label={l === 'all' ? t('map.everything') : l === 'drop' ? t('map.layers.drop') : l === 'word' ? t('map.layers.any') : t('map.layers.friends')}
+                    selected={layer === l}
+                    tone={l === 'drop' ? 'drop' : undefined}
+                    onPress={() => { setLayer(l); setSelected(null); }}
+                  />
                 ))}
                 <Chip label={t('map.howWorldSays')} icon={<Languages size={14} color={words ? c.background : c.text} />} selected={words} onPress={() => setWords((w) => !w)} />
-              </ScrollView>
-              {layer === 'any' && (
+              </View>
+              {layer === 'word' && (
                 <View>
                   <View style={[styles.search, { backgroundColor: c.surface, borderColor: c.divider }]}>
                     <Search size={18} color={c.textSecondary} />
@@ -161,95 +183,102 @@ export default function MapTab() {
           )}
         </View>
       </View>
-
-      {mode === 'map' && !locked && points.length > 0 && (
-        <View style={[styles.counter, { bottom: TAB_BAR_HEIGHT + 16 }]} pointerEvents="none">
-          <View style={[styles.counterPill, { backgroundColor: c.surface }]}>
-            <Txt v="captionMedium">{t('drop.stats', { photos: layerPosts.length, countries, langs })}</Txt>
-          </View>
-        </View>
-      )}
     </View>
   );
 }
 
-/* ------------------------------------------------------------------ */
-function Feed({ tab, setTab, dropPosted }: { tab: FeedTab; setTab: (t: FeedTab) => void; dropPosted: boolean }) {
+/* ---------------- marker preview ---------------- */
+function Preview({ post, onClose }: { post: PostRow; onClose: () => void }) {
   const { c } = useTheme();
-  const { t, code } = useT();
-  const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
   const s = useApp((x) => x.settings);
-  const myPosts = useApp((x) => x.myPosts);
-  const friends = useApp((x) => x.friends);
-  const blocked = useApp((x) => x.blocked);
-  const reported = useApp((x) => x.reported);
-  const visible = (p: Post) => !blocked.includes(p.authorId) && !reported.includes(p.id);
-  const today = dropFor();
-
-  const world = useMemo(
-    () => [...myPosts, ...WORLD_POSTS].filter(visible).filter((p) => dropPosted || !(p.isDrop && p.concept === today && !p.mine)).sort((a, b) => b.createdAt - a.createdAt),
-    [myPosts, blocked, reported, dropPosted],
+  const label = post.concept_id ? labelOf(post.concept_id, (post.lang ?? 'en') as LangCode) : undefined;
+  return (
+    <Animated.View entering={SlideInDown.springify().damping(20)} exiting={SlideOutDown.duration(180)} style={[styles.preview, { bottom: TAB_BAR_HEIGHT + 12 }]}>
+      <PressableScale onPress={() => router.push({ pathname: '/post/[id]', params: { id: post.id } })} style={[styles.previewCard, { backgroundColor: c.surface }]}>
+        <View style={{ width: 92, height: 92, borderRadius: radius.m, overflow: 'hidden' }}>
+          <Photo uri={post.photo_url ?? undefined} style={{ width: '100%', height: '100%' }} />
+        </View>
+        <View style={{ flex: 1, gap: 2 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Avatar seed={post.author_id} size={20} label={post.author.handle} uri={post.author.avatar_url} />
+            <Txt v="captionMedium" numberOfLines={1}>@{post.author.handle}</Txt>
+          </View>
+          {label ? <Txt style={{ fontFamily: fonts.serif, fontSize: 24, color: c.text }} numberOfLines={1}>{label.word}</Txt> : null}
+          {post.concept_id ? <Txt v="caption" color={c.textSecondary}>{fullWord(post.concept_id, s.active)}</Txt> : null}
+          {post.body ? <Txt v="caption" color={c.textSecondary} numberOfLines={1}>{post.body}</Txt> : null}
+          {post.place ? <Txt v="caption" color={c.textTertiary} numberOfLines={1}>{post.place}</Txt> : null}
+        </View>
+        <Pressable onPress={onClose} hitSlop={10} style={{ alignSelf: 'flex-start' }}><X size={18} color={c.textTertiary} /></Pressable>
+      </PressableScale>
+    </Animated.View>
   );
-  const fr = useMemo(() => [...myPosts, ...friendPosts().filter((p) => friends.includes(p.authorId))].filter(visible).sort((a, b) => b.createdAt - a.createdAt), [myPosts, friends]);
-  const challenge = CHALLENGES[Math.floor(Date.now() / (7 * 86400000)) % CHALLENGES.length];
-  const cardW = Math.min(width, 640) - 32;
+}
+
+/* ---------------- Threads-style feed ---------------- */
+function Feed() {
+  const { c } = useTheme();
+  const { t } = useT();
+  const insets = useSafeAreaInsets();
+  const status = useNet((x) => x.status);
+  const [tab, setTab] = useState<'for_you' | 'following'>('for_you');
+  const q = useInfiniteQuery({
+    queryKey: ['feed', tab],
+    queryFn: ({ pageParam }) => feed(tab, pageParam || undefined),
+    initialPageParam: '',
+    getNextPageParam: (last) => (last.length >= 20 ? last[last.length - 1].created_at : undefined),
+    enabled: status === 'ok',
+  });
+  const posts = useMemo(() => q.data?.pages.flat() ?? [], [q.data]);
+  const liked = useLikedSet(posts);
 
   return (
-    <ScrollView contentContainerStyle={{ paddingTop: insets.top + 64, paddingBottom: TAB_BAR_HEIGHT + 40 }}>
-      <View style={{ maxWidth: 640, width: '100%', alignSelf: 'center', paddingHorizontal: 16 }}>
-        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
-          {(['friends', 'world', 'collections'] as FeedTab[]).map((f) => <Chip key={f} label={t(`map.feedTabs.${f}`)} selected={tab === f} onPress={() => setTab(f)} />)}
-        </View>
-
-        {tab === 'world' && (
-          <>
-            <PressableScale onPress={() => router.push({ pathname: '/(tabs)/map', params: { concept: challenge.concept } })} style={[styles.challenge, { height: cardW * 0.5 }]}>
-              <Photo uri={coverFor(challenge.concept, 1000)} style={StyleSheet.absoluteFill as never} />
-              <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.4)' }]} />
-              <View style={{ position: 'absolute', left: 16, bottom: 14, right: 16 }}>
-                <Txt v="overline" color="rgba(255,255,255,0.75)">{t('map.challenge')}</Txt>
-                <Txt style={{ fontFamily: fonts.serif, fontSize: 34, color: '#fff' }}>{challenge.title[code === 'uk' ? 'uk' : 'en']}</Txt>
-              </View>
-            </PressableScale>
-            {world.map((p, i) => <PostCard key={p.id} post={p} i={i} />)}
-          </>
-        )}
-        {tab === 'friends' && (fr.length ? fr.map((p, i) => <PostCard key={p.id} post={p} i={i} />) : <EmptyState title={t('map.noFriends')} />)}
-        {tab === 'collections' && (
-          <View style={{ gap: 12 }}>
-            <Txt v="headline">{t('map.publicCollections')}</Txt>
-            {THEMED_SETS.map((set, i) => (
-              <Animated.View key={set.id} entering={FadeInDown.delay(i * 70)}>
-                <PressableScale onPress={() => router.push({ pathname: '/word/[id]', params: { id: set.concepts[0] } })} style={[styles.collection, { backgroundColor: c.surface, borderColor: c.divider }]}>
-                  <View style={{ flexDirection: 'row', gap: 4, height: 110 }}>
-                    {set.concepts.slice(0, 4).map((id) => (
-                      <View key={id} style={{ flex: 1, borderRadius: 10, overflow: 'hidden' }}>
-                        <Photo uri={coverFor(id, 300)} style={{ width: '100%', height: '100%' }} />
-                      </View>
-                    ))}
-                  </View>
-                  <Txt v="bodyMedium" style={{ marginTop: 10 }}>{t(`dictionary.setNames.${set.id}`)}</Txt>
-                  <Txt v="caption" color={c.textSecondary}>{set.concepts.map((id) => labelOf(id, s.active)?.word).join(' · ')}</Txt>
-                </PressableScale>
-              </Animated.View>
-            ))}
+    <View style={{ flex: 1 }}>
+      <FlatList
+        data={posts}
+        keyExtractor={(p) => p.id}
+        renderItem={({ item, index }) => <PostCard post={item} i={index % 20} liked={liked.has(item.id)} />}
+        contentContainerStyle={{ paddingTop: insets.top + 64, paddingBottom: TAB_BAR_HEIGHT + 90, paddingHorizontal: 16, maxWidth: 680, width: '100%', alignSelf: 'center' }}
+        onEndReached={() => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()}
+        onEndReachedThreshold={0.4}
+        refreshing={q.isRefetching}
+        onRefresh={() => q.refetch()}
+        ListHeaderComponent={
+          <View style={{ flexDirection: 'row', gap: 8, marginBottom: 4 }}>
+            <Chip label={t('social.forYou')} selected={tab === 'for_you'} onPress={() => setTab('for_you')} />
+            <Chip label={t('social.followingFeed')} selected={tab === 'following'} onPress={() => setTab('following')} />
           </View>
-        )}
-      </View>
-    </ScrollView>
+        }
+        ListFooterComponent={q.isFetchingNextPage ? <ActivityIndicator style={{ margin: 20 }} color={c.textSecondary} /> : undefined}
+        ListEmptyComponent={
+          q.isLoading || status === 'idle' ? (
+            <ActivityIndicator style={{ marginTop: 40 }} color={c.textSecondary} />
+          ) : status === 'offline' || q.isError ? (
+            <EmptyState title={t('social.offline')} cta={t('social.retry')} onCta={() => q.refetch()} />
+          ) : tab === 'following' ? (
+            <EmptyState title={t('social.emptyFeed')} sub={t('social.emptyFollowing')} cta={t('social.findPeople')} onCta={() => router.push('/people')} />
+          ) : (
+            <EmptyState title={t('social.emptyFeed')} sub={t('social.emptyFeedSub')} cta={t('social.newPost')} onCta={() => router.push('/compose')} />
+          )
+        }
+      />
+      <PressableScale onPress={() => router.push('/compose')} style={[styles.fab, { backgroundColor: c.text, bottom: TAB_BAR_HEIGHT + 18 }]}>
+        <PenSquare size={22} color={c.background} />
+      </PressableScale>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   top: { position: 'absolute', top: 0, left: 0, right: 0 },
+  center: { alignItems: 'center', justifyContent: 'center' },
+  card: { width: '100%', maxWidth: 360, padding: 24, borderRadius: radius.xl, alignItems: 'center' },
   search: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: radius.s, paddingHorizontal: 12, height: 44, borderWidth: StyleSheet.hairlineWidth },
   input: { flex: 1, fontFamily: fonts.regular, fontSize: 16, height: 44 },
   suggest: { marginTop: 6, borderRadius: radius.m, borderWidth: StyleSheet.hairlineWidth, overflow: 'hidden' },
   sugRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 12, paddingVertical: 8 },
-  lockCard: { width: '100%', maxWidth: 360, padding: 24, borderRadius: radius.xl, alignItems: 'center' },
-  counter: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
-  counterPill: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 10, elevation: 4 },
-  challenge: { borderRadius: radius.l, overflow: 'hidden', marginBottom: 22 },
-  collection: { padding: 12, borderRadius: radius.l, borderWidth: StyleSheet.hairlineWidth },
+  iconBtn: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  locate: { position: 'absolute', right: 10, width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 8, elevation: 4 },
+  preview: { position: 'absolute', left: 16, right: 16, alignItems: 'center' },
+  previewCard: { flexDirection: 'row', gap: 12, padding: 10, borderRadius: radius.l, width: '100%', maxWidth: 520, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 18, elevation: 8 },
+  fab: { position: 'absolute', right: 20, width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 12, elevation: 6 },
 });

@@ -11,6 +11,8 @@ import { useT, languageName } from '../src/i18n';
 import { useApp, Level } from '../src/store/useApp';
 import { LANGUAGES, LangCode, UI_LANGUAGES } from '../src/data/languages';
 import { backendConnected } from '../src/lib/recognize';
+import { deleteMyData, linkEmail } from '../src/lib/api';
+import { qc, useNet } from '../src/lib/queries';
 
 export default function SettingsScreen() {
   const { c } = useTheme();
@@ -21,17 +23,19 @@ export default function SettingsScreen() {
   const [langSheet, setLangSheet] = useState<'native' | 'target' | null>(null);
   const [familyOpen, setFamilyOpen] = useState(false);
   const [pin, setPin] = useState('');
+  const [email, setEmail] = useState('');
+  const uid = useNet((x) => x.uid);
 
   const confirmDelete = () => {
-    const doIt = () => { st.resetAll(); router.replace('/onboarding'); };
+    const doIt = async () => { await deleteMyData().catch(() => {}); qc.clear(); st.resetAll(); router.replace('/onboarding'); };
     if (Platform.OS === 'web') {
       if (window.confirm(t('settings.deleteConfirm'))) doIt();
     } else Alert.alert(t('settings.deleteAccount'), t('settings.deleteConfirm'), [{ text: t('common.cancel'), style: 'cancel' }, { text: t('common.delete'), style: 'destructive', onPress: doIt }]);
   };
 
   const exportData = async () => {
-    const { settings, words, collections, myPosts, history, profile } = useApp.getState();
-    await Share.share({ message: JSON.stringify({ profile, settings, words, collections, myPosts, history }, null, 2) });
+    const { settings, words, collections, history, profile } = useApp.getState();
+    await Share.share({ message: JSON.stringify({ profile, settings, words, collections, history }, null, 2) });
     toast(t('settings.exported'));
   };
 
@@ -70,18 +74,48 @@ export default function SettingsScreen() {
           <ListRow title={t('settings.slow')} right={<Toggle value={s.slowVoice} onChange={(v) => st.updateSettings({ slowVoice: v })} />} />
         </Group>
 
-        <Group title={t('settings.notifications')}>
-          <ListRow title={t('settings.nDrop')} right={<Toggle value={s.notify.drop} onChange={(v) => st.updateSettings({ notify: { ...s.notify, drop: v } })} />} />
-          <ListRow title={t('settings.nReview')} right={<Toggle value={s.notify.review} onChange={(v) => st.updateSettings({ notify: { ...s.notify, review: v } })} />} />
-          <View style={{ paddingHorizontal: 16, paddingVertical: 12, gap: 8 }}>
-            <Txt v="captionMedium" color={c.textSecondary}>{t('settings.reviewTime')}</Txt>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-              {[8, 12, 18, 19, 20, 21].map((h) => <Chip key={h} label={`${h}:00`} selected={s.notify.reviewHour === h} onPress={() => st.updateSettings({ notify: { ...s.notify, reviewHour: h } })} />)}
-            </ScrollView>
+        {Platform.OS !== 'web' && (
+          <Group title={t('settings.notifications')}>
+            <ListRow title={t('settings.nDrop')} right={<Toggle value={s.notify.drop} onChange={(v) => st.updateSettings({ notify: { ...s.notify, drop: v } })} />} />
+            <ListRow title={t('settings.nReview')} right={<Toggle value={s.notify.review} onChange={(v) => st.updateSettings({ notify: { ...s.notify, review: v } })} />} />
+            <View style={{ paddingHorizontal: 16, paddingVertical: 12, gap: 8 }}>
+              <Txt v="captionMedium" color={c.textSecondary}>{t('settings.reviewTime')}</Txt>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                {[8, 12, 18, 19, 20, 21].map((h) => <Chip key={h} label={`${h}:00`} selected={s.notify.reviewHour === h} onPress={() => st.updateSettings({ notify: { ...s.notify, reviewHour: h } })} />)}
+              </ScrollView>
+            </View>
+          </Group>
+        )}
+
+        <Group title={t('settings.account')} footer={uid ? `${t('settings.accountId')}: ${uid}` : undefined}>
+          <View style={{ padding: 16, gap: 10 }}>
+            <Txt v="bodyMedium">{t('settings.linkEmail')}</Txt>
+            <Txt v="caption" color={c.textSecondary}>{t('settings.linkEmailSub')}</Txt>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="you@example.com"
+                placeholderTextColor={c.textTertiary}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                style={{ flex: 1, height: 44, borderRadius: radius.s, backgroundColor: c.surfaceAlt, paddingHorizontal: 12, color: c.text, fontFamily: fonts.regular, fontSize: 15 }}
+              />
+              <Button
+                title={t('common.save')}
+                size="m"
+                disabled={!/^\S+@\S+\.\S+$/.test(email)}
+                onPress={async () => {
+                  try {
+                    await linkEmail(email.trim());
+                    toast(t('settings.emailSent'));
+                  } catch {
+                    toast(t('social.offline'), 'default');
+                  }
+                }}
+              />
+            </View>
           </View>
-          <ListRow title={t('settings.nFriends')} right={<Toggle value={s.notify.friends} onChange={(v) => st.updateSettings({ notify: { ...s.notify, friends: v } })} />} />
-          <ListRow title={t('settings.nWeekly')} right={<Toggle value={s.notify.weekly} onChange={(v) => st.updateSettings({ notify: { ...s.notify, weekly: v } })} />} />
-          <ListRow title={t('settings.friendsSummary')} right={<Toggle value={s.weeklyFriendsSummary} onChange={(v) => st.updateSettings({ weeklyFriendsSummary: v })} />} />
         </Group>
 
         <Group title={t('settings.appearance')}>
@@ -100,9 +134,7 @@ export default function SettingsScreen() {
         </Group>
 
         <Group title={t('settings.about')}>
-          <ListRow title={t('settings.demoMode')} subtitle={t('settings.demoSub')} right={<Toggle value={s.demoMode} onChange={(v) => st.updateSettings({ demoMode: v })} />} />
           <ListRow title={t('settings.backend')} value={backendConnected() ? t('settings.backendOn') : t('settings.backendOff')} />
-          <ListRow title="Thingual+" value={st.premium ? t('common.on') : t('common.off')} onPress={() => router.push('/paywall')} />
           <ListRow title={t('settings.version', { v: Constants.expoConfig?.version ?? '1.0.0' })} subtitle={t('settings.photos')} />
         </Group>
       </ScrollView>
@@ -120,7 +152,6 @@ export default function SettingsScreen() {
                     setLangSheet(null);
                   } else if (sel && s.targets.length > 1) st.removeTarget(l.code);
                   else if (l.code !== s.native) {
-                    if (!st.premium && s.targets.length >= 1 && !sel) toast(t('paywall.f2'), 'default');
                     st.addTarget(l.code as LangCode);
                   }
                 }}

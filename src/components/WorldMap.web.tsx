@@ -4,7 +4,7 @@ import { buildMapHtml } from './mapHtml';
 import { useTheme } from '../theme/tokens';
 import type { WorldMapProps } from './WorldMap';
 
-export function WorldMap({ points, wordsMode = false, onSelect, style, center, zoom }: WorldMapProps) {
+export function WorldMap({ points, wordsMode = false, onSelect, onBlank, style, center, zoom }: WorldMapProps) {
   const { isDark } = useTheme();
   const ref = useRef<HTMLIFrameElement | null>(null);
   const html = useMemo(() => buildMapHtml(points, { dark: isDark, wordsMode, center, zoom }), [points, isDark, wordsMode, center, zoom]);
@@ -14,11 +14,12 @@ export function WorldMap({ points, wordsMode = false, onSelect, style, center, z
       try {
         const m = JSON.parse(String(e.data));
         if (m.type === 'select') onSelect?.(m.id);
+        if (m.type === 'blank') onBlank?.();
       } catch {}
     };
     window.addEventListener('message', h);
     return () => window.removeEventListener('message', h);
-  }, [onSelect]);
+  }, [onSelect, onBlank]);
   return (
     <View style={[{ flex: 1, overflow: 'hidden' }, style]}>
       {React.createElement('iframe', {

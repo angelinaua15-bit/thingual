@@ -28,7 +28,6 @@ export default function Learn() {
   const history = useApp((x) => x.history);
   const learnStreak = useApp((x) => x.learnStreak);
   const dropStreak = useApp((x) => x.dropStreak);
-  const premium = useApp((x) => x.premium);
   const update = useApp((x) => x.updateSettings);
   const [handsFree, setHandsFree] = useState(false);
 
@@ -141,13 +140,12 @@ export default function Learn() {
           })}
         </View>
 
-        <PressableScale onPress={() => (premium ? setHandsFree(true) : router.push('/paywall'))} style={[styles.card, styles.hands, { backgroundColor: c.surface, borderColor: c.divider }]}>
+        <PressableScale onPress={() => setHandsFree(true)} style={[styles.card, styles.hands, { backgroundColor: c.surface, borderColor: c.divider }]}>
           <Headphones size={22} color={c.text} />
           <View style={{ flex: 1 }}>
             <Txt v="bodyMedium">{t('learn.handsFree')}</Txt>
             <Txt v="caption" color={c.textSecondary}>{t('learn.exSub.handsFree')}</Txt>
           </View>
-          {!premium && <PlusBadge />}
         </PressableScale>
       </ScrollView>
       <HandsFree visible={handsFree} onClose={() => setHandsFree(false)} />

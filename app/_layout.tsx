@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler';
 import React, { useEffect } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -11,8 +11,17 @@ import { InstrumentSerif_400Regular, InstrumentSerif_400Regular_Italic } from '@
 import { useTheme } from '../src/theme/tokens';
 import { useApp } from '../src/store/useApp';
 import { ToastHost } from '../src/components/Overlay';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { qc, useBootstrap } from '../src/lib/queries';
+import { useNotificationSchedule } from '../src/lib/notifications';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
+
+if (Platform.OS === 'web' && typeof document !== 'undefined') {
+  const st = document.createElement('style');
+  st.textContent = 'input,textarea{outline:none!important}';
+  document.head.appendChild(st);
+}
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -22,6 +31,8 @@ export default function RootLayout() {
   const hydrated = useApp((s) => s.hydrated);
   const { c, isDark } = useTheme();
   const ready = fontsLoaded && hydrated;
+  useBootstrap();
+  useNotificationSchedule();
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync().catch(() => {});
@@ -30,6 +41,7 @@ export default function RootLayout() {
   if (!ready) return <View style={{ flex: 1, backgroundColor: c.background }} />;
 
   return (
+    <QueryClientProvider client={qc}>
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -41,12 +53,14 @@ export default function RootLayout() {
           <Stack.Screen name="review" options={{ animation: 'slide_from_bottom', gestureEnabled: false }} />
           <Stack.Screen name="drop" options={{ animation: 'slide_from_bottom' }} />
           <Stack.Screen name="find" options={{ animation: 'slide_from_bottom' }} />
-          <Stack.Screen name="paywall" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="compose" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="edit-profile" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="postcard/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="age" options={{ presentation: 'transparentModal', animation: 'fade' }} />
         </Stack>
         <ToastHost />
       </SafeAreaProvider>
     </GestureHandlerRootView>
+    </QueryClientProvider>
   );
 }

@@ -13,8 +13,8 @@ import { CONCEPTS, conceptById, fullWord, labelOf } from '../data/concepts';
 import { haptic, speak } from '../lib/feedback';
 
 /** Small card that rises after recognition: photo, word, sound, save. */
-export function WordPeek({ conceptId, photo, visible, onClose, alternatives = [], confidence = 1, source, onChange }: {
-  conceptId: string | null; photo?: string; visible: boolean; onClose: () => void; alternatives?: string[]; confidence?: number; source: WordSource; onChange?: (id: string) => void;
+export function WordPeek({ conceptId, photo, visible, onClose, alternatives = [], confidence = 1, source, onChange, onShare }: {
+  conceptId: string | null; photo?: string; visible: boolean; onClose: () => void; alternatives?: string[]; confidence?: number; source: WordSource; onChange?: (id: string) => void; onShare?: () => void;
 }) {
   const { c } = useTheme();
   const { t } = useT();
@@ -82,9 +82,16 @@ export function WordPeek({ conceptId, photo, visible, onClose, alternatives = []
             style={{ flex: 1 }}
           />
         </View>
-        <Pressable onPress={() => onChange?.('__pick__')} style={{ alignItems: 'center', paddingTop: 14 }}>
-          <Txt v="captionMedium" color={c.textSecondary}>{t('word.wrong')}</Txt>
-        </Pressable>
+        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 24, paddingTop: 14 }}>
+          {onShare && photo ? (
+            <Pressable onPress={onShare}>
+              <Txt v="captionMedium" color={c.accent}>{t('word.publish')}</Txt>
+            </Pressable>
+          ) : null}
+          <Pressable onPress={() => onChange?.('__pick__')}>
+            <Txt v="captionMedium" color={c.textSecondary}>{t('word.wrong')}</Txt>
+          </Pressable>
+        </View>
       </View>
     </Sheet>
   );

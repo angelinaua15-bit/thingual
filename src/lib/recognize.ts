@@ -4,7 +4,7 @@ export type Recognition = {
   concept: string | null;
   confidence: number;
   alternatives: string[];
-  source: 'server' | 'demo' | 'none';
+  source: 'server' | 'none';
 };
 
 /** Supabase Edge Function `recognize` (see supabase/functions/recognize). */
@@ -19,15 +19,7 @@ export const backendConnected = () => !!RECOGNIZE_URL;
  * 2) the tapped crop is refined by a multimodal model on the server and mapped to a concept id.
  * Without a server, the app asks the user to pick the word (the "low confidence" path).
  */
-export async function recognize(input: { base64?: string; knownConcept?: string }): Promise<Recognition> {
-  if (input.knownConcept) {
-    await new Promise((r) => setTimeout(r, 650));
-    const others = CONCEPTS.filter((c) => c.id !== input.knownConcept)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 2)
-      .map((c) => c.id);
-    return { concept: input.knownConcept, confidence: 0.94, alternatives: others, source: 'demo' };
-  }
+export async function recognize(input: { base64?: string }): Promise<Recognition> {
   if (RECOGNIZE_URL && input.base64) {
     try {
       const res = await fetch(RECOGNIZE_URL, {

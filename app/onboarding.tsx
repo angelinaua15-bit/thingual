@@ -8,7 +8,10 @@ import Animated, {
   Easing, FadeIn, FadeInDown, FadeInUp, FadeOut, ZoomIn, useAnimatedStyle, useSharedValue, withRepeat, withTiming, withDelay, withSequence, withSpring,
 } from 'react-native-reanimated';
 import { Camera, Check, ChevronLeft, Volume2, X } from 'lucide-react-native';
-import { Button, PressableScale, Txt, ProgressBar } from '../src/components/ui';
+import { Button, PressableScale, Txt, ProgressBar, Avatar } from '../src/components/ui';
+import { TextInput } from 'react-native';
+import { pickImage } from '../src/lib/pickImage';
+import { normalizeHandle } from '../src/lib/api';
 import { Photo } from '../src/components/Photo';
 import { useTheme, fonts, radius, space } from '../src/theme/tokens';
 import { useApp, Goal, Level } from '../src/store/useApp';
@@ -18,8 +21,8 @@ import { CONCEPTS, fullWord, labelOf } from '../src/data/concepts';
 import { PHOTOS, SCENES, unsplash, photosFor } from '../src/data/photos';
 import { haptic, speak } from '../src/lib/feedback';
 
-type Step = 'welcome' | 'native' | 'target' | 'goal' | 'quizIntro' | 'quiz' | 'result' | 'camera' | 'ready';
-const ORDER: Step[] = ['welcome', 'native', 'target', 'goal', 'quizIntro', 'quiz', 'result', 'camera', 'ready'];
+type Step = 'welcome' | 'native' | 'target' | 'goal' | 'quizIntro' | 'quiz' | 'result' | 'camera' | 'profile' | 'ready';
+const ORDER: Step[] = ['welcome', 'native', 'target', 'goal', 'quizIntro', 'quiz', 'result', 'camera', 'profile', 'ready'];
 
 const QUIZ_CONCEPTS = ['coffee', 'apple', 'window', 'key', 'umbrella', 'mirror'];
 
@@ -59,7 +62,7 @@ export default function Onboarding() {
       {step === 'welcome' && <Welcome t={t} onStart={() => go('native')} />}
       {step !== 'welcome' && (
         <Frame
-          onBack={['native', 'target', 'goal', 'quizIntro', 'camera'].includes(step) ? back : undefined}
+          onBack={['native', 'target', 'goal', 'quizIntro', 'camera', 'profile'].includes(step) ? back : undefined}
           progress={progressIdx / (ORDER.length - 1)}
           dark={step === 'quiz' || step === 'camera' || step === 'quizIntro'}
         >
@@ -97,7 +100,8 @@ export default function Onboarding() {
             />
           )}
           {step === 'result' && <Result t={t} score={score} level={level} missed={QUIZ_CONCEPTS.filter((_, i) => !answers[i])} target={target} onNext={() => go('camera')} />}
-          {step === 'camera' && <CameraStep t={t} target={target} native={native} onNext={() => go('ready')} />}
+          {step === 'camera' && <CameraStep t={t} target={target} native={native} onNext={() => go('profile')} />}
+          {step === 'profile' && <ProfileStep t={t} onNext={() => go('ready')} />}
           {step === 'ready' && <Ready t={t} onDone={finish} />}
         </Frame>
       )}
@@ -543,6 +547,53 @@ function CameraStep({ t, onNext, target, native }: { t: (k: string) => string; o
   );
 }
 
+function ProfileStep({ t, onNext }: { t: (k: string) => string; onNext: () => void }) {
+  const { c } = useTheme();
+  const nick = useApp((x) => x.profile.nickname);
+  const id = useApp((x) => x.profile.id);
+  const setLocal = useApp((x) => x.setLocalProfile);
+  const [name, setName] = useState('');
+  const [handle, setHandle] = useState(normalizeHandle(nick));
+  const [avatar, setAvatar] = useState<string | undefined>();
+  const save = () => {
+    const h = normalizeHandle(handle || name || nick);
+    setLocal({ nickname: h.length >= 3 ? h : nick, displayName: name.trim() || undefined, pendingAvatar: avatar });
+    onNext();
+  };
+  return (
+    <View style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={{ padding: space.l, paddingBottom: 140, maxWidth: 560, width: '100%', alignSelf: 'center' }} keyboardShouldPersistTaps="handled">
+        <Animated.View entering={FadeInDown.duration(500)}>
+          <Txt v="display">{t('onboarding.profileTitle')}</Txt>
+          <Txt v="body" color={c.textSecondary} style={{ marginTop: 10 }}>{t('onboarding.profileSub')}</Txt>
+        </Animated.View>
+        <Animated.View entering={ZoomIn.delay(150).springify()} style={{ alignItems: 'center', marginVertical: 28 }}>
+          <Pressable onPress={async () => { const u = await pickImage({ square: true, max: 600 }); if (u) setAvatar(u); }}>
+            <Avatar seed={id} size={120} label={name || handle} uri={avatar} />
+            <View style={[styles.camBadge, { backgroundColor: c.text, borderColor: c.background }]}><Camera size={18} color={c.background} /></View>
+          </Pressable>
+          <Txt v="captionMedium" color={c.accent} style={{ marginTop: 12 }}>{t('onboarding.addPhoto')}</Txt>
+        </Animated.View>
+        <Txt v="captionMedium" color={c.textSecondary} style={{ marginBottom: 6 }}>{t('social.name')}</Txt>
+        <TextInput
+          value={name}
+          onChangeText={(v) => { setName(v.slice(0, 40)); if (!handle || handle === normalizeHandle(name)) setHandle(normalizeHandle(v)); }}
+          placeholder="Angelina"
+          placeholderTextColor={c.textTertiary}
+          style={[styles.input, { backgroundColor: c.surface, borderColor: c.divider, color: c.text }]}
+        />
+        <Txt v="captionMedium" color={c.textSecondary} style={{ marginTop: 14, marginBottom: 6 }}>{t('social.handle')}</Txt>
+        <View style={[styles.input, { backgroundColor: c.surface, borderColor: c.divider, flexDirection: 'row', alignItems: 'center' }]}>
+          <Txt v="body" color={c.textTertiary}>@</Txt>
+          <TextInput value={handle} onChangeText={(v) => setHandle(normalizeHandle(v))} autoCapitalize="none" autoCorrect={false} style={{ flex: 1, color: c.text, fontFamily: fonts.regular, fontSize: 16, height: 50 }} />
+        </View>
+        <Txt v="caption" color={c.textTertiary} style={{ marginTop: 4 }}>{t('social.handleRules')}</Txt>
+      </ScrollView>
+      <BottomCta title={t('common.continue')} onPress={save} />
+    </View>
+  );
+}
+
 function Ready({ t, onDone }: { t: (k: string) => string; onDone: () => void }) {
   const { c } = useTheme();
   const s = useSharedValue(0);
@@ -576,5 +627,7 @@ const styles = StyleSheet.create({
   dot: { width: 16, height: 16, borderRadius: 8, backgroundColor: '#fff', shadowColor: '#fff', shadowOpacity: 0.9, shadowRadius: 10 },
   dotRing: { position: 'absolute', width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: '#fff' },
   bubble: { position: 'absolute', top: '58%', backgroundColor: '#fff', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 10, alignItems: 'center' },
+  camBadge: { position: 'absolute', right: 0, bottom: 0, width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', borderWidth: 3 },
+  input: { height: 52, borderRadius: radius.m, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 14, fontFamily: fonts.regular, fontSize: 16 },
   corner: { position: 'absolute', width: 28, height: 28, borderColor: '#fff', borderRadius: 4 },
 });
