@@ -192,8 +192,8 @@ function Welcome({ t, onStart }: { t: (k: string) => string; onStart: () => void
       </View>
       <LinearGradient
         colors={['rgba(10,29,48,0)', 'rgba(10,29,48,0.65)', '#0A1D30']}
-        locations={[0, 0.35, 0.62]}
-        style={[StyleSheet.absoluteFill, { top: height * 0.25 }]}
+        locations={[0, 0.3, 0.5]}
+        style={[StyleSheet.absoluteFill, { top: height * 0.15 }]}
       />
       <View style={{ position: 'absolute', left: 24, right: 24, bottom: insets.bottom + 24, maxWidth: 520, alignSelf: 'center', width: Math.min(width - 48, 520) }}>
         <Animated.View entering={FadeInDown.delay(150).duration(700)}>

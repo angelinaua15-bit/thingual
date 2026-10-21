@@ -13,6 +13,7 @@
     <link rel="preload" href="/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/inter-cyrillic-400-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="/fonts/fonts.css" />
+    <link rel="preload" href="/logo-mark.webp" as="image" />
     <style id="expo-reset">
       html, body { height: 100%; }
       body { overflow: hidden; margin: 0; background: #FAFAF8; }
@@ -21,7 +22,7 @@
       /* lightweight splash shown until the app mounts */
       #boot { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; font-family: Georgia, serif; color: #141414; }
       @media (prefers-color-scheme: dark) { #boot { color: #F2F2F0; } }
-      #boot svg { width: 72px; height: 72px; border-radius: 17px; animation: pulse 1.4s ease-in-out infinite; }
+      #boot img { width: 72px; height: 72px; animation: pulse 1.4s ease-in-out infinite; }
       #boot span { font-size: 30px; letter-spacing: -.3px; }
       @keyframes pulse { 0%,100% { transform: scale(1) } 50% { transform: scale(1.06) } }
     </style>
@@ -29,7 +30,7 @@
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="boot" aria-hidden="true">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="72" height="72"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0F5240"/><stop offset="1" stop-color="#0B2350"/></linearGradient><radialGradient id="glow" cx="0.3" cy="0.25" r="0.8"><stop offset="0" stop-color="#3FBF8F" stop-opacity=".28"/><stop offset="1" stop-color="#3FBF8F" stop-opacity="0"/></radialGradient><linearGradient id="coral" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFB079"/><stop offset="1" stop-color="#FF6B35"/></linearGradient></defs><rect width="1024" height="1024" rx="230" fill="url(#bg)"/><rect width="1024" height="1024" rx="230" fill="url(#glow)"/><g fill="none" stroke="#fff" stroke-width="58" stroke-linecap="round" stroke-linejoin="round"><path d="M238,388 L238,238 L388,238"/><path d="M786,388 L786,238 L636,238"/><path d="M238,636 L238,786 L388,786"/><path d="M786,636 L786,786 L636,786"/></g><path d="M424,618 L392,704 L484,660 Z" fill="url(#coral)"/><circle cx="512" cy="504" r="150" fill="url(#coral)"/><circle cx="546" cy="470" r="46" fill="#fff"/></svg>
+      <img src="/logo-mark.webp" width="72" height="72" alt="" />
       <span>Thingual</span>
     </div>
     <div id="root"></div>
