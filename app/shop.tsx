@@ -98,6 +98,7 @@ export default function Shop() {
 
         {/* Thingual Max */}
         <Animated.View entering={FadeInDown.delay(300)} style={{ marginTop: space.l, borderRadius: radius.xl, overflow: 'hidden' }}>
+          <Pressable onPress={() => router.push('/premium')}>
           <LinearGradient colors={['#1F1B3A', '#3B2A6B']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ padding: space.l }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <Crown size={24} color="#FFD66B" />
@@ -113,7 +114,9 @@ export default function Shop() {
                 </View>
               ))}
             </View>
+            <Txt v="captionMedium" color="#FFD66B" style={{ marginTop: 14 }}>{t('premium.open')} →</Txt>
           </LinearGradient>
+          </Pressable>
         </Animated.View>
 
         {/* spark packs */}

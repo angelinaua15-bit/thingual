@@ -16,6 +16,7 @@ import { speak, stopSpeaking } from '../../src/lib/feedback';
 import { lang } from '../../src/data/languages';
 import { Flame } from '../../src/components/Flame';
 import { StreakPills } from '../../src/components/StreakBits';
+import { MaxBanner } from '../../src/components/MaxBanner';
 import { doneToday, visibleStreak } from '../../src/lib/streak';
 
 const EX = [
@@ -159,6 +160,7 @@ export default function Learn() {
             <Txt v="caption" color={c.textSecondary}>{t('learn.exSub.handsFree')}</Txt>
           </View>
         </PressableScale>
+        <MaxBanner style={{ marginTop: 12 }} />
       </ScrollView>
       <HandsFree visible={handsFree} onClose={() => setHandsFree(false)} />
     </Screen>

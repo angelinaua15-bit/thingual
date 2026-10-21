@@ -11,6 +11,7 @@ import { useT, languageName } from '../src/i18n';
 import { useApp, Level } from '../src/store/useApp';
 import { LANGUAGES, LangCode, UI_LANGUAGES } from '../src/data/languages';
 import { backendConnected } from '../src/lib/recognize';
+import { MaxBanner } from '../src/components/MaxBanner';
 import { deleteMyData, linkEmail } from '../src/lib/api';
 import { qc, useNet } from '../src/lib/queries';
 
@@ -48,6 +49,7 @@ export default function SettingsScreen() {
         <Txt v="headline">{t('settings.title')}</Txt>
       </View>
       <ScrollView contentContainerStyle={{ padding: space.m, paddingBottom: insets.bottom + 40, maxWidth: 640, width: '100%', alignSelf: 'center' }}>
+        <MaxBanner style={{ marginBottom: 20 }} />
         <Group title={t('settings.languages')}>
           <ListRow title={t('settings.myLanguage')} value={LANGUAGES.find((l) => l.code === s.native)?.native} onPress={() => setLangSheet('native')} />
           <ListRow title={t('settings.learning')} value={s.targets.map((l) => languageName(l, s.uiLang)).join(', ')} onPress={() => setLangSheet('target')} />

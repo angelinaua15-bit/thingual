@@ -10,6 +10,7 @@ import { useT } from '../../src/i18n';
 import { useApp } from '../../src/store/useApp';
 import { useNet } from '../../src/lib/queries';
 import { StreakPills } from '../../src/components/StreakBits';
+import { MaxBanner } from '../../src/components/MaxBanner';
 import { visibleStreak } from '../../src/lib/streak';
 
 const ACH = [
@@ -48,6 +49,7 @@ export default function Profile() {
           );
         })}
       </ScrollView>
+      <MaxBanner style={{ marginTop: 14 }} />
     </Animated.View>
   );
 

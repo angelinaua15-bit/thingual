@@ -318,6 +318,7 @@ export async function linkEmail(email: string) {
 export async function deleteMyData() {
   const id = await ensureSession();
   await supabase.from('posts').delete().eq('author_id', id);
+  await supabase.from('premium_waitlist').delete().eq('user_id', id);
   await supabase.from('profiles').delete().eq('id', id);
   await supabase.auth.signOut();
   sessionPromise = null;
@@ -328,4 +329,11 @@ export async function dropPosts(day: string, concept: string): Promise<PostRow[]
   if (error) throw error;
   const blocked = new Set(await blockedIds().catch(() => []));
   return ((data ?? []) as PostRow[]).filter((p) => !blocked.has(p.author_id));
+}
+
+/** "Notify me" for Thingual Max (no payment yet). */
+export async function joinPremiumWaitlist(plan: 'monthly' | 'yearly' | 'family') {
+  const id = await ensureSession();
+  const { error } = await supabase.from('premium_waitlist').upsert({ user_id: id, plan });
+  if (error) throw error;
 }

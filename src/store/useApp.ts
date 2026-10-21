@@ -70,6 +70,7 @@ type State = {
   flames: FlameId[];
   flame: FlameId;
   celebrate: Celebration | null;
+  maxWaitlist?: 'monthly' | 'yearly' | 'family';
   drops: Record<string, string>; // dateKey -> post id of my Daily Drop
   achievements: string[];
   familyMode: { enabled: boolean; pin?: string; childName?: string };
@@ -100,6 +101,7 @@ type Actions = {
   buy: (item: ShopItem) => 'ok' | 'funds' | 'max' | 'unavailable';
   setFlame: (f: FlameId) => void;
   clearCelebrate: () => void;
+  setMaxWaitlist: (p: 'monthly' | 'yearly' | 'family') => void;
   resetAll: () => void;
 };
 
@@ -382,6 +384,7 @@ export const useApp = create<State & Actions>()(
 
       setFlame: (f) => set((s) => (s.flames.includes(f) ? { flame: f } : {})),
       clearCelebrate: () => set({ celebrate: null }),
+      setMaxWaitlist: (p) => set({ maxWaitlist: p }),
 
       resetAll: () => set({ ...initialState(), hydrated: true }),
     }),

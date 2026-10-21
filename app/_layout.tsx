@@ -67,6 +67,7 @@ export default function RootLayout() {
           <Stack.Screen name="edit-profile" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="postcard/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="streak" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="premium" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="shop" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="age" options={{ presentation: 'transparentModal', animation: 'fade' }} />
         </Stack>
