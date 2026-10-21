@@ -15,7 +15,7 @@ import { visibleStreak } from '../../src/lib/streak';
 
 const ACH = [
   { id: 'first-word', icon: BookOpen }, { id: '25-words', icon: Languages }, { id: '100-words', icon: Trophy }, { id: 'first-post', icon: Camera },
-  { id: 'streak-7', icon: Flame }, { id: 'streak-30', icon: Flame }, { id: 'drop-30', icon: Sparkles }, { id: 'ten-countries', icon: Globe2 }, { id: 'five-langs', icon: Award },
+  { id: 'streak-7', icon: Flame }, { id: 'streak-30', icon: Flame }, { id: 'drop-30', icon: Sparkles },
 ];
 
 export default function Profile() {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { goBack } from '../../src/lib/nav';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
@@ -26,7 +27,7 @@ export default function PostScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: c.background, paddingTop: insets.top }}>
       <View style={styles.bar}>
-        <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/map'))} hitSlop={12}><ArrowLeft size={22} color={c.text} /></Pressable>
+        <Pressable onPress={() => (goBack('/(tabs)/map'))} hitSlop={12}><ArrowLeft size={22} color={c.text} /></Pressable>
         <Txt v="headline">{t('social.thread')}</Txt>
       </View>
       <ScrollView contentContainerStyle={{ paddingHorizontal: space.m, paddingBottom: 120, maxWidth: 640, width: '100%', alignSelf: 'center' }}>
@@ -42,7 +43,7 @@ export default function PostScreen() {
                 <Txt v="captionMedium" color={c.textSecondary}>{t('social.thread')}</Txt>
               </Pressable>
             )}
-            <PostCard post={post.data} liked={liked.has(post.data.id)} big onDeleted={() => router.back()} />
+            <PostCard post={post.data} liked={liked.has(post.data.id)} big onDeleted={() => goBack()} />
             {(replies.data ?? []).map((r, i) => (
               <PostCard key={r.id} post={r} i={i} liked={liked.has(r.id)} threadLine={i < (replies.data?.length ?? 0) - 1} />
             ))}

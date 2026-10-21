@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, ImageStyle, StyleProp } from 'react-native';
+import { goBack } from '../src/lib/nav';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -90,7 +91,7 @@ export default function Drop() {
   return (
     <View style={{ flex: 1, backgroundColor: '#0E0E0E' }}>
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.close}><X size={22} color="#fff" /></Pressable>
+        <Pressable onPress={() => goBack()} hitSlop={12} style={styles.close}><X size={22} color="#fff" /></Pressable>
         <View style={{ flex: 1, alignItems: 'center' }}><Txt v="overline" color="#FF8A5B">{t('drop.title')}</Txt></View>
         <View style={{ width: 36 }} />
       </View>
@@ -192,7 +193,7 @@ function Reveal({ concept }: { concept: string }) {
           <WorldMap points={points} wordsMode={view === 'words'} onSelect={(id) => router.push({ pathname: '/post/[id]', params: { id } })} />
           <LinearGradient colors={['rgba(0,0,0,0.35)', 'transparent']} style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 100 }} pointerEvents="none" />
           <View style={[styles.header, { position: 'absolute', top: 0, left: 0, right: 0, paddingTop: insets.top + 8 }]}>
-            <Pressable onPress={() => router.back()} hitSlop={12} style={[styles.close, { backgroundColor: 'rgba(0,0,0,0.45)' }]}><X size={22} color="#fff" /></Pressable>
+            <Pressable onPress={() => goBack()} hitSlop={12} style={[styles.close, { backgroundColor: 'rgba(0,0,0,0.45)' }]}><X size={22} color="#fff" /></Pressable>
           </View>
           <View style={{ position: 'absolute', left: 16, right: 16, bottom: 16, alignItems: 'center' }}>
             <Segmented style={{ width: 320, backgroundColor: 'rgba(242,241,237,0.94)' }} value={view} onChange={setView} options={[{ value: 'photos', label: t('map.mapView') }, { value: 'words', label: t('map.howWorldSays') }]} />

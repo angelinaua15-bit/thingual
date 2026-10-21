@@ -6,6 +6,7 @@ import { LangCode, LANGUAGES } from '../data/languages';
 import { newCard, review as srsReview, StoredCard, Answer } from '../lib/srs';
 import { dateKey, nicknameFor } from '../data/social';
 import { conceptById, Place } from '../data/concepts';
+import { needsPersist, persistPhoto } from '../lib/photoStore';
 import { addDays, DAILY_SPARKS, dayDiff, FLAMES, FlameId, MAX_FREEZES, MILESTONES, PRICES, REPAIR_WINDOW, Reward } from '../lib/streak';
 
 export type Level = 'beginner' | 'intermediate' | 'advanced';
@@ -218,8 +219,18 @@ export const useApp = create<State & Actions>()(
         const c = conceptById(conceptId);
         if (!c) return false;
         const existing = get().words[conceptId];
+        const keepPhoto = (p: string) => {
+          if (!needsPersist(p)) return;
+          persistPhoto(p).then((key) => {
+            const w = get().words[conceptId];
+            if (w && w.photo === p) set((s) => ({ words: { ...s.words, [conceptId]: { ...w, photo: key } } }));
+          });
+        };
         if (existing) {
-          if (photo && !existing.photo) set((s) => ({ words: { ...s.words, [conceptId]: { ...existing, photo } } }));
+          if (photo && !existing.photo) {
+            set((s) => ({ words: { ...s.words, [conceptId]: { ...existing, photo } } }));
+            keepPhoto(photo);
+          }
           return false;
         }
         set((s) => ({
@@ -228,6 +239,7 @@ export const useApp = create<State & Actions>()(
             [conceptId]: { conceptId, photo, addedAt: Date.now(), place: c.place, source, card: newCard(), lapses: 0 },
           },
         }));
+        keepPhoto(photo);
         if (source !== 'quiz') get().markActive();
         const n = Object.keys(get().words).length;
         if (n >= 1) get().unlock('first-word');
@@ -311,7 +323,8 @@ export const useApp = create<State & Actions>()(
           const days = Array.from({ length: missed }, (_, i) => addDays(st.last!, i + 1));
           set({ freezes: s.freezes - missed, frozenDays: [...s.frozenDays, ...days].slice(-200), learnStreak: { count: st.count, last: yesterdayKey() } });
         } else {
-          set({ lostStreak: { count: st.count, day: today, last: st.last }, learnStreak: { count: 0 } });
+          // the streak broke on the first missed day — that's where the repair window starts
+          set({ lostStreak: { count: st.count, day: addDays(st.last, 1), last: st.last }, learnStreak: { count: 0 } });
         }
       },
 
@@ -402,9 +415,26 @@ export const useApp = create<State & Actions>()(
       },
       storage: createJSONStorage(() => AsyncStorage),
       partialize: ({ hydrated, celebrate, ...rest }) => rest as unknown as State & Actions,
-      onRehydrateStorage: () => (state) => state?.setHydrated(),
+      onRehydrateStorage: () => () => {
+        // also on a storage read error, so the app never stays on a blank screen
+        setTimeout(() => {
+          useApp.setState({ hydrated: true });
+          migratePhotos();
+        }, 0);
+      },
     },
   ),
 );
 
 export { weekKey };
+
+/** Move photos saved by older versions (base64 / blob: inside the state) out of localStorage. */
+async function migratePhotos() {
+  const words = useApp.getState().words;
+  for (const w of Object.values(words)) {
+    if (!needsPersist(w.photo)) continue;
+    const key = await persistPhoto(w.photo);
+    const cur = useApp.getState().words[w.conceptId];
+    if (cur && cur.photo === w.photo) useApp.setState((s) => ({ words: { ...s.words, [w.conceptId]: { ...cur, photo: key } } }));
+  }
+}

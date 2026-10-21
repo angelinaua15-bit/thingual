@@ -8,14 +8,16 @@ import { Txt, PressableScale } from './ui';
 import { coverFor } from '../data/photos';
 import { fullWord, labelOf } from '../data/concepts';
 import { LangCode } from '../data/languages';
+import { useResolvedPhoto } from '../lib/photoStore';
 
 const BLUR = 'L6Bg#2?=Q:w}y9yBtLMxRCofsCWB';
 
 export function Photo({ uri, style, contentFit = 'cover', transition = 300 }: { uri?: string; style?: StyleProp<ImageStyle>; contentFit?: 'cover' | 'contain'; transition?: number }) {
   const { c } = useTheme();
+  const src = useResolvedPhoto(uri);
   return (
     <Image
-      source={uri ? { uri } : undefined}
+      source={src ? { uri: src } : undefined}
       placeholder={{ blurhash: BLUR }}
       style={[{ backgroundColor: c.surfaceAlt }, style]}
       contentFit={contentFit}

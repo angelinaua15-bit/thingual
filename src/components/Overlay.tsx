@@ -1,5 +1,5 @@
 import React, { ReactNode, useEffect } from 'react';
-import { Modal, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown, useAnimatedProps, useSharedValue, withTiming, Easing, FadeInUp, FadeOutUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
@@ -63,7 +63,7 @@ export function Sheet({ visible, onClose, children, title }: { visible: boolean;
               <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: c.divider }} />
             </View>
             {title ? <Txt v="headline" style={{ paddingHorizontal: 20, paddingVertical: 8 }}>{title}</Txt> : null}
-            {children}
+            <ScrollView style={{ flexShrink: 1 }} bounces={false} keyboardShouldPersistTaps="handled">{children}</ScrollView>
           </Animated.View>
         </View>
       )}

@@ -22,8 +22,25 @@ export const haptic = {
 /** Neural TTS of the platform. In production audio is pre-generated and cached in the CDN. */
 export async function speak(text: string, code: LangCode, opts?: { slow?: boolean; onDone?: () => void }) {
   const s = useApp.getState().settings;
-  const voices = await Speech.getAvailableVoicesAsync().catch(() => []);
   const locale = lang(code).voice;
+  if (Platform.OS === 'web' && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    // Speak synchronously inside the tap: iOS Safari only allows speech started by a user gesture.
+    const synth = window.speechSynthesis;
+    const all = synth.getVoices();
+    const cand = all.filter((v) => v.lang?.toLowerCase().startsWith(locale.slice(0, 2).toLowerCase()));
+    const wantMale = s.voice === 'male';
+    const v = cand.find((x) => (wantMale ? /male|daniel|thomas|jorge|diego|yuri/i : /female|samantha|anna|monica|amelie|kyoko/i).test(x.name)) ?? cand.find((x) => x.lang === locale) ?? cand[0];
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = locale;
+    if (v) u.voice = v;
+    u.rate = opts?.slow || s.slowVoice ? 0.7 : 0.95;
+    u.onend = () => opts?.onDone?.();
+    u.onerror = () => opts?.onDone?.();
+    synth.speak(u);
+    return;
+  }
+  const voices = await Speech.getAvailableVoicesAsync().catch(() => []);
   const candidates = voices.filter((v) => v.language?.toLowerCase().startsWith(locale.slice(0, 2).toLowerCase()));
   const wantMale = s.voice === 'male';
   const pick =
@@ -39,7 +56,10 @@ export async function speak(text: string, code: LangCode, opts?: { slow?: boolea
   });
 }
 
-export const stopSpeaking = () => Speech.stop();
+export const stopSpeaking = () => {
+  if (Platform.OS === 'web' && typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+  else Speech.stop();
+};
 
 export function timeAgo(ts: number, t: (k: string, v?: Record<string, string | number>) => string) {
   const diff = Date.now() - ts;

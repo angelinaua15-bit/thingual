@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,7 +21,7 @@ import { fullWord, labelOf } from '../../src/data/concepts';
 import { dropFor, dateKey } from '../../src/data/social';
 import { LANGUAGES } from '../../src/data/languages';
 import { haptic } from '../../src/lib/feedback';
-import { pickImage } from '../../src/lib/pickImage';
+import { pickImage, toBase64 } from '../../src/lib/pickImage';
 import { openComposer } from '../../src/lib/draft';
 import { myDropToday } from '../../src/lib/api';
 import { useNet } from '../../src/lib/queries';
@@ -58,6 +58,7 @@ export default function CameraScreen() {
   const myDrop = useQuery({ queryKey: ['myDrop', dateKey()], queryFn: () => myDropToday(dateKey()), enabled: net === 'ok' });
   const dropDone = !!localDrop || !!myDrop.data;
   const todayDrop = dropFor();
+  const { height } = useWindowDimensions();
 
   const showPeek = (f: Found) => {
     setFound(f);
@@ -101,7 +102,7 @@ export default function CameraScreen() {
     try {
       const dets = await detectUri(uri);
       let base64: string | undefined;
-      if (!dets.length && uri.startsWith('data:')) base64 = uri.split(',')[1];
+      if (!dets.length) base64 = await toBase64(uri);
       await handleStill(uri, base64, dets);
     } finally {
       setBusy(false);
@@ -153,6 +154,7 @@ export default function CameraScreen() {
               <Photo uri={scene.photo} style={{ width: '100%', height: '100%' }} />
             </View>
             <Txt v="overline" color="rgba(255,255,255,0.6)" style={{ marginBottom: 8 }}>{t('camera.sceneFound', { n: scene.concepts.length })}</Txt>
+            <ScrollView style={{ maxHeight: Math.max(160, height * 0.36) }} showsVerticalScrollIndicator={false}>
             {scene.concepts.map((id, i) => {
               const sel = sceneSel.includes(id);
               return (
@@ -165,6 +167,7 @@ export default function CameraScreen() {
                 </Animated.View>
               );
             })}
+            </ScrollView>
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
               <Button title={t('common.cancel')} variant="secondary" size="m" style={{ flex: 1 }} onPress={() => setScene(null)} />
               <Button

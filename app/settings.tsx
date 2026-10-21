@@ -1,5 +1,8 @@
+import { haptic } from '../src/lib/feedback';
+import { shareFile } from '../src/lib/share';
 import React, { useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, Share, TextInput, View } from 'react-native';
+import { goBack } from '../src/lib/nav';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
@@ -22,7 +25,7 @@ export default function SettingsScreen() {
   const st = useApp();
   const s = st.settings;
   const [langSheet, setLangSheet] = useState<'native' | 'target' | null>(null);
-  const [familyOpen, setFamilyOpen] = useState(false);
+  const [familyOpen, setFamilyOpen] = useState<false | 'set' | 'unlock'>(false);
   const [pin, setPin] = useState('');
   const [email, setEmail] = useState('');
   const uid = useNet((x) => x.uid);
@@ -36,14 +39,13 @@ export default function SettingsScreen() {
 
   const exportData = async () => {
     const { settings, words, collections, history, profile } = useApp.getState();
-    await Share.share({ message: JSON.stringify({ profile, settings, words, collections, history }, null, 2) });
-    toast(t('settings.exported'));
+    await shareFile(JSON.stringify({ profile, settings, words, collections, history }, null, 2), 'thingual-export.json', 'application/json');
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: c.background, paddingTop: insets.top }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, height: 52 }}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Pressable onPress={() => goBack()} hitSlop={12}>
           <ArrowLeft size={22} color={c.text} />
         </Pressable>
         <Txt v="headline">{t('settings.title')}</Txt>
@@ -124,13 +126,12 @@ export default function SettingsScreen() {
           <View style={{ padding: 16 }}>
             <Segmented value={s.theme} onChange={(v) => st.updateSettings({ theme: v })} options={(['system', 'light', 'dark'] as const).map((v) => ({ value: v, label: t(`settings.theme.${v}`) }))} />
           </View>
-          <ListRow title={t('settings.sounds')} right={<Toggle value={s.sounds} onChange={(v) => st.updateSettings({ sounds: v })} />} />
           <ListRow title={t('settings.haptics')} right={<Toggle value={s.haptics} onChange={(v) => st.updateSettings({ haptics: v })} />} />
           <ListRow title={t('settings.reduceMotion')} right={<Toggle value={s.reduceMotion} onChange={(v) => st.updateSettings({ reduceMotion: v })} />} />
         </Group>
 
         <Group title={t('settings.privacy')} footer={t('settings.privacyNote')}>
-          <ListRow title={t('settings.family')} subtitle={t('settings.familySub')} right={<Toggle value={st.familyMode.enabled} onChange={(v) => (v ? setFamilyOpen(true) : st.setFamilyMode({ enabled: false }))} />} />
+          <ListRow title={t('settings.family')} subtitle={t('settings.familySub')} right={<Toggle value={st.familyMode.enabled} onChange={(v) => setFamilyOpen(v ? 'set' : 'unlock')} />} />
           <ListRow title={t('settings.export')} onPress={exportData} />
           <ListRow title={t('settings.deleteAccount')} danger onPress={confirmDelete} />
         </Group>
@@ -150,6 +151,12 @@ export default function SettingsScreen() {
                 key={l.code}
                 onPress={() => {
                   if (langSheet === 'native') {
+                    // the language you speak can't also be the one you learn
+                    if (s.targets.includes(l.code)) {
+                      const rest = s.targets.filter((x) => x !== l.code);
+                      const fallback = rest[0] ?? (l.code === 'en' ? 'es' : 'en');
+                      st.updateSettings({ targets: rest.length ? rest : [fallback], active: rest.includes(s.active) ? s.active : fallback });
+                    }
                     st.updateSettings({ native: l.code, uiLang: UI_LANGUAGES.includes(l.code) ? l.code : 'en' });
                     setLangSheet(null);
                   } else if (sel && s.targets.length > 1) st.removeTarget(l.code);
@@ -167,9 +174,9 @@ export default function SettingsScreen() {
         </ScrollView>
       </Sheet>
 
-      <Sheet visible={familyOpen} onClose={() => setFamilyOpen(false)} title={t('settings.family')}>
+      <Sheet visible={!!familyOpen} onClose={() => { setFamilyOpen(false); setPin(''); }} title={t('settings.family')}>
         <View style={{ paddingHorizontal: 20, gap: 12 }}>
-          <Txt v="callout" color={c.textSecondary}>{t('settings.familySub')}</Txt>
+          <Txt v="callout" color={c.textSecondary}>{familyOpen === 'unlock' ? t('settings.familyUnlock') : t('settings.familySub')}</Txt>
           <TextInput
             value={pin}
             onChangeText={(v) => setPin(v.replace(/\D/g, '').slice(0, 4))}
@@ -179,7 +186,13 @@ export default function SettingsScreen() {
             placeholderTextColor={c.textTertiary}
             style={{ height: 56, borderRadius: radius.m, backgroundColor: c.surfaceAlt, paddingHorizontal: 16, fontFamily: fonts.semibold, fontSize: 24, letterSpacing: 8, color: c.text, textAlign: 'center' }}
           />
-          <Button title={t('common.done')} disabled={pin.length !== 4} onPress={() => { st.setFamilyMode({ enabled: true, pin }); setFamilyOpen(false); setPin(''); toast(t('settings.family')); }} />
+          <Button title={t('common.done')} disabled={pin.length !== 4} onPress={() => {
+            if (familyOpen === 'unlock') {
+              if (pin !== st.familyMode.pin) { haptic.error(); toast(t('settings.wrongPin')); setPin(''); return; }
+              st.setFamilyMode({ enabled: false });
+            } else st.setFamilyMode({ enabled: true, pin });
+            setFamilyOpen(false); setPin(''); toast(t('settings.family'));
+          }} />
         </View>
       </Sheet>
     </View>

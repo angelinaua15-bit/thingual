@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { goBack } from '../src/lib/nav';
 import { router } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -40,7 +41,7 @@ export default function Shop() {
     <View style={{ flex: 1, backgroundColor: c.background, paddingTop: insets.top }}>
       <View style={styles.bar}>
         <Txt v="headline" style={{ flex: 1 }}>{t('shop.title')}</Txt>
-        <Pressable onPress={() => router.back()} hitSlop={12}><X size={22} color={c.text} /></Pressable>
+        <Pressable onPress={() => goBack()} hitSlop={12}><X size={22} color={c.text} /></Pressable>
       </View>
       <ScrollView contentContainerStyle={{ padding: space.m, paddingBottom: insets.bottom + 40, maxWidth: 560, width: '100%', alignSelf: 'center' }}>
         {/* balance */}

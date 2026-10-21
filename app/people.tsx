@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { goBack } from '../src/lib/nav';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -34,7 +35,7 @@ export default function People() {
   return (
     <View style={{ flex: 1, backgroundColor: c.background, paddingTop: insets.top }}>
       <View style={styles.bar}>
-        <Pressable onPress={() => router.back()} hitSlop={12}><ArrowLeft size={22} color={c.text} /></Pressable>
+        <Pressable onPress={() => goBack()} hitSlop={12}><ArrowLeft size={22} color={c.text} /></Pressable>
         <Txt v="headline" style={{ textTransform: isList ? 'capitalize' : 'none' }}>{title}</Txt>
       </View>
       <View style={{ maxWidth: 640, width: '100%', alignSelf: 'center', flex: 1 }}>

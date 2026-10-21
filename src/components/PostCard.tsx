@@ -1,3 +1,4 @@
+import { shareText } from '../lib/share';
 import React, { useEffect, useState } from 'react';
 import { Pressable, Share, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
@@ -27,6 +28,7 @@ export function PostCard({ post, liked = false, i = 0, threadLine, big, onDelete
   const [isLiked, setIsLiked] = useState(liked);
   const [likes, setLikes] = useState(post.like_count);
   const [menu, setMenu] = useState(false);
+  const [confirmDel, setConfirmDel] = useState(false);
   const heart = useSharedValue(1);
   const heartStyle = useAnimatedStyle(() => ({ transform: [{ scale: heart.value }] }));
   useEffect(() => setIsLiked(liked), [liked]);
@@ -133,26 +135,33 @@ export function PostCard({ post, liked = false, i = 0, threadLine, big, onDelete
             <MessageCircle size={20} color={c.text} />
             {post.reply_count > 0 && <Txt v="caption" color={c.textSecondary}>{post.reply_count}</Txt>}
           </Pressable>
-          <Pressable onPress={() => Share.share({ message: `${post.body ? `${post.body}\n` : ''}https://thingual.vercel.app/post/${post.id}` })} hitSlop={8} style={styles.action}>
+          <Pressable onPress={() => shareText(`${post.body ? `${post.body}\n` : ''}https://thingual.vercel.app/post/${post.id}`)} hitSlop={8} style={styles.action}>
             <Send size={19} color={c.text} />
           </Pressable>
         </View>
       </View>
 
-      <Sheet visible={menu} onClose={() => setMenu(false)}>
+      <Sheet visible={menu} onClose={() => { setMenu(false); setConfirmDel(false); }}>
         <View style={{ paddingHorizontal: 20, gap: 8 }}>
           {mine ? (
             <Pressable
               style={[styles.menuItem, { backgroundColor: c.errorSoft }]}
               onPress={async () => {
+                if (!confirmDel) return setConfirmDel(true);
                 setMenu(false);
-                await deletePost(post.id).catch(() => toast(t('social.offline'), 'default'));
+                setConfirmDel(false);
+                try {
+                  await deletePost(post.id);
+                } catch {
+                  toast(t('social.offline'), 'default');
+                  return;
+                }
                 toast(t('social.deleted'));
                 qc.invalidateQueries();
                 onDeleted?.();
               }}
             >
-              <Txt v="bodyMedium" color={c.error}>{t('social.delete')}</Txt>
+              <Txt v="bodyMedium" color={c.error}>{confirmDel ? t('common.confirmDelete') : t('social.delete')}</Txt>
             </Pressable>
           ) : (
             <>

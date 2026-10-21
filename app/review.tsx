@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
+import { goBack } from '../src/lib/nav';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
@@ -18,7 +19,7 @@ import { haptic, speak } from '../src/lib/feedback';
 import { listenOnce, similarity, speechRecognitionAvailable } from '../src/lib/speech';
 
 type ExType = 'recall' | 'listen' | 'choose' | 'type' | 'speak' | 'sentence' | 'article';
-type Item = { id: string; type: ExType };
+type Item = { id: string; type: ExType; srs: boolean };
 
 const ARTICLES: Partial<Record<LangCode, string[]>> = {
   de: ['der', 'die', 'das'],
@@ -66,7 +67,8 @@ export default function Review() {
     let pick = [...due, ...fresh];
     if (params.mode && pick.length < 6) pick = [...pick, ...shuffle(all.filter((w) => !pick.includes(w)))];
     const max = Math.max(6, s.dailyMinutes * 4);
-    return pick.slice(0, max).map((w) => ({ id: w.conceptId, type: pickType(w, target, params.mode) }));
+    // practice extras that aren't due don't touch the schedule (srs: false)
+    return pick.slice(0, max).map((w) => ({ id: w.conceptId, type: pickType(w, target, params.mode), srs: isDue(w.card) || mastery(w.card) === 0 }));
   }, []);
 
   const [idx, setIdx] = useState(0);
@@ -74,12 +76,24 @@ export default function Review() {
   const [done, setDone] = useState(false);
   const item = queue[idx];
 
+  const logged = useRef(false);
+  const minutes = () => Math.max(1, Math.round((Date.now() - started.current) / 60000));
+  /** Leaving early still counts the answered cards (streak, sparks, history). */
+  const leave = () => {
+    if (!logged.current && idx > 0) {
+      logged.current = true;
+      logSession(idx, correct, minutes());
+    }
+    goBack();
+  };
+
   const finish = (a: Answer) => {
     if (!item) return;
-    answerStore(item.id, a);
+    if (item.srs) answerStore(item.id, a);
     if (a !== 'again') setCorrect((n) => n + 1);
     if (idx + 1 >= queue.length) {
-      logSession(queue.length, correct + (a !== 'again' ? 1 : 0), Math.max(1, Math.round((Date.now() - started.current) / 60000)));
+      logged.current = true;
+      logSession(queue.length, correct + (a !== 'again' ? 1 : 0), minutes());
       setDone(true);
       haptic.success();
     } else setIdx(idx + 1);
@@ -90,7 +104,7 @@ export default function Review() {
       <View style={{ flex: 1, backgroundColor: c.background, paddingTop: insets.top, alignItems: 'center', justifyContent: 'center', padding: space.l }}>
         <Txt v="headline" center>{t('learn.emptyTitle')}</Txt>
         <Txt v="callout" color={c.textSecondary} center style={{ marginTop: 8, marginBottom: 20 }}>{t('learn.emptySub')}</Txt>
-        <Button title={t('learn.backHome')} onPress={() => router.back()} />
+        <Button title={t('learn.backHome')} onPress={() => goBack()} />
       </View>
     );
   }
@@ -100,7 +114,7 @@ export default function Review() {
   return (
     <View style={{ flex: 1, backgroundColor: c.background, paddingTop: insets.top, paddingBottom: insets.bottom }}>
       <View style={styles.top}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Pressable onPress={leave} hitSlop={12}>
           <X size={24} color={c.text} />
         </Pressable>
         <View style={{ flex: 1 }}>
@@ -452,7 +466,7 @@ function Complete({ total, correct }: { total: number; correct: number }) {
         </View>
       </Animated.View>
       <View style={{ flex: 1 }} />
-      <Button title={t('learn.backHome')} onPress={() => router.back()} style={{ alignSelf: 'stretch', maxWidth: 520, width: '100%' }} />
+      <Button title={t('learn.backHome')} onPress={() => goBack()} style={{ alignSelf: 'stretch', maxWidth: 520, width: '100%' }} />
     </View>
   );
 }

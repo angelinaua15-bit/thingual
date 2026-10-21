@@ -1,3 +1,6 @@
+import { resolvePhoto } from './photoStore';
+import { useApp } from '../store/useApp';
+import { dateKey } from '../data/social';
 import { supabase } from './supabase';
 
 export type Profile = {
@@ -46,17 +49,18 @@ export class AuthUnavailable extends Error {}
 let sessionPromise: Promise<string> | null = null;
 
 /** Anonymous account: no sign-up form, the session is created silently on first launch. */
+let currentUid: string | null = null;
 export function ensureSession(): Promise<string> {
   if (!sessionPromise) {
     sessionPromise = (async () => {
       const { data } = await supabase.auth.getSession();
-      if (data.session?.user) return data.session.user.id;
+      if (data.session?.user) return (currentUid = data.session.user.id);
       const { data: signed, error } = await supabase.auth.signInAnonymously();
       if (error || !signed.user) {
         sessionPromise = null;
         throw new AuthUnavailable(error?.message ?? 'auth');
       }
-      return signed.user.id;
+      return (currentUid = signed.user.id);
     })();
   }
   return sessionPromise;
@@ -122,7 +126,7 @@ export async function searchProfiles(q: string): Promise<Profile[]> {
 /* ---------------- images ---------------- */
 export async function uploadImage(bucket: 'avatars' | 'posts', uri: string): Promise<string> {
   const id = await ensureSession();
-  const res = await fetch(uri);
+  const res = await fetch(await resolvePhoto(uri));
   const buf = await res.arrayBuffer();
   const type = res.headers.get('content-type')?.startsWith('image/') ? res.headers.get('content-type')! : 'image/jpeg';
   const ext = type.includes('png') ? 'png' : type.includes('webp') ? 'webp' : 'jpg';
@@ -197,7 +201,15 @@ export async function feed(kind: 'for_you' | 'following', before?: string): Prom
   const { data, error } = await req;
   if (error) throw error;
   const blocked = new Set(await blockedIds().catch(() => []));
-  return ((data ?? []) as PostRow[]).filter((p) => !blocked.has(p.author_id));
+  return hideUnrevealedDrops((data ?? []) as PostRow[]).filter((p) => !blocked.has(p.author_id));
+}
+
+/** Today's Daily Drop stays hidden until you've posted yours ("post to see"). */
+function hideUnrevealedDrops(rows: PostRow[]) {
+  const today = dateKey();
+  if (useApp.getState().drops[today]) return rows;
+  const me = currentUid;
+  return rows.filter((p) => !(p.is_drop && p.drop_day === today && p.author_id !== me));
 }
 
 export async function userPosts(uid: string, replies = false): Promise<PostRow[]> {
@@ -235,7 +247,8 @@ export async function mapPosts(opts: { concept?: string; dropDay?: string; autho
   const { data, error } = await req;
   if (error) throw error;
   const blocked = new Set(await blockedIds().catch(() => []));
-  return ((data ?? []) as PostRow[]).filter((p) => !blocked.has(p.author_id));
+  const rows = (data ?? []) as PostRow[];
+  return (opts.dropDay ? rows : hideUnrevealedDrops(rows)).filter((p) => !blocked.has(p.author_id));
 }
 
 export async function myDropToday(day: string): Promise<PostRow | null> {

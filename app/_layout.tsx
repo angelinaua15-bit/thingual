@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
 import React, { useEffect } from 'react';
 import { AppState, Platform, View } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, router, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -37,6 +37,12 @@ export default function RootLayout() {
   const { c, isDark } = useTheme();
   const ready = fontsLoaded && hydrated;
   useBootstrap();
+  const onboarded = useApp((s) => s.onboarded);
+  const pathname = usePathname();
+  useEffect(() => {
+    // a shared /post or /user link opened by someone new → onboarding first
+    if (ready && !onboarded && pathname !== '/' && !pathname.startsWith('/onboarding')) router.replace('/onboarding');
+  }, [ready, onboarded, pathname]);
   useNotificationSchedule();
 
   useEffect(() => {

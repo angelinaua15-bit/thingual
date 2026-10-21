@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { goBack } from '../src/lib/nav';
 import { router } from 'expo-router';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,12 +21,12 @@ export default function AgeGate() {
     setAge(a);
     updateProfile({ age_group: a }).catch(() => {});
     if (a === 'under13') toast(t('age.kidsNote'), 'default');
-    router.back();
+    goBack();
   };
   return (
     <View style={{ flex: 1, justifyContent: 'flex-end' }}>
       <Animated.View entering={FadeIn} style={StyleSheet.absoluteFill}>
-        <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: c.overlay }]} onPress={() => router.back()} />
+        <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: c.overlay }]} onPress={() => goBack()} />
       </Animated.View>
       <Animated.View entering={SlideInDown.springify().damping(20)} style={{ backgroundColor: c.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: insets.bottom + 24, maxWidth: 640, width: '100%', alignSelf: 'center' }}>
         <Txt v="title">{t('age.title')}</Txt>

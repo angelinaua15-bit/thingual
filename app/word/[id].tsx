@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View, useWindowDimensions, ImageStyle, StyleProp } from 'react-native';
+import { goBack } from '../../src/lib/nav';
 import { router, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -203,7 +204,7 @@ export default function WordScreen() {
                 <ActionRow icon={<FolderPlus size={20} color={c.text} />} label={t('word.addToCollection')} onPress={() => setColOpen(true)} />
                 <ActionRow icon={<Share2 size={20} color={c.text} />} label={t('word.postcard')} onPress={() => router.push({ pathname: '/postcard/[id]', params: { id: concept.id } })} />
                 <ActionRow icon={<Send size={20} color={c.text} />} label={t('word.publish')} onPress={onPublish} disabled={!ownPhoto || ownPhoto.startsWith('https://images.unsplash.com')} />
-                <ActionRow icon={<Trash2 size={20} color={c.error} />} label={t('word.remove')} danger onPress={() => { removeWord(concept.id); router.back(); }} />
+                <ActionRow icon={<Trash2 size={20} color={c.error} />} label={t('word.remove')} danger onPress={() => { removeWord(concept.id); goBack(); }} />
               </View>
             )}
           </View>
@@ -215,7 +216,7 @@ export default function WordScreen() {
         <Txt style={{ fontFamily: fonts.serif, fontSize: 22, color: c.text, marginBottom: 10 }}>{l.word}</Txt>
       </Animated.View>
       <View style={[styles.topBtns, { top: insets.top + 8 }]}>
-        <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/dictionary'))} style={styles.glass}>
+        <Pressable onPress={() => (goBack('/(tabs)/dictionary'))} style={styles.glass}>
           <ArrowLeft size={20} color="#fff" />
         </Pressable>
         <View style={{ flex: 1 }} />

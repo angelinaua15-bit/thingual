@@ -17,13 +17,14 @@ import { CONCEPTS, fullWord, labelOf } from '../../src/data/concepts';
 import { coverFor } from '../../src/data/photos';
 import { LangCode } from '../../src/data/languages';
 import { feed, followingIds, mapPosts, myDropToday, type PostRow } from '../../src/lib/api';
-import { useLikedSet, useNet } from '../../src/lib/queries';
+import { useLikedSet, useNet, connect } from '../../src/lib/queries';
 import { getMyCity } from '../../src/lib/publish';
 
 type Layer = 'drop' | 'all' | 'word' | 'following';
 
 export default function MapTab() {
-  const { c } = useTheme();
+  const { c, isDark } = useTheme();
+  const glass = isDark ? 'rgba(26,26,26,0.94)' : 'rgba(242,241,237,0.94)';
   const { t } = useT();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ concept?: string }>();
@@ -131,17 +132,17 @@ export default function MapTab() {
       )}
 
       {/* top controls */}
-      <View style={[styles.top, { paddingTop: insets.top + 8 }]} pointerEvents="box-none">
+      <View style={[styles.top, { paddingTop: insets.top + 8, paddingBottom: mode === 'feed' ? 8 : 0, backgroundColor: mode === 'feed' ? c.background : 'transparent' }]} pointerEvents="box-none">
         <View style={{ maxWidth: 720, width: '100%', alignSelf: 'center', paddingHorizontal: 16, gap: 10 }} pointerEvents="box-none">
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <Segmented
               value={mode}
               onChange={(m) => { setMode(m); setSelected(null); }}
               options={[{ value: 'feed', label: t('map.feedView') }, { value: 'map', label: t('map.mapView') }]}
-              style={{ flex: 1, backgroundColor: mode === 'map' ? 'rgba(242,241,237,0.94)' : c.surfaceAlt }}
+              style={{ flex: 1, backgroundColor: mode === 'map' ? glass : c.surfaceAlt }}
             />
-            <Pressable onPress={() => router.push('/people')} style={[styles.iconBtn, { backgroundColor: mode === 'map' ? 'rgba(242,241,237,0.94)' : c.surfaceAlt }]} accessibilityLabel={t('social.findPeople')}>
-              <UserPlus size={18} color="#141414" />
+            <Pressable onPress={() => router.push('/people')} style={[styles.iconBtn, { backgroundColor: mode === 'map' ? glass : c.surfaceAlt }]} accessibilityLabel={t('social.findPeople')}>
+              <UserPlus size={18} color={c.text} />
             </Pressable>
           </View>
           {mode === 'map' && (
@@ -253,7 +254,7 @@ function Feed() {
           q.isLoading || status === 'idle' ? (
             <ActivityIndicator style={{ marginTop: 40 }} color={c.textSecondary} />
           ) : status === 'offline' || q.isError ? (
-            <EmptyState title={t('social.offline')} cta={t('social.retry')} onCta={() => q.refetch()} />
+            <EmptyState title={t('social.offline')} cta={t('social.retry')} onCta={() => { connect(); q.refetch(); }} />
           ) : tab === 'following' ? (
             <EmptyState title={t('social.emptyFeed')} sub={t('social.emptyFollowing')} cta={t('social.findPeople')} onCta={() => router.push('/people')} />
           ) : (

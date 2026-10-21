@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { goBack } from '../src/lib/nav';
 import { router } from 'expo-router';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -66,7 +67,7 @@ export default function StreakScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: c.background, paddingTop: insets.top }}>
       <View style={styles.bar}>
-        <Pressable onPress={() => router.back()} hitSlop={12}><X size={22} color={c.text} /></Pressable>
+        <Pressable onPress={() => goBack()} hitSlop={12}><X size={22} color={c.text} /></Pressable>
         <Txt v="headline" style={{ flex: 1, textAlign: 'center' }}>{t('streak.title')}</Txt>
         <PressableScale onPress={() => router.push('/shop')} style={[styles.pill, { backgroundColor: c.surface, borderColor: c.divider }]}>
           <Sparkle size={15} color="#F59F00" fill="#F59F00" />

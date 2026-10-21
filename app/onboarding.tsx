@@ -578,7 +578,7 @@ function ProfileStep({ t, onNext }: { t: (k: string) => string; onNext: () => vo
         <TextInput
           value={name}
           onChangeText={(v) => { setName(v.slice(0, 40)); if (!handle || handle === normalizeHandle(name)) setHandle(normalizeHandle(v)); }}
-          placeholder="Angelina"
+          placeholder={t('social.namePlaceholder')}
           placeholderTextColor={c.textTertiary}
           style={[styles.input, { backgroundColor: c.surface, borderColor: c.divider, color: c.text }]}
         />

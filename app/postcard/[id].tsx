@@ -1,5 +1,7 @@
+import { shareText } from '../../src/lib/share';
 import React, { useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, Share, StyleSheet, View, useWindowDimensions, ImageStyle, StyleProp } from 'react-native';
+import { goBack } from '../../src/lib/nav';
 import { router, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -46,14 +48,14 @@ export default function Postcard() {
         }
       } catch {}
     }
-    await Share.share({ message: `${text}\n${langs.map((l) => concept.labels[l].word).join(' · ')}\nhttps://thingual.app/w/${concept.id}` });
+    await shareText(`${text}\n${langs.map((l) => concept.labels[l].word).join(' · ')}\nhttps://thingual.vercel.app/word/${concept.id}`);
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: c.background, paddingTop: insets.top }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, height: 52 }}>
         <Txt v="headline" style={{ flex: 1 }}>{t('postcard.title')}</Txt>
-        <Pressable onPress={() => router.back()} hitSlop={12}><X size={22} color={c.text} /></Pressable>
+        <Pressable onPress={() => goBack()} hitSlop={12}><X size={22} color={c.text} /></Pressable>
       </View>
       <ScrollView contentContainerStyle={{ alignItems: 'center', padding: space.m, paddingBottom: insets.bottom + 24 }}>
         <Animated.View layout={LinearTransition.springify()} entering={FadeIn}>

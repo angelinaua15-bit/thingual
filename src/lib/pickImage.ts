@@ -22,3 +22,13 @@ export async function pickImage(opts: { square?: boolean; camera?: boolean; max?
   if (r.canceled || !r.assets?.[0]) return null;
   return shrink(r.assets[0].uri, opts.max ?? 1280);
 }
+
+/** JPEG base64 (without the data: prefix) for server recognition — works for file:, blob:, data: and idb-resolved URIs. */
+export async function toBase64(uri: string, max = 768): Promise<string | undefined> {
+  try {
+    const r = await manipulateAsync(uri, [{ resize: { width: max } }], { compress: 0.7, format: SaveFormat.JPEG, base64: true });
+    return r.base64 ?? undefined;
+  } catch {
+    return uri.startsWith('data:') ? uri.split(',')[1] : undefined;
+  }
+}

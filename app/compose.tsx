@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { goBack } from '../src/lib/nav';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -50,16 +51,16 @@ export default function Compose() {
     if (!ensureCanPublish()) return;
     setPosting(true);
     try {
-      await createPost({
+      const post = await createPost({
         body, photoUri: photo, concept_id: concept ?? null, lang: concept ? s.active : null, parent_id: parent ?? null,
         place: city?.place ?? null, lat: city?.lat ?? null, lng: city?.lng ?? null,
       });
-      if (concept && photo) useApp.getState().saveWord(concept, photo, 'camera');
+      if (concept && photo) useApp.getState().saveWord(concept, post.photo_url ?? photo, 'camera');
       useApp.getState().unlock('first-post');
       qc.invalidateQueries();
       haptic.success();
       toast(t('social.posted'));
-      router.back();
+      goBack();
     } catch {
       toast(t('social.offline'), 'default');
     } finally {
@@ -70,7 +71,7 @@ export default function Compose() {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: c.background, paddingTop: insets.top }}>
       <View style={styles.bar}>
-        <Pressable onPress={() => router.back()} hitSlop={12}><Txt v="body">{t('common.cancel')}</Txt></Pressable>
+        <Pressable onPress={() => goBack()} hitSlop={12}><Txt v="body">{t('common.cancel')}</Txt></Pressable>
         <Txt v="bodyMedium" style={{ flex: 1, textAlign: 'center' }}>{parent ? t('social.reply') : t('social.newPost')}</Txt>
         <View style={{ width: 70 }} />
       </View>

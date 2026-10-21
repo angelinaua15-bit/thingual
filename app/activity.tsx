@@ -1,5 +1,6 @@
 import React from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { goBack } from '../src/lib/nav';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
@@ -20,7 +21,7 @@ export default function ActivityScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: c.background, paddingTop: insets.top }}>
       <View style={styles.bar}>
-        <Pressable onPress={() => router.back()} hitSlop={12}><ArrowLeft size={22} color={c.text} /></Pressable>
+        <Pressable onPress={() => goBack()} hitSlop={12}><ArrowLeft size={22} color={c.text} /></Pressable>
         <Txt v="headline">{t('social.activity')}</Txt>
       </View>
       {q.isLoading ? (

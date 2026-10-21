@@ -46,7 +46,9 @@ export const LiveCamera = forwardRef<LiveCameraHandle, LiveCameraProps>(function
     const scale = Math.max(size.w / v.videoWidth, size.h / v.videoHeight);
     const ox = (size.w - v.videoWidth * scale) / 2;
     const oy = (size.h - v.videoHeight * scale) / 2;
-    return { x: (box[0] + box[2] / 2) * scale + ox, y: (box[1] + box[3] / 2) * scale + oy };
+    const x = (box[0] + box[2] / 2) * scale + ox;
+    // the front camera preview is mirrored with CSS, so mirror the dots too
+    return { x: facing === 'front' ? size.w - x : x, y: (box[1] + box[3] / 2) * scale + oy };
   };
 
   useEffect(() => {

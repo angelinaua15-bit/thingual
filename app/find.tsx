@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { goBack } from '../src/lib/nav';
 import { router } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -79,10 +80,12 @@ export default function Find() {
       }
       if (backendConnected()) {
         const r = await recognize({ base64: pic.base64 });
-        if (r.concept === target || r.alternatives.includes(target)) win(uri);
-        else toast(t('camera.somethingElse'), 'default');
+        if (r.concept === target || r.alternatives.includes(target)) return win(uri);
+        toast(t('camera.somethingElse'), 'default');
+        setShot(null); // back to the live camera so the user can try again
       }
     } catch {
+      setShot(null);
       toast(t('camera.noPermission'), 'default');
     }
   };
@@ -92,7 +95,7 @@ export default function Find() {
   return (
     <View style={{ flex: 1, backgroundColor: '#0E0E0E', paddingTop: insets.top, paddingBottom: insets.bottom }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, height: 52 }}>
-        <Pressable onPress={() => router.back()} hitSlop={12}><X size={22} color="#fff" /></Pressable>
+        <Pressable onPress={() => goBack()} hitSlop={12}><X size={22} color="#fff" /></Pressable>
         <View style={{ flex: 1 }} />
         <Txt v="captionMedium" color="rgba(255,255,255,0.7)">✓ {score}</Txt>
       </View>

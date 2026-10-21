@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
+import { goBack } from '../../src/lib/nav';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft } from '../../src/components/icons';
@@ -13,7 +14,7 @@ export default function UserScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: c.background, paddingTop: insets.top }}>
       <View style={{ height: 48, paddingHorizontal: 16, justifyContent: 'center', maxWidth: 680, width: '100%', alignSelf: 'center' }}>
-        <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/map'))} hitSlop={12}>
+        <Pressable onPress={() => (goBack('/(tabs)/map'))} hitSlop={12}>
           <ArrowLeft size={22} color={c.text} />
         </Pressable>
       </View>

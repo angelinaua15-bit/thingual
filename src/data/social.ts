@@ -30,10 +30,12 @@ const DROP_CALENDAR = [
   'flower', 'chair', 'umbrella', 'lamp', 'bench', 'bottle', 'clock', 'apple', 'plant', 'bus',
   'table', 'glasses', 'mirror', 'egg', 'backpack', 'cat', 'plate', 'hat', 'pillow', 'dog',
 ];
-const dayNumber = (d: Date) => Math.floor(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) / 86400000);
+/** Local calendar day — the Drop and streak days change at the user's own midnight. */
+const dayNumber = (d: Date) => Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
 const BASE = dayNumber(new Date(Date.UTC(2026, 9, 21)));
 
-export const dateKey = (d = new Date()) => d.toISOString().slice(0, 10);
+export const dateKey = (d = new Date()) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 export function dropFor(date = new Date()) {
   const idx = (((dayNumber(date) - BASE) % DROP_CALENDAR.length) + DROP_CALENDAR.length) % DROP_CALENDAR.length;

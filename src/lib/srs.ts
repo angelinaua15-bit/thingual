@@ -14,11 +14,14 @@ const toStored = (c: Card): StoredCard => ({
   last_review: c.last_review ? new Date(c.last_review).toISOString() : undefined,
 });
 
-const fromStored = (c: StoredCard): Card => ({
-  ...c,
-  due: new Date(c.due),
-  last_review: c.last_review ? new Date(c.last_review) : undefined,
-});
+const fromStored = (c: StoredCard): Card => {
+  const card: Card = { ...c, due: new Date(c.due), last_review: c.last_review ? new Date(c.last_review) : undefined };
+  // damaged or hand-edited memory state → start the card over instead of crashing the scheduler
+  if (card.state === State.New || !(card.stability > 0) || !(card.difficulty >= 1)) {
+    return { ...createEmptyCard(card.due), reps: card.reps ?? 0, lapses: card.lapses ?? 0 };
+  }
+  return card;
+};
 
 export type Answer = 'again' | 'hard' | 'good' | 'easy';
 const GRADE: Record<Answer, Grade> = {

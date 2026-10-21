@@ -1,3 +1,4 @@
+import { shareFile } from '../../src/lib/share';
 import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Share, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
 import { router } from 'expo-router';
@@ -56,7 +57,7 @@ export default function Dictionary() {
 
   const exportCsv = async () => {
     const rows = all.map((w) => [fullWord(w.conceptId, target), labelOf(w.conceptId, s.native)?.word ?? '', w.note ?? ''].map((v) => `"${v.replace(/"/g, '""')}"`).join(','));
-    await Share.share({ message: ['front,back,note', ...rows].join('\n') });
+    await shareFile(['front,back,note', ...rows].join('\n'), 'thingual-words.csv', 'text/csv');
   };
 
   return (

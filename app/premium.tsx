@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { goBack } from '../src/lib/nav';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown, LinearTransition } from 'react-native-reanimated';
@@ -68,7 +69,7 @@ export default function Premium() {
         {/* hero */}
         <LinearGradient colors={['#14112A', '#2E2160', '#4B2F86']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingTop: insets.top + 12, paddingHorizontal: space.l, paddingBottom: space.xl }}>
           <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
-            <Pressable onPress={() => router.back()} hitSlop={12} style={styles.close}><X size={20} color="#fff" /></Pressable>
+            <Pressable onPress={() => goBack()} hitSlop={12} style={styles.close}><X size={20} color="#fff" /></Pressable>
           </View>
           <View style={{ maxWidth: 560, width: '100%', alignSelf: 'center' }}>
             <Animated.View entering={FadeInDown.springify()} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>

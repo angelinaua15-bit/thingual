@@ -5,6 +5,9 @@ export type MapPoint = { id: string; lat: number; lng: number; photo: string; la
 const esc = (s: string) => s.replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]!);
 
 /** Leaflet (bundled, no CDN) + MarkerCluster on Esri's muted grey canvas basemap (no API key), so photos are the colour on the map. */
+/** Escaped points, safe to inject into the map page (initially or via postMessage). */
+export const safePoints = (points: MapPoint[]) => points.map((p) => ({ ...p, label: esc(p.label), sub: p.sub ? esc(p.sub) : undefined, photo: encodeURI(p.photo) }));
+
 export function buildMapHtml(points: MapPoint[], opts: { dark: boolean; wordsMode: boolean; center?: [number, number]; zoom?: number }) {
   const tiles = opts.dark
     ? 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'
@@ -13,7 +16,7 @@ export function buildMapHtml(points: MapPoint[], opts: { dark: boolean; wordsMod
     ? 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}'
     : 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}';
   const bg = opts.dark ? '#0E0E0E' : '#F2F1ED';
-  const safe = points.map((p) => ({ ...p, label: esc(p.label), sub: p.sub ? esc(p.sub) : undefined, photo: encodeURI(p.photo) }));
+  const safe = safePoints(points);
   const data = JSON.stringify(safe).replace(/</g, '\\u003c');
   return `<!doctype html><html><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
@@ -47,15 +50,25 @@ L.tileLayer('${tiles}',{maxZoom:16,attribution:'Tiles © Esri — Esri, HERE, Ga
 L.tileLayer('${labels}',{maxZoom:16,pane:'overlayPane'}).addTo(map);
 var group=L.markerClusterGroup({showCoverageOnHover:false,maxClusterRadius:56,spiderfyOnMaxZoom:true,
  iconCreateFunction:function(c){return L.divIcon({html:'<div class="cl pop">'+c.getChildCount()+'</div>',className:'',iconSize:[48,48]})}});
-pts.forEach(function(p,i){
+function render(list){
+ group.clearLayers();
+ list.forEach(function(p,i){
   var html=wordsMode?'<div class="word pop" style="animation-delay:'+(i%20)*30+'ms">'+p.label+(p.sub?'<small>'+p.sub+'</small>':'')+'</div>'
     :'<div class="pin pop'+(p.highlight?' hl':'')+'" style="animation-delay:'+(i%20)*30+'ms;background-image:url(\\''+p.photo+'\\')"></div>';
   var m=L.marker([p.lat,p.lng],{icon:L.divIcon({html:html,className:'',iconSize:wordsMode?[0,0]:[48,48]})});
   m.on('click',function(){send({type:'select',id:p.id})});
   group.addLayer(m);
-});
+ });
+}
+render(pts);
 map.addLayer(group);
-${opts.center ? '' : "if(pts.length){try{map.fitBounds(group.getBounds(),{padding:[60,60],maxZoom:6})}catch(e){}}"}
+// live updates from the app without rebuilding the page (keeps the user's pan/zoom)
+window.addEventListener('message',function(e){try{var m=typeof e.data==='string'?JSON.parse(e.data):e.data;
+ if(m&&m.type==='points'){render(m.pts);if(!fitted&&!hasCenter&&m.pts.length){fitted=true;try{map.fitBounds(group.getBounds(),{padding:[60,60],maxZoom:6})}catch(e2){}}}
+ if(m&&m.type==='view'&&m.center){map.setView(m.center,m.zoom||map.getZoom())}
+}catch(err){}});
+var hasCenter=${opts.center ? 'true' : 'false'};var fitted=false;
+${opts.center ? '' : "if(pts.length){fitted=true;try{map.fitBounds(group.getBounds(),{padding:[60,60],maxZoom:6})}catch(e){}}"}
 map.on('click',function(){send({type:'blank'})});
 send({type:'ready'});
 </script></body></html>`;

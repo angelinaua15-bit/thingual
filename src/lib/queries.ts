@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react';
+import { AppState } from 'react-native';
 import { QueryClient, useQuery } from '@tanstack/react-query';
 import { create } from 'zustand';
 import { createProfile, ensureSession, getMyProfile, myLikes, updateProfile, uploadImage, type PostRow, type Profile } from './api';
@@ -10,34 +11,51 @@ type Net = { status: 'idle' | 'ok' | 'offline'; uid?: string; set: (p: Partial<N
 export const useNet = create<Net>((set) => ({ status: 'idle', set: (p) => set(p) }));
 
 /** Signs in anonymously and makes sure the user has a community profile. */
+let connecting = false;
+/** Anonymous session + profile. Safe to call again — used for retries after a network failure. */
+export async function connect() {
+  if (connecting || !useApp.getState().onboarded) return;
+  connecting = true;
+  try {
+    const uid = await ensureSession();
+    let me = await getMyProfile();
+    if (!me) {
+      const s = useApp.getState();
+      me = await createProfile({
+        handle: s.profile.nickname, name: s.profile.displayName ?? s.profile.nickname, native_lang: s.settings.native, learning_lang: s.settings.active, age_group: s.profile.ageGroup ?? null,
+      });
+    }
+    const pending = useApp.getState().profile.pendingAvatar;
+    if (pending) {
+      try {
+        me = await updateProfile({ avatar_url: await uploadImage('avatars', pending) });
+      } catch {}
+      useApp.getState().setLocalProfile({ pendingAvatar: undefined });
+    }
+    qc.setQueryData(['me'], me);
+    useNet.getState().set({ status: 'ok', uid });
+    qc.invalidateQueries();
+    syncStreak();
+  } catch {
+    useNet.getState().set({ status: 'offline' });
+  } finally {
+    connecting = false;
+  }
+}
+
 export function useBootstrap() {
   const onboarded = useApp((s) => s.onboarded);
   useEffect(() => {
     if (!onboarded) return;
-    (async () => {
-      try {
-        const uid = await ensureSession();
-        let me = await getMyProfile();
-        if (!me) {
-          const s = useApp.getState();
-          me = await createProfile({
-            handle: s.profile.nickname, name: s.profile.displayName ?? s.profile.nickname, native_lang: s.settings.native, learning_lang: s.settings.active, age_group: s.profile.ageGroup ?? null,
-          });
-        }
-        const pending = useApp.getState().profile.pendingAvatar;
-        if (pending) {
-          try {
-            me = await updateProfile({ avatar_url: await uploadImage('avatars', pending) });
-          } catch {}
-          useApp.getState().setLocalProfile({ pendingAvatar: undefined });
-        }
-        qc.setQueryData(['me'], me);
-        useNet.getState().set({ status: 'ok', uid });
-        syncStreak();
-      } catch {
-        useNet.getState().set({ status: 'offline' });
-      }
-    })();
+    connect();
+    // reconnect when the network comes back or the app returns to the foreground
+    const retry = () => useNet.getState().status !== 'ok' && connect();
+    const sub = AppState.addEventListener('change', (st) => st === 'active' && retry());
+    if (typeof window !== 'undefined' && window.addEventListener) window.addEventListener('online', retry);
+    return () => {
+      sub.remove();
+      if (typeof window !== 'undefined' && window.removeEventListener) window.removeEventListener('online', retry);
+    };
   }, [onboarded]);
 }
 

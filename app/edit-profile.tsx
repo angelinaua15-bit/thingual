@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { goBack } from '../src/lib/nav';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
@@ -55,7 +56,7 @@ export default function EditProfile() {
       qc.invalidateQueries({ queryKey: ['feed'] });
       haptic.success();
       toast(t('social.saved'));
-      router.back();
+      goBack();
     } catch (e) {
       setError((e as { code?: string })?.code === '23505' ? t('social.handleTaken') : t('social.offline'));
     } finally {
@@ -68,7 +69,7 @@ export default function EditProfile() {
   return (
     <View style={{ flex: 1, backgroundColor: c.background, paddingTop: insets.top }}>
       <View style={styles.bar}>
-        <Pressable onPress={() => router.back()} hitSlop={12}><X size={22} color={c.text} /></Pressable>
+        <Pressable onPress={() => goBack()} hitSlop={12}><X size={22} color={c.text} /></Pressable>
         <Txt v="headline" style={{ flex: 1 }}>{t('social.editProfile')}</Txt>
         {saving ? <ActivityIndicator color={c.accent} /> : (
           <Pressable onPress={save} hitSlop={10}><Txt v="bodyMedium" color={c.accent}>{t('common.done')}</Txt></Pressable>

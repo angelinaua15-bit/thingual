@@ -1,3 +1,4 @@
+import { shareText } from '../lib/share';
 import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, Share, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
@@ -142,7 +143,7 @@ export function ProfileView({ uid, header, footer }: { uid: string; header?: Rea
             variant="secondary"
             size="m"
             style={{ flex: 1 }}
-            onPress={() => Share.share({ message: t('social.inviteText', { handle: p.handle, link: `https://thingual.vercel.app/user/${p.id}` }) })}
+            onPress={() => shareText(t('social.inviteText', { handle: p.handle, link: `https://thingual.vercel.app/user/${p.id}` }))}
           />
         </View>
       </Animated.View>
