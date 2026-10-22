@@ -72,6 +72,8 @@ type State = {
   flame: FlameId;
   celebrate: Celebration | null;
   maxWaitlist?: 'monthly' | 'yearly' | 'family';
+  /** saved phrases, phrasal verbs, collocations and idioms (spaced repetition) */
+  exprs: Record<string, { card: StoredCard; addedAt: number }>;
   drops: Record<string, string>; // dateKey -> post id of my Daily Drop
   achievements: string[];
   familyMode: { enabled: boolean; pin?: string; childName?: string };
@@ -103,6 +105,9 @@ type Actions = {
   setFlame: (f: FlameId) => void;
   clearCelebrate: () => void;
   setMaxWaitlist: (p: 'monthly' | 'yearly' | 'family') => void;
+  toggleExpr: (id: string) => boolean;
+  saveExprs: (ids: string[]) => number;
+  answerExpr: (id: string, a: Answer) => void;
   resetAll: () => void;
 };
 
@@ -172,6 +177,7 @@ const initialState = (): State => {
     flames: ['classic'],
     flame: 'classic',
     celebrate: null,
+    exprs: {},
     drops: {},
     achievements: [],
     familyMode: { enabled: false },
@@ -398,6 +404,23 @@ export const useApp = create<State & Actions>()(
       setFlame: (f) => set((s) => (s.flames.includes(f) ? { flame: f } : {})),
       clearCelebrate: () => set({ celebrate: null }),
       setMaxWaitlist: (p) => set({ maxWaitlist: p }),
+      toggleExpr: (id) => {
+        const has = !!get().exprs[id];
+        set((s) => {
+          const exprs = { ...s.exprs };
+          if (has) delete exprs[id];
+          else exprs[id] = { card: newCard(), addedAt: Date.now() };
+          return { exprs };
+        });
+        return !has;
+      },
+      saveExprs: (ids) => {
+        const fresh = ids.filter((id) => !get().exprs[id]);
+        if (fresh.length) set((s) => ({ exprs: { ...s.exprs, ...Object.fromEntries(fresh.map((id) => [id, { card: newCard(), addedAt: Date.now() }])) } }));
+        return fresh.length;
+      },
+      answerExpr: (id, a) =>
+        set((s) => (s.exprs[id] ? { exprs: { ...s.exprs, [id]: { ...s.exprs[id], card: srsReview(s.exprs[id].card, a) } } } : {})),
 
       resetAll: () => set({ ...initialState(), hydrated: true }),
     }),

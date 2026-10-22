@@ -1,3 +1,6 @@
+import { Image } from 'expo-image';
+import { emojiUrl } from '../../src/data/emoji';
+import { EXPRESSIONS, EXPR_KINDS, KIND_EMOJI } from '../../src/data/expressions';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
@@ -33,6 +36,8 @@ export default function Learn() {
   const learnStreak = useApp((x) => x.learnStreak);
   const dropStreak = useApp((x) => x.dropStreak);
   const update = useApp((x) => x.updateSettings);
+  const exprs = useApp((x) => x.exprs);
+  const exprDue = Object.values(exprs).filter((e) => isDue(e.card)).length;
   const [handsFree, setHandsFree] = useState(false);
 
   const list = Object.values(words);
@@ -113,6 +118,24 @@ export default function Learn() {
               <Button title={t('learn.start')} variant="inverse" icon={<ArrowRight size={18} color="#141414" />} onPress={() => router.push('/review')} />
             </>
           )}
+        </Animated.View>
+
+        {/* phrases & expressions */}
+        <Animated.View entering={FadeInDown.delay(210)}>
+          <PressableScale onPress={() => router.push('/phrases')} style={[styles.card, { backgroundColor: c.surface, borderColor: c.divider, flexDirection: 'row', alignItems: 'center', gap: 12 }]}>
+            <View style={{ flexDirection: 'row' }}>
+              {EXPR_KINDS.map((k, i) => (
+                <View key={k} style={{ width: 40, height: 40, borderRadius: 13, backgroundColor: c.surfaceAlt, alignItems: 'center', justifyContent: 'center', marginLeft: i ? -12 : 0, borderWidth: 2, borderColor: c.surface }}>
+                  <Image source={{ uri: emojiUrl(KIND_EMOJI[k]) }} style={{ width: 24, height: 24 }} />
+                </View>
+              ))}
+            </View>
+            <View style={{ flex: 1 }}>
+              <Txt v="bodyMedium">{t('phr.title')}</Txt>
+              <Txt v="caption" color={c.textSecondary}>{t('phr.total', { n: EXPRESSIONS.length })}{exprDue ? ` · ${t('phr.reviewDue', { n: exprDue })}` : ''}</Txt>
+            </View>
+            <ArrowRight size={18} color={c.textTertiary} />
+          </PressableScale>
         </Animated.View>
 
         {/* coverage + week */}
