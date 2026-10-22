@@ -60,6 +60,20 @@ export default function SettingsScreen() {
         <Group title={t('settings.languages')}>
           <ListRow title={t('settings.myLanguage')} value={LANGUAGES.find((l) => l.code === s.native)?.native} onPress={() => setLangSheet('native')} />
           <ListRow title={t('settings.learning')} value={s.targets.map((l) => languageName(l, s.uiLang)).join(', ')} onPress={() => setLangSheet('target')} />
+          <View style={{ padding: 16, paddingBottom: 4, gap: 10 }}>
+            <Txt v="captionMedium" color={c.textSecondary}>{t('settings.uiLanguage')}</Txt>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+              {UI_LANGUAGES.map((code) => (
+                <Chip key={code} label={LANGUAGES.find((l) => l.code === code)?.native ?? code} selected={s.uiLang === code} onPress={() => st.updateSettings({ uiLang: code })} />
+              ))}
+            </ScrollView>
+            <Txt v="captionMedium" color={c.textSecondary} style={{ marginTop: 6 }}>{t('settings.speakerGender')}</Txt>
+            <Segmented
+              value={s.speakerGender ?? 'male'}
+              onChange={(v) => st.updateSettings({ speakerGender: v })}
+              options={[{ value: 'male', label: t('settings.genderMale') }, { value: 'female', label: t('settings.genderFemale') }]}
+            />
+          </View>
           <View style={{ padding: 16, gap: 10 }}>
             <Txt v="captionMedium" color={c.textSecondary}>{t('settings.level')}</Txt>
             <Segmented<Level>

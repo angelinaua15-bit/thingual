@@ -5,13 +5,13 @@ const path = require('path');
 const src = process.argv[2];
 if (!src) throw new Error('pass the assets folder of @lobehub/fluent-emoji-3d');
 const root = path.join(__dirname, '..');
-const files = [path.join(root, 'src/data/concepts.ts'), path.join(root, 'src/data/expressions.ts'), path.join(root, 'src/lib/quests.ts'), ...fs.readdirSync(path.join(root, 'src/data/words')).filter((f) => /\.ts$/.test(f)).map((f) => path.join(root, 'src/data/words', f))];
+const files = [path.join(root, 'src/data/concepts.ts'), path.join(root, 'src/data/expressions.ts'), path.join(root, 'src/lib/quests.ts'), path.join(root, 'src/data/grammar/english.ts'), path.join(root, 'src/data/tutorEmoji.ts'), ...fs.readdirSync(path.join(root, 'src/data/words')).filter((f) => /\.ts$/.test(f)).map((f) => path.join(root, 'src/data/words', f))];
 const emojis = new Set();
 for (const f of files) {
   const s = fs.readFileSync(f, 'utf8');
   for (const m of s.matchAll(/\['[a-z0-9-]+', '[a-z]+', '([^'a-z\/][^']{0,12})'/g)) emojis.add(m[1]);
   for (const m of s.matchAll(/[a-z]+: \['[a-z]+', '([^']+)'\]/g)) emojis.add(m[1]);
-  for (const m of s.matchAll(/[a-z]+: '([^'a-z/ ][^']{0,10})'/g)) emojis.add(m[1]);
+  for (const m of s.matchAll(/[a-z]+: '(\p{Extended_Pictographic}[^']{0,10})'/gu)) emojis.add(m[1]);
 }
 const out = path.join(root, 'public/emoji');
 fs.mkdirSync(out, { recursive: true });

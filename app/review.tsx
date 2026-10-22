@@ -1,3 +1,4 @@
+import { PronunciationDiff } from '../src/components/Pronunciation';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
 import { goBack } from '../src/lib/nav';
@@ -310,12 +311,13 @@ function SpeakIt({ id, onAnswer }: { id: string; onAnswer: (a: Answer) => void }
   const { height } = useWindowDimensions();
   const { target, l, photo } = useWord(id);
   const [score, setScore] = useState<number | null>(null);
+  const [heard, setHeard] = useState('');
   const [listening, setListening] = useState(false);
   const available = speechRecognitionAvailable();
   const start = () => {
     if (!available) return;
     setListening(true);
-    listenOnce(lang(target).voice, (text) => setScore(similarity(text, l.word)), () => setListening(false));
+    listenOnce(lang(target).voice, (text) => { setHeard(text); setScore(similarity(text, l.word)); }, () => setListening(false));
   };
   return (
     <View style={{ flex: 1, padding: space.m }}>
@@ -335,7 +337,11 @@ function SpeakIt({ id, onAnswer }: { id: string; onAnswer: (a: Answer) => void }
           score === null ? (
             <Button title={listening ? t('word.listening') : t('learn.sayIt', { word: l.word })} icon={<Mic size={18} color={c.onAccent} />} onPress={start} loading={listening} />
           ) : (
-            <Feedback ok={score >= 70} word={`${l.word} · ${score}%`} onNext={() => onAnswer(score >= 85 ? 'good' : score >= 70 ? 'hard' : 'again')} />
+            <>
+              <PronunciationDiff heard={heard} target={l.word} score={score} />
+              {score < 70 && <Button title={t('pron.again')} variant="secondary" size="m" icon={<Mic size={16} color={c.text} />} onPress={() => { setScore(null); start(); }} />}
+              <Feedback ok={score >= 70} word={`${l.word} · ${score}%`} onNext={() => onAnswer(score >= 85 ? 'good' : score >= 70 ? 'hard' : 'again')} />
+            </>
           )
         ) : (
           <>

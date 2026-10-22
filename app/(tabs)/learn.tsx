@@ -144,6 +144,23 @@ export default function Learn() {
           </PressableScale>
         </Animated.View>
 
+        {/* AI tutor, grammar, league */}
+        <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+          {([
+            { href: '/tutor', emoji: '🤖', title: t('tutor.title'), sub: t('tutor.short') },
+            { href: '/grammar', emoji: '✏️', title: t('grammar.title'), sub: t('grammar.short') },
+            { href: '/league', emoji: '🏆', title: t('league.title'), sub: t('league.short') },
+          ] as const).map((x, i) => (
+            <Animated.View key={x.href} entering={FadeInDown.delay(230 + i * 40)} style={{ flex: 1 }}>
+              <PressableScale onPress={() => router.push(x.href)} style={[styles.card, { backgroundColor: c.surface, borderColor: c.divider, marginTop: 0, padding: 12, gap: 6, minHeight: 118 }]}>
+                <Image source={{ uri: emojiUrl(x.emoji) }} style={{ width: 34, height: 34 }} />
+                <Txt v="captionMedium" numberOfLines={2}>{x.title}</Txt>
+                <Txt v="caption" color={c.textSecondary} numberOfLines={2} style={{ fontSize: 11 }}>{x.sub}</Txt>
+              </PressableScale>
+            </Animated.View>
+          ))}
+        </View>
+
         {/* coverage + week */}
         <Animated.View entering={FadeInDown.delay(240)} style={[styles.card, { backgroundColor: c.surface, borderColor: c.divider }]}>
           <Txt v="bodyMedium">{t('learn.coverage', { n: learned, total: CONCEPTS.length })}</Txt>

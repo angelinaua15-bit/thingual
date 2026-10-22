@@ -82,6 +82,8 @@ type State = {
   quests: { day: string; claimed: string[] } & Partial<Record<QuestField, number>>;
   /** sparks earned this ISO week (weekly league) */
   weekXp: { week: string; xp: number };
+  /** grammar lesson id → best score (0–100) */
+  grammar: Record<string, number>;
   drops: Record<string, string>; // dateKey -> post id of my Daily Drop
   achievements: string[];
   familyMode: { enabled: boolean; pin?: string; childName?: string };
@@ -118,6 +120,7 @@ type Actions = {
   answerExpr: (id: string, a: Answer) => void;
   questBump: (field: QuestField, n?: number) => void;
   claimQuest: (id: string) => number;
+  finishGrammar: (id: string, score: number) => void;
   resetAll: () => void;
 };
 
@@ -193,6 +196,7 @@ const initialState = (): State => {
     exprs: {},
     quests: { day: '', claimed: [] },
     weekXp: { week: weekKey(), xp: 0 },
+    grammar: {},
     drops: {},
     achievements: [],
     familyMode: { enabled: false },
@@ -436,6 +440,10 @@ export const useApp = create<State & Actions>()(
         const fresh = ids.filter((id) => !get().exprs[id]);
         if (fresh.length) set((s) => ({ exprs: { ...s.exprs, ...Object.fromEntries(fresh.map((id) => [id, { card: newCard(), addedAt: Date.now() }])) } }));
         return fresh.length;
+      },
+      finishGrammar: (id, score) => {
+        set((s) => ({ grammar: { ...s.grammar, [id]: Math.max(s.grammar[id] ?? 0, score) } }));
+        get().questBump('grammar');
       },
       questBump: (field, n = 1) =>
         set((s) => {
