@@ -12,7 +12,7 @@ import type { StoredCard } from './srs';
 type S = ReturnType<typeof useApp.getState>;
 const KEYS = [
   'onboarded', 'goal', 'quizScore', 'settings', 'words', 'collections', 'history', 'learnStreak', 'dropStreak', 'bestStreak',
-  'activeDays', 'frozenDays', 'sparks', 'freezes', 'claimed', 'flames', 'flame', 'achievements', 'exprs', 'drops', 'quests', 'weekXp', 'grammar', 'maxUntil', 'trialUsed', 'maxFreezeMonth', 'maxWaitlist', 'lostStreak', 'notebook', 'noteTomb', 'books',
+  'activeDays', 'frozenDays', 'sparks', 'freezes', 'claimed', 'flames', 'flame', 'achievements', 'exprs', 'drops', 'quests', 'weekXp', 'grammar', 'maxUntil', 'trialUsed', 'maxFreezeMonth', 'maxWaitlist', 'lostStreak', 'notebook', 'noteTomb', 'books', 'crystals', 'unlocks',
 ] as const;
 type Snapshot = Partial<Pick<S, (typeof KEYS)[number]>> & { profile?: Partial<S['profile']> };
 
@@ -95,6 +95,8 @@ function merge(local: S, remote: Snapshot, remoteNewer: boolean): Partial<S> {
     flame: newer('flame') ?? local.flame,
     quests: mergeQuests(local.quests, remote.quests),
     ...mergeNotebook(local, remote),
+    crystals: remoteNewer ? remote.crystals ?? local.crystals : local.crystals,
+    unlocks: union(local.unlocks, remote.unlocks),
     books: Object.fromEntries(
       [...new Set([...Object.keys(local.books), ...Object.keys(remote.books ?? {})])].map((id) => {
         const a = local.books[id];

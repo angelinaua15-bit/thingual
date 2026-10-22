@@ -1,5 +1,6 @@
 import { useColorScheme } from 'react-native';
 import { useApp } from '../store/useApp';
+import { ACCENTS } from '../data/wordPacks';
 
 const light = {
   background: '#FAFAF8',
@@ -77,10 +78,27 @@ export const type = {
   overline: { fontFamily: fonts.semibold, fontSize: 11, lineHeight: 14, letterSpacing: 1.2, textTransform: 'uppercase' as const },
 };
 
+const themed = new Map<string, Colors>();
+/** light/dark palette with the learner's accent colour (unlocked with crystals) */
+function palette(isDark: boolean, accent?: string): Colors {
+  const a = ACCENTS.find((x) => x.id === accent);
+  if (!a || a.id === 'classic') return isDark ? dark : light;
+  const key = `${isDark}-${a.id}`;
+  let p = themed.get(key);
+  if (!p) {
+    const hex = isDark ? a.dark : a.light;
+    const n = parseInt(hex.slice(1), 16);
+    p = { ...(isDark ? dark : light), accent: hex, accentSoft: `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${isDark ? 0.16 : 0.1})` };
+    themed.set(key, p);
+  }
+  return p;
+}
+
 export function useTheme() {
   const system = useColorScheme();
   const pref = useApp((s) => s.settings.theme);
+  const accent = useApp((s) => s.settings.accent);
   const isDark = pref === 'dark' || (pref === 'system' && system === 'dark');
-  return { c: isDark ? dark : light, isDark };
+  return { c: palette(isDark, accent), isDark };
 }
 export const TAB_BAR_HEIGHT = 84;

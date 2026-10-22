@@ -278,7 +278,7 @@ export const de: Strings = {
     perks: {
       ai: ['Unbegrenzte KI-Erkennung', 'Gratis: {ai} Scans pro Tag'],
       notebook: ['Unbegrenzte KI in Mein Wortschatz', 'Gratis: {word} KI-Ausfüllungen pro Tag'],
-      books: ['Alle Hörbücher', 'Gratis: {books} Bücher pro Sprache + erste Kapitel'],
+      books: ['Alle Hörbücher', 'Gratis: {books} Bücher pro Sprache'],
       chat: ['Unbegrenzter KI-Gesprächspartner', 'Gratis: {chat} Nachrichten pro Tag'],
       phrases: ['Der ganze Sprachführer — 12 Situationen', 'Dazu alle Phrasal Verbs, Kollokationen und Redewendungen'],
       grammar: ['Grammatik A1 → C2', 'Gratis: nur A1-Lektionen'],
@@ -559,7 +559,7 @@ export const de: Strings = {
     loading: 'Kapitel werden geladen…', loadError: 'Das Buch konnte nicht geladen werden — prüf deine Verbindung.', retry: 'Nochmal', empty: 'Noch keine Hörbücher in dieser Sprache — probier eine andere Sprache.',
     about: 'Über das Buch', credit: 'Gemeinfreie Aufnahmen von LibriVox-Freiwilligen, gehostet im Internet Archive.',
     levels: { A2: 'Anfänger', B1: 'Mittelstufe', B2: 'Gute Mittelstufe', C1: 'Fortgeschritten' },
-    progress: '{n} von {total} Kapiteln', nowPlaying: 'Läuft gerade', inLang: 'Bücher auf', unlock: 'Alle Bücher mit Max', unlockSub: 'Gratis: {n} Bücher pro Sprache und die ersten Kapitel aller anderen',
+    progress: '{n} von {total} Kapiteln', nowPlaying: 'Läuft gerade', inLang: 'Bücher auf', unlock: 'Alle Bücher mit Max', unlockSub: 'Free: die {n} leichtesten Bücher jeder Sprache',
     chapterN: 'Kapitel {n}',
   },
   share: {
@@ -572,6 +572,12 @@ export const de: Strings = {
       question: 'Frag Muttersprachler: Wie sagt man…?',
     },
     tripCta: 'Teile deine Reise', all: 'Alle',
+  },
+  cr: {
+    title: 'Kristalle', sub: 'Alle 2 Minuten Lernen gibt es einen Kristall, dazu Geschenke nach 5, 15, 30 und 60 Minuten am Tag. Gib sie für Farben und lustige Wortsammlungen aus.', maxDouble: 'Mit Max bekommst du doppelt so viele.',
+    today: 'Heute {n} Min. gelernt', toNext: 'Noch {n} Min. bis zum nächsten Geschenk (+{b} 💎)', allDone: 'Alle Geschenke für heute gehören dir – bis morgen!', min: '{n} Min.', claimed: '+{n} {n:Kristall|Kristalle}!',
+    themes: 'App-Farbe', packs: 'Wortsammlungen', words: '{n} {n:Wort|Wörter}', open: 'Öffnen', owned: 'Freigeschaltet', on: 'Aktiv', unlocked: 'Freigeschaltet 🎉', needMore: 'Dir fehlen noch {n} Kristalle – lern weiter!', save: 'In Mein Wortschatz speichern',
+    how: 'So verdienst du sie', how1: 'Lerne in der App: Wiederholungen, Sätze, Grammatik, Hörbücher – alle 2 aktiven Minuten gibt es 1 Kristall (bis zu 30 pro Tag).', how2: 'Öffne die Geschenke nach 5, 15, 30 und 60 Minuten für Bonuskristalle.', how3: 'Zeit ohne Aktivität zählt nicht – nur, wenn du wirklich lernst oder zuhörst.',
   },
   limits: { left: 'Heute noch {n}' },
 };

@@ -21,6 +21,7 @@ import { initErrorLog, logError } from '../src/lib/errorLog';
 import { Txt, Button } from '../src/components/ui';
 import { BookAudio } from '../src/lib/player';
 import { useBilling } from '../src/lib/billing';
+import { ActivityTracker, markActivity } from '../src/lib/activity';
 import { LogoMark } from '../src/components/Logo';
 
 initSync();
@@ -83,10 +84,11 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={qc}>
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1 }} onTouchStart={markActivity}>
       <SafeAreaProvider>
         <StatusBar style={isDark ? 'light' : 'dark'} />
         <BookAudio />
+        <ActivityTracker />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.background }, animation: 'slide_from_right' }}>
           <Stack.Screen name="index" options={{ animation: 'none' }} />
           <Stack.Screen name="onboarding" options={{ animation: 'fade', gestureEnabled: false }} />
@@ -101,6 +103,7 @@ export default function RootLayout() {
           <Stack.Screen name="streak" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="notebook/edit" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="notebook/practice" options={{ animation: 'slide_from_bottom', gestureEnabled: false }} />
+          <Stack.Screen name="crystals/index" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="premium" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="shop" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="age" options={{ presentation: 'transparentModal', animation: 'fade' }} />

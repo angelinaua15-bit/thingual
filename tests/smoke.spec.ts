@@ -126,3 +126,19 @@ test('My vocabulary fills a known word from the built-in dictionary (no AI)', as
   await expect(page.getByPlaceholder('Що означає')).toHaveValue('кіт');
   expect(errs).toEqual([]);
 });
+
+test('Max-only pages stay closed for a free learner', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate((s) => localStorage.setItem('thingual-v1', s), seed());
+  // a locked book: never opens the player
+  await page.goto('/books/niebla_1701_librivox');
+  await expect(page.getByText('Усі книги — у Max').first()).toBeVisible();
+  await expect(page.getByLabel('play')).toHaveCount(0);
+  // a locked topic: back to all words + the Max page
+  await page.goto('/explore?topic=work');
+  await expect(page).toHaveURL(/premium/);
+  // a locked phrasebook situation
+  await page.goto('/phrases');
+  await page.getByText('Покупки', { exact: true }).first().click();
+  await expect(page).toHaveURL(/premium\?reason=phrases/);
+});

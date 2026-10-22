@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { Image } from 'expo-image';
@@ -9,9 +9,10 @@ import { Txt, PressableScale } from './ui';
 import { useTheme, fonts, radius } from '../theme/tokens';
 import { useT } from '../i18n';
 import { BOOKS, bookById, type Level } from '../data/audiobooks';
-import { bookCover } from '../lib/audiobooks';
 import { stopBook, togglePlay, usePlayer } from '../lib/player';
 import { unsplash } from '../data/photos';
+import { BOOK_ART } from '../data/bookArt';
+import { EmojiArt } from './NoteBits';
 
 export const BOOKS_BANNER = unsplash('photo-1758539412456-b26bed4e685d', 1200); // Mario Azzi, Unsplash License
 export const BOOKS_HERO = unsplash('photo-1644900250658-a692865fa77f', 1200); // Raman, Unsplash License
@@ -27,19 +28,24 @@ export function LevelBadge({ level, small }: { level: Level; small?: boolean }) 
   );
 }
 
-/** Book cover from the Internet Archive, with a typographic fallback. */
+/** Book cover: our own illustrated cover (emoji + colours per book), so every book looks different and it works offline. */
 export function BookCover({ id, width, radiusPx = 14 }: { id: string; width: number; radiusPx?: number }) {
   const b = bookById(id);
-  const [failed, setFailed] = useState(false);
-  const h = width * 1.0;
-  const [fg] = LEVEL_COLORS[b?.level ?? 'B1'];
+  const [emoji, from, to] = BOOK_ART[id] ?? ['📖', '#5B6CF0', '#141A5E'];
+  const small = width < 70;
   return (
-    <View style={{ width, height: h, borderRadius: radiusPx, overflow: 'hidden', backgroundColor: '#1F2933' }}>
-      <LinearGradient colors={[fg, '#14213D']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[StyleSheet.absoluteFill, { padding: 10, justifyContent: 'flex-end' }]}>
-        <Txt numberOfLines={3} style={{ fontFamily: fonts.serif, fontSize: Math.max(13, width / 8), lineHeight: Math.max(16, width / 7), color: '#fff' }}>{b?.title}</Txt>
-        <Txt numberOfLines={1} v="caption" color="rgba(255,255,255,.75)" style={{ fontSize: 10 }}>{b?.author}</Txt>
-      </LinearGradient>
-      {!failed && <Image source={{ uri: bookCover(id) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} onError={() => setFailed(true)} />}
+    <View style={{ width, height: width, borderRadius: radiusPx, overflow: 'hidden' }}>
+      <LinearGradient colors={[from, to]} start={{ x: 0.1, y: 0 }} end={{ x: 0.9, y: 1 }} style={StyleSheet.absoluteFill} />
+      <View style={{ position: 'absolute', width: width * 0.9, height: width * 0.9, borderRadius: width, backgroundColor: 'rgba(255,255,255,0.12)', top: -width * 0.25, right: -width * 0.3 }} />
+      <View style={{ position: 'absolute', top: small ? width * 0.18 : width * 0.1, right: small ? width * 0.18 : width * 0.08 }}>
+        <EmojiArt emoji={emoji} size={small ? width * 0.62 : width * 0.42} />
+      </View>
+      {!small && (
+        <View style={{ flex: 1, justifyContent: 'flex-end', padding: width * 0.07 }}>
+          <Txt numberOfLines={3} style={{ fontFamily: fonts.serif, fontSize: Math.max(13, width / 8.5), lineHeight: Math.max(16, width / 7.4), color: '#fff' }}>{b?.title}</Txt>
+          <Txt numberOfLines={1} v="caption" color="rgba(255,255,255,.8)" style={{ fontSize: Math.max(9, width / 17) }}>{b?.author}</Txt>
+        </View>
+      )}
     </View>
   );
 }

@@ -278,7 +278,7 @@ export const fr: Strings = {
     perks: {
       ai: ['Reconnaissance IA illimitée', 'Gratuit : {ai} scans par jour'],
       notebook: ['IA illimitée dans Mon vocabulaire', 'Gratuit : {word} remplissages IA par jour'],
-      books: ['Tous les livres audio', 'Gratuit : {books} livres par langue + premiers chapitres'],
+      books: ['Tous les livres audio', 'Gratuit : {books} livres par langue'],
       chat: ['Partenaire de conversation IA illimité', 'Gratuit : {chat} messages par jour'],
       phrases: ['Tout le guide de conversation — 12 situations', 'Plus tous les phrasal verbs, collocations et idiomes'],
       grammar: ['Grammaire A1 → C2', 'Gratuit : leçons A1 uniquement'],
@@ -559,7 +559,7 @@ export const fr: Strings = {
     loading: 'Chargement des chapitres…', loadError: 'Impossible de charger le livre — vérifie ta connexion.', retry: 'Réessayer', empty: 'Pas encore de livres audio dans cette langue — essaie une autre langue.',
     about: 'À propos du livre', credit: 'Enregistrements du domaine public par les bénévoles de LibriVox, hébergés sur Internet Archive.',
     levels: { A2: 'Débutant', B1: 'Intermédiaire', B2: 'Intermédiaire avancé', C1: 'Avancé' },
-    progress: '{n} {n:chapitre|chapitres} sur {total}', nowPlaying: 'En cours de lecture', inLang: 'Livres en', unlock: 'Tous les livres avec Max', unlockSub: 'Gratuit : {n} livres par langue et les premiers chapitres de tous les autres',
+    progress: '{n} {n:chapitre|chapitres} sur {total}', nowPlaying: 'En cours de lecture', inLang: 'Livres en', unlock: 'Tous les livres avec Max', unlockSub: 'Free : les {n} livres les plus faciles de chaque langue',
     chapterN: 'Chapitre {n}',
   },
   share: {
@@ -572,6 +572,12 @@ export const fr: Strings = {
       question: 'Demande aux natifs : comment dit-on… ?',
     },
     tripCta: 'Partage ton voyage', all: 'Tous',
+  },
+  cr: {
+    title: 'Cristaux', sub: 'Toutes les 2 minutes d’apprentissage te rapportent un cristal, et des cadeaux t’attendent à 5, 15, 30 et 60 minutes par jour. Dépense-les en couleurs et en collections de mots amusants.', maxDouble: 'Avec Max, tu en gagnes deux fois plus.',
+    today: 'Aujourd’hui : {n} min d’apprentissage', toNext: 'Encore {n} min avant le prochain cadeau (+{b} 💎)', allDone: 'Tous les cadeaux du jour sont à toi — à demain !', min: '{n} min', claimed: '+{n} {n:cristal|cristaux} !',
+    themes: 'Couleur de l’app', packs: 'Collections de mots', words: '{n} {n:mot|mots}', open: 'Ouvrir', owned: 'Débloqué', on: 'Utilisé', unlocked: 'Débloqué 🎉', needMore: 'Il te manque {n} cristaux — continue d’apprendre !', save: 'Ajouter à Mon vocabulaire',
+    how: 'Comment en gagner', how1: 'Apprends dans l’app : révisions, phrases, grammaire, livres audio — toutes les 2 minutes actives donnent 1 cristal (jusqu’à 30 par jour).', how2: 'Ouvre les cadeaux à 5, 15, 30 et 60 minutes pour des cristaux bonus.', how3: 'Le temps d’inactivité ne compte pas — seulement quand tu apprends ou écoutes vraiment.',
   },
   limits: { left: 'Encore {n} aujourd’hui' },
 };

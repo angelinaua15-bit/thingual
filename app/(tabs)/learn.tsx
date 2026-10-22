@@ -16,6 +16,7 @@ import { useApp } from '../../src/store/useApp';
 import { isDue } from '../../src/lib/srs';
 import { lang } from '../../src/data/languages';
 import { StreakPills } from '../../src/components/StreakBits';
+import { TimeCard } from '../../src/components/TimeCard';
 import { AudiobooksBanner } from '../../src/components/BookBits';
 
 const EX = [
@@ -97,6 +98,9 @@ export default function Learn() {
             </>
           )}
         </Animated.View>
+
+        {/* time today → crystals */}
+        <TimeCard />
 
         {/* study: 2 × 2 */}
         <View style={styles.grid}>

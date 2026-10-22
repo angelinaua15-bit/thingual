@@ -13,7 +13,7 @@ import { useTheme, fonts, radius, space } from '../../src/theme/tokens';
 import { useT, languageName } from '../../src/i18n';
 import { useApp } from '../../src/store/useApp';
 import { BOOKS, LEVELS, booksFor, bookById, type Level } from '../../src/data/audiobooks';
-import { LIMITS, bookOpen, useIsMax } from '../../src/lib/premium';
+import { LIMITS, bookOpen, requireMax, useIsMax } from '../../src/lib/premium';
 import { goBack } from '../../src/lib/nav';
 import { fmtMinutes } from '../../src/lib/audiobooks';
 import type { LangCode } from '../../src/data/languages';
@@ -105,7 +105,7 @@ export default function Books() {
                 const p = progress[b.id];
                 return (
                   <Animated.View key={b.id} entering={FadeInDown.delay(Math.min(i, 8) * 45)} style={{ width: cardW }}>
-                    <PressableScale onPress={() => router.push({ pathname: '/books/[id]', params: { id: b.id } })}>
+                    <PressableScale onPress={() => (open ? router.push({ pathname: '/books/[id]', params: { id: b.id } }) : requireMax('books'))}>
                       <View>
                         <BookCover id={b.id} width={cardW} />
                         {!open && <View style={{ position: 'absolute', top: 8, right: 8 }}><MaxBadge size={24} /></View>}
@@ -119,7 +119,6 @@ export default function Books() {
                       <Txt v="bodyMedium" numberOfLines={2} style={{ marginTop: 8 }}>{b.title}</Txt>
                       <Txt v="caption" color={c.textSecondary} numberOfLines={1}>{b.author}</Txt>
                       <Txt v="caption" color={c.textTertiary}>{fmtMinutes(b.minutes, t)} · {t('books.chapters', { n: b.chapters })}</Txt>
-                      {!open && <Txt v="caption" color="#8B5CF6" style={{ marginTop: 2 }}>{t('books.freeTaste', { n: LIMITS.freeBookChapters })}</Txt>}
                     </PressableScale>
                   </Animated.View>
                 );

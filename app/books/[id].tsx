@@ -1,7 +1,6 @@
 import React, { useRef } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View, type LayoutChangeEvent, type GestureResponderEvent } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,7 +12,8 @@ import { useTheme, fonts, radius, space } from '../../src/theme/tokens';
 import { useT, languageName } from '../../src/i18n';
 import { useApp } from '../../src/store/useApp';
 import { bookById } from '../../src/data/audiobooks';
-import { bookCover, fmtMinutes, fmtTime, useChapters } from '../../src/lib/audiobooks';
+import { fmtMinutes, fmtTime, useChapters } from '../../src/lib/audiobooks';
+import { BOOK_ART } from '../../src/data/bookArt';
 import { playBook, seekBy, seekTo, setRate, togglePlay, usePlayer } from '../../src/lib/player';
 import { LIMITS, bookOpen, chapterOpen, useIsMax } from '../../src/lib/premium';
 import { goBack } from '../../src/lib/nav';
@@ -43,6 +43,20 @@ export default function BookScreen() {
     );
   }
   const open = bookOpen(book.id, max);
+  if (!open) {
+    // locked books never open: deep links and old bookmarks land on the Max offer instead
+    return (
+      <View style={{ flex: 1, backgroundColor: c.background, paddingTop: insets.top, padding: space.l, justifyContent: 'center', alignItems: 'center' }}>
+        <BookCover id={book.id} width={180} radiusPx={18} />
+        <Txt center style={{ fontFamily: fonts.serif, fontSize: 28, lineHeight: 34, color: c.text, marginTop: 16 }}>{book.title}</Txt>
+        <View style={{ alignSelf: 'stretch', marginTop: space.m }}>
+          <MaxLockCard reason="books" title={t('books.unlock')} sub={t('books.unlockSub', { n: LIMITS.freeBooksPerLang })} />
+        </View>
+        <Button title={t('common.back')} variant="secondary" onPress={() => goBack('/books')} style={{ alignSelf: 'stretch' }} />
+      </View>
+    );
+  }
+  const art = BOOK_ART[book.id] ?? ['📖', '#3A4A8A', '#141A5E'];
   const list = chapters.data ?? [];
   const isThis = !!current;
   const ch = isThis ? current!.chapter : progress?.chapter ?? 0;
@@ -65,8 +79,7 @@ export default function BookScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}>
         {/* blurred cover backdrop */}
         <View style={{ paddingTop: insets.top + 6, paddingBottom: space.l, overflow: 'hidden' }}>
-          <Image source={{ uri: bookCover(book.id) }} style={StyleSheet.absoluteFill} contentFit="cover" blurRadius={40} />
-          <LinearGradient colors={['rgba(5,15,30,0.55)', 'rgba(5,15,30,0.35)', c.background]} locations={[0, 0.6, 1]} style={StyleSheet.absoluteFill} />
+          <LinearGradient colors={[art[1], art[2], c.background]} locations={[0, 0.6, 1]} style={StyleSheet.absoluteFill} />
           <View style={{ paddingHorizontal: 16 }}>
             <Pressable onPress={() => goBack('/books')} hitSlop={12} style={styles.back}><ArrowLeft size={20} color="#fff" /></Pressable>
           </View>
@@ -123,11 +136,6 @@ export default function BookScreen() {
             </View>
           </Animated.View>
 
-          {!open && (
-            <View style={{ marginTop: space.m }}>
-              <MaxLockCard reason="books" title={t('books.unlock')} sub={t('books.freeTaste', { n: LIMITS.freeBookChapters })} />
-            </View>
-          )}
 
           {/* about */}
           <Txt v="overline" color={c.textSecondary} style={{ marginTop: space.l, marginBottom: 6 }}>{t('books.about')}</Txt>

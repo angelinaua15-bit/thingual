@@ -297,7 +297,7 @@ export const es: Strings = {
     perks: {
       ai: ['Reconocimiento IA ilimitado', 'Gratis: {ai} escaneos al día'],
       notebook: ['IA ilimitada en Mi vocabulario', 'Gratis: {word} rellenos IA al día'],
-      books: ['Todos los audiolibros', 'Gratis: {books} libros por idioma + primeros capítulos'],
+      books: ['Todos los audiolibros', 'Gratis: {books} libros por idioma'],
       chat: ['Compañero de conversación IA ilimitado', 'Gratis: {chat} mensajes al día'],
       phrases: ['Todas las frases útiles — 12 situaciones', 'Y todos los phrasal verbs, colocaciones y modismos'],
       grammar: ['Gramática A1 → C2', 'Gratis: solo lecciones A1'],
@@ -709,7 +709,7 @@ export const es: Strings = {
     nowPlaying: 'Sonando ahora',
     inLang: 'Libros en',
     unlock: 'Todos los libros con Max',
-    unlockSub: 'Gratis: {n} libros por idioma y los primeros capítulos de todos los demás',
+    unlockSub: 'Free: los {n} libros más fáciles de cada idioma',
     chapterN: 'Capítulo {n}',
   },
   share: {
@@ -724,6 +724,12 @@ export const es: Strings = {
     },
     tripCta: 'Comparte tu viaje',
     all: 'Todo',
+  },
+  cr: {
+    title: 'Cristales', sub: 'Cada 2 minutos de estudio te dan un cristal, y hay regalos a los 5, 15, 30 y 60 minutos al día. Úsalos en colores y colecciones de palabras divertidas.', maxDouble: 'Con Max consigues el doble.',
+    today: 'Hoy: {n} min de estudio', toNext: 'Faltan {n} min para el siguiente regalo (+{b} 💎)', allDone: '¡Todos los regalos de hoy son tuyos! Hasta mañana.', min: '{n} min', claimed: '+{n} {n:cristal|cristales}!',
+    themes: 'Color de la app', packs: 'Colecciones de palabras', words: '{n} {n:palabra|palabras}', open: 'Abrir', owned: 'Desbloqueado', on: 'En uso', unlocked: 'Desbloqueado 🎉', needMore: 'Te faltan {n} cristales — ¡sigue aprendiendo!', save: 'Guardar en Mi vocabulario',
+    how: 'Cómo ganarlos', how1: 'Aprende en la app: repasos, frases, gramática, audiolibros — cada 2 minutos activos dan 1 cristal (hasta 30 al día).', how2: 'Abre los regalos a los 5, 15, 30 y 60 minutos para cristales extra.', how3: 'El tiempo sin actividad no cuenta, solo cuando de verdad aprendes o escuchas.',
   },
   limits: { left: 'Quedan {n} hoy' },
 };

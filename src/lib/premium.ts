@@ -79,4 +79,4 @@ export function bookOpen(id: string, max: boolean) {
   if (!b) return false;
   return booksFor(b.lang).slice(0, LIMITS.freeBooksPerLang).some((x) => x.id === id);
 }
-export const chapterOpen = (id: string, chapter: number, max: boolean) => bookOpen(id, max) || chapter < LIMITS.freeBookChapters;
+export const chapterOpen = (id: string, _chapter: number, max: boolean) => bookOpen(id, max);

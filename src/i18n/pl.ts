@@ -297,7 +297,7 @@ export const pl: Strings = {
     perks: {
       ai: ['Nielimitowane rozpoznawanie AI', 'Za darmo: {ai} skanów dziennie'],
       notebook: ['Nielimitowane AI w Moim słowniczku', 'Za darmo: {word} uzupełnień AI dziennie'],
-      books: ['Wszystkie audiobooki', 'Za darmo: książki na język ({books}) + pierwsze rozdziały'],
+      books: ['Wszystkie audiobooki', 'Za darmo: książki na język ({books})'],
       chat: ['Nielimitowany partner do rozmów AI', 'Za darmo: {chat} wiadomości dziennie'],
       phrases: ['Całe rozmówki — 12 sytuacji', 'Plus wszystkie phrasal verbs, kolokacje i idiomy'],
       grammar: ['Gramatyka A1 → C2', 'Za darmo: tylko lekcje A1'],
@@ -709,7 +709,7 @@ export const pl: Strings = {
     nowPlaying: 'Teraz gra',
     inLang: 'Książki:',
     unlock: 'Wszystkie książki z Max',
-    unlockSub: 'Za darmo: książki na język ({n}) i pierwsze rozdziały pozostałych',
+    unlockSub: 'Free: najłatwiejsze książki w każdym języku ({n})',
     chapterN: 'Rozdział {n}',
   },
   share: {
@@ -724,6 +724,12 @@ export const pl: Strings = {
     },
     tripCta: 'Pokaż swoją podróż',
     all: 'Wszystkie',
+  },
+  cr: {
+    title: 'Kryształy', sub: 'Co 2 minuty nauki dostajesz kryształ, a po 5, 15, 30 i 60 minutach dziennie — prezenty. Wydawaj je na kolory i zabawne kolekcje słów.', maxDouble: 'Z Max dostajesz dwa razy więcej.',
+    today: 'Dziś nauki: {n} min', toNext: 'Jeszcze {n} min do prezentu (+{b} 💎)', allDone: 'Wszystkie dzisiejsze prezenty są twoje — do jutra!', min: '{n} min', claimed: 'Kryształy: +{n}!',
+    themes: 'Kolor aplikacji', packs: 'Kolekcje słów', words: 'Słowa: {n}', open: 'Otwórz', owned: 'Odblokowane', on: 'W użyciu', unlocked: 'Odblokowane 🎉', needMore: 'Brakuje kryształów: {n} — ucz się dalej!', save: 'Zapisz w Moim słowniku',
+    how: 'Jak zdobywać', how1: 'Ucz się w aplikacji: powtórki, zwroty, gramatyka, audiobooki — co 2 aktywne minuty to 1 kryształ (do 30 dziennie).', how2: 'Otwieraj prezenty po 5, 15, 30 i 60 minutach — w środku są dodatkowe kryształy.', how3: 'Czas bez aktywności się nie liczy — tylko gdy naprawdę się uczysz lub słuchasz.',
   },
   limits: { left: 'Zostało dziś: {n}' },
 };

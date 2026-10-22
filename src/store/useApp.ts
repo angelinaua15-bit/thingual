@@ -1,14 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import { getLocales } from 'expo-localization';
-import { LangCode, LANGUAGES } from '../data/languages';
+import { LangCode } from '../data/languages';
 import { newCard, review as srsReview, StoredCard, Answer } from '../lib/srs';
 import { dateKey, nicknameFor } from '../data/social';
 import { conceptById, Place } from '../data/concepts';
 import { needsPersist, persistPhoto } from '../lib/photoStore';
 import { questsFor, CHEST_REWARD, type QuestField } from '../lib/quests';
 import { LIMITS } from '../lib/limits';
+import { DAILY_TIME_CAP, SECONDS_PER_CRYSTAL, TIME_TIERS } from '../data/wordPacks';
 import type { CEFR } from '../data/words/types';
 import { addDays, DAILY_SPARKS, dayDiff, FLAMES, FlameId, MAX_FREEZES, MILESTONES, PRICES, REPAIR_WINDOW, Reward } from '../lib/streak';
 
@@ -47,6 +47,8 @@ export type Settings = {
   voice: 'female' | 'male';
   slowVoice: boolean;
   notify: { drop: boolean; review: boolean; friends: boolean; weekly: boolean; reviewHour: number };
+  /** app colour theme (accent), see ACCENTS */
+  accent?: string;
   /** we already asked for notification permission (asked in context, never at launch) */
   notifyAsked?: boolean;
   sounds: boolean;
@@ -100,6 +102,12 @@ type State = {
   noteTomb: Record<string, number>;
   /** audiobooks: where the learner stopped in each book */
   books: Record<string, BookProgress>;
+  /** crystals: earned by time spent learning every day, spent on fun unlocks */
+  crystals: number;
+  /** active time today (seconds) and the crystals already given for it */
+  timeToday: { day: string; seconds: number; earned: number; claimed: number[] };
+  /** unlocked rewards: 'accent:mint', 'pack:idioms'… */
+  unlocks: string[];
   /** last time synced progress changed on this device (ms) */
   localChangedAt?: number;
   /** grammar lesson id → best score (0–100) */
@@ -143,6 +151,9 @@ type Actions = {
   finishGrammar: (id: string, score: number) => void;
   startTrial: () => boolean;
   addNote: (w: NoteInput) => string;
+  addActiveTime: (seconds: number) => void;
+  claimTimeTier: (min: number) => number;
+  unlockReward: (id: string, price: number) => 'ok' | 'funds' | 'owned';
   saveBookProgress: (id: string, p: Partial<BookProgress>) => void;
   updateNote: (id: string, patch: Partial<NoteInput & { done: boolean }>) => void;
   removeNote: (id: string) => void;
@@ -186,11 +197,6 @@ const addXp = (w: { week: string; xp: number }, n: number) => { const wk = weekK
 // calendar arithmetic, not 24 h: DST days are 23 or 25 hours long
 const yesterdayKey = () => addDays(dateKey(), -1);
 
-const detectLang = (): LangCode => {
-  const code = getLocales()[0]?.languageCode ?? 'en';
-  return (LANGUAGES.find((l) => l.code === code)?.code ?? 'en') as LangCode;
-};
-
 /** Daily Drop streak: consecutive days with a Drop. */
 const bumpStreak = (s: Streak): Streak => {
   const today = dateKey();
@@ -200,13 +206,13 @@ const bumpStreak = (s: Streak): Streak => {
 };
 
 const initialSettings = (): Settings => {
-  const sys = detectLang();
+  // the first launch is always in English; the learner picks their language (Ukrainian is listed second) during onboarding
   return {
     theme: 'system',
-    uiLang: sys,
-    native: sys,
-    targets: [sys === 'en' ? 'es' : 'en'],
-    active: sys === 'en' ? 'es' : 'en',
+    uiLang: 'en',
+    native: 'en',
+    targets: ['es'],
+    active: 'es',
     level: 'beginner',
     dailyMinutes: 5,
     voice: 'female',
@@ -249,6 +255,9 @@ const initialState = (): State => {
     notebook: {},
     noteTomb: {},
     books: {},
+    crystals: 0,
+    timeToday: { day: '', seconds: 0, earned: 0, claimed: [] },
+    unlocks: [],
     drops: {},
     achievements: [],
     familyMode: { enabled: false },
@@ -543,6 +552,33 @@ export const useApp = create<State & Actions>()(
           const prev = s.books[id] ?? { chapter: 0, position: 0, done: [], updatedAt: 0 };
           return { books: { ...s.books, [id]: { ...prev, ...p, updatedAt: Date.now() } } };
         }),
+      addActiveTime: (sec) =>
+        set((s) => {
+          const day = dateKey();
+          const t = s.timeToday.day === day ? s.timeToday : { day, seconds: 0, earned: 0, claimed: [] };
+          const seconds = t.seconds + sec;
+          // 1 crystal per 2 active minutes (×2 with Max), at most DAILY_TIME_CAP from time
+          const due = Math.min(DAILY_TIME_CAP, Math.floor(seconds / SECONDS_PER_CRYSTAL));
+          const fresh = Math.max(0, due - t.earned);
+          const mult = s.maxUntil && s.maxUntil > Date.now() ? 2 : 1;
+          return { timeToday: { ...t, seconds, earned: t.earned + fresh }, crystals: s.crystals + fresh * mult };
+        }),
+      claimTimeTier: (min) => {
+        const s = get();
+        const tier = TIME_TIERS.find((x) => x.min === min);
+        const t = s.timeToday;
+        if (!tier || t.day !== dateKey() || t.seconds < min * 60 || t.claimed.includes(min)) return 0;
+        const bonus = tier.bonus * (s.maxUntil && s.maxUntil > Date.now() ? 2 : 1);
+        set({ crystals: s.crystals + bonus, timeToday: { ...t, claimed: [...t.claimed, min] } });
+        return bonus;
+      },
+      unlockReward: (id, price) => {
+        const s = get();
+        if (s.unlocks.includes(id)) return 'owned';
+        if (s.crystals < price) return 'funds';
+        set({ crystals: s.crystals - price, unlocks: [...s.unlocks, id] });
+        return 'ok';
+      },
       addNote: (w) => {
         const id = `n-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
         const now = Date.now();

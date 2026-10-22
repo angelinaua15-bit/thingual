@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import ViewShot from 'react-native-view-shot';
 import Animated, { FadeIn, FadeInDown, FadeInUp, FadeOut, FadeOutUp, ZoomIn, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming, Easing } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Share2, Snowflake, Sparkle } from './icons';
+import { Share2, Snowflake, Sparkle, Gem } from './icons';
 import { Txt, Button, PressableScale } from './ui';
 import { Flame } from './Flame';
 import { toast } from './Overlay';
@@ -55,6 +55,7 @@ export function StreakPills() {
   const { c } = useTheme();
   const st = useApp((s) => s.learnStreak);
   const sparks = useApp((s) => s.sparks);
+  const crystals = useApp((s) => s.crystals);
   const n = visibleStreak(st);
   const done = doneToday(st);
   const narrow = useWindowDimensions().width < 360;
@@ -66,10 +67,16 @@ export function StreakPills() {
         <Flame size={16} active={done} animate={false} />
         <Txt v="captionMedium" style={{ fontVariant: ['tabular-nums'] }}>{n}</Txt>
       </PressableScale>
-      <PressableScale onPress={() => router.push('/shop')} style={[styles.pill, pad, { backgroundColor: c.surface, borderColor: c.divider }]} accessibilityLabel="sparks">
-        <Sparkle size={15} color="#F59F00" fill="#F59F00" />
-        <Txt v="captionMedium" style={{ fontVariant: ['tabular-nums'] }}>{sparks}</Txt>
+      <PressableScale onPress={() => router.push('/crystals')} style={[styles.pill, pad, { backgroundColor: c.surface, borderColor: c.divider }]} accessibilityLabel="crystals">
+        <Gem size={15} color="#7C5CFF" fill="#C4B5FD" />
+        <Txt v="captionMedium" style={{ fontVariant: ['tabular-nums'] }}>{crystals}</Txt>
       </PressableScale>
+      {!narrow && (
+        <PressableScale onPress={() => router.push('/shop')} style={[styles.pill, pad, { backgroundColor: c.surface, borderColor: c.divider }]} accessibilityLabel="sparks">
+          <Sparkle size={15} color="#F59F00" fill="#F59F00" />
+          <Txt v="captionMedium" style={{ fontVariant: ['tabular-nums'] }}>{sparks}</Txt>
+        </PressableScale>
+      )}
     </View>
   );
 }

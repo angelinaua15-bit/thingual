@@ -70,3 +70,6 @@ export { default as WandSparkles } from 'lucide-react-native/icons/wand-sparkles
 export { default as Play } from 'lucide-react-native/icons/play';
 export { default as Pause } from 'lucide-react-native/icons/pause';
 export { default as RotateCw } from 'lucide-react-native/icons/rotate-cw';
+export { default as Gem } from 'lucide-react-native/icons/gem';
+export { default as Gift } from 'lucide-react-native/icons/gift';
+export { default as Timer } from 'lucide-react-native/icons/timer';

@@ -276,7 +276,7 @@ export const en = {
     perks: {
       ai: ['Unlimited AI recognition', 'Free: {ai} scans a day'],
       notebook: ['Unlimited AI in My vocabulary', 'Free: {word} AI fills a day'],
-      books: ['Every audiobook', 'Free: {books} books per language + first chapters'],
+      books: ['Every audiobook', 'Free: {books} books per language'],
       chat: ['Unlimited AI conversation partner', 'Free: {chat} messages a day'],
       phrases: ['The whole phrasebook — 12 situations', 'Plus every phrasal verb, collocation and idiom'],
       grammar: ['Grammar A1 → C2', 'Free: A1 lessons only'],
@@ -558,7 +558,7 @@ export const en = {
     loading: 'Loading chapters…', loadError: 'Couldn’t load the book — check your connection.', retry: 'Try again', empty: 'No audiobooks in this language yet — try another language.',
     about: 'About the book', credit: 'Public-domain recordings by LibriVox volunteers, hosted on the Internet Archive.',
     levels: { A2: 'Beginner', B1: 'Intermediate', B2: 'Upper-intermediate', C1: 'Advanced' },
-    progress: '{n} of {total} chapters', nowPlaying: 'Now playing', inLang: 'Books in', unlock: 'All books with Max', unlockSub: 'Free: {n} books per language and the first chapters of every other one',
+    progress: '{n} of {total} chapters', nowPlaying: 'Now playing', inLang: 'Books in', unlock: 'All books with Max', unlockSub: 'Free: the {n} easiest books in each language',
     chapterN: 'Chapter {n}',
   },
   share: {
@@ -571,6 +571,12 @@ export const en = {
       question: 'Ask native speakers: how do you say…?',
     },
     tripCta: 'Share your trip', all: 'All',
+  },
+  cr: {
+    title: 'Crystals', sub: 'Every 2 minutes of learning earns a crystal, and there are gifts at 5, 15, 30 and 60 minutes a day. Spend them on colours and fun word collections.', maxDouble: 'With Max you get twice as many.',
+    today: '{n} min of learning today', toNext: '{n} min to the next gift (+{b} 💎)', allDone: 'All of today’s gifts are yours — see you tomorrow!', min: '{n} min', claimed: '+{n} crystals!',
+    themes: 'App colour', packs: 'Word collections', words: '{n} {n:word|words}', open: 'Open', owned: 'Unlocked', on: 'In use', unlocked: 'Unlocked 🎉', needMore: 'You need {n} more crystals — keep learning!', save: 'Save to My vocabulary',
+    how: 'How to earn', how1: 'Learn in the app: reviews, phrases, grammar, audiobooks — every 2 active minutes give 1 crystal (up to 30 a day).', how2: 'Open the gifts at 5, 15, 30 and 60 minutes for bonus crystals.', how3: 'Idle time doesn’t count — only when you’re actually learning or listening.',
   },
   limits: { left: '{n} left today' },
 };
