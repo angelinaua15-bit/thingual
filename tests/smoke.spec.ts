@@ -92,3 +92,25 @@ test('My vocabulary: add a word and mark it learned', async ({ page }) => {
   expect(added?.done).toBe(true);
   expect(errs).toEqual([]);
 });
+
+test('audiobook plays, saves progress and moves to the next chapter', async ({ page }) => {
+  const errs = errors(page);
+  await page.route('**/archive.org/metadata/**', (r) =>
+    r.fulfill({ contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ result: [
+      { name: 'ch01_64kb.mp3', format: '64Kbps MP3', title: 'Uno', length: '0:04', track: '1' },
+      { name: 'ch02_64kb.mp3', format: '64Kbps MP3', title: 'Dos', length: '0:04', track: '2' },
+    ] }) }),
+  );
+  await page.route('**/archive.org/download/**', (r) => r.fulfill({ contentType: 'audio/mpeg', path: 'tests/fixtures/tone.mp3' }));
+  await page.route('**/archive.org/services/**', (r) => r.abort());
+  await page.goto('/');
+  await page.evaluate((s) => localStorage.setItem('thingual-v1', s), seed());
+  await page.goto('/books/fabulas_esopo_01_librivox');
+  await expect(page.getByText('Uno').first()).toBeVisible();
+  await page.getByLabel('play').first().click();
+  await page.waitForTimeout(6500);
+  const books = await page.evaluate(() => JSON.parse(localStorage.getItem('thingual-v1')!).state.books);
+  expect(books['fabulas_esopo_01_librivox'].done).toContain(0);
+  expect(books['fabulas_esopo_01_librivox'].chapter).toBe(1);
+  expect(errs).toEqual([]);
+});

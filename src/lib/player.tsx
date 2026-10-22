@@ -46,6 +46,23 @@ export function playBook(bookId: string, chapters: Chapter[], chapter?: number) 
   }
   pendingSeek = saved && saved.chapter === ch ? saved.position : 0;
   usePlayer.setState({ bookId, chapters, chapter: ch, time: pendingSeek ?? 0, duration: chapters[ch]?.seconds ?? 0, error: false, buffering: true });
+  // start inside the tap itself: mobile browsers only allow audio that a gesture started
+  load(bookId, ch);
+}
+
+function load(bookId: string, ch: number) {
+  const st = usePlayer.getState();
+  const c = st.chapters[ch];
+  if (!player || !c) return;
+  player.replace({ uri: c.url });
+  player.setPlaybackRate(st.rate);
+  player.play();
+  if (Platform.OS !== 'web') {
+    const b = bookById(bookId);
+    try {
+      player.setActiveForLockScreen(true, { title: c.title, artist: b?.author, albumTitle: b?.title, artworkUrl: bookCover(bookId) }, { showSeekBackward: true, showSeekForward: true });
+    } catch {}
+  }
 }
 
 export const togglePlay = () => {
@@ -85,7 +102,6 @@ export function BookAudio() {
   const p = useAudioPlayer(null, { updateInterval: 500 });
   const status = useAudioPlayerStatus(p);
   const bookId = usePlayer((s) => s.bookId);
-  const chapter = usePlayer((s) => s.chapter);
   const listened = useRef(0);
   const lastSave = useRef(0);
   player = p;
@@ -94,22 +110,6 @@ export function BookAudio() {
     if (Platform.OS === 'web') return;
     setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: true, interruptionMode: 'doNotMix' }).catch(() => {});
   }, []);
-
-  // load the chosen chapter
-  useEffect(() => {
-    const st = usePlayer.getState();
-    const ch = st.chapters[chapter];
-    if (!bookId || !ch) return;
-    p.replace({ uri: ch.url });
-    p.setPlaybackRate(st.rate);
-    p.play();
-    if (Platform.OS !== 'web') {
-      const b = bookById(bookId);
-      try {
-        p.setActiveForLockScreen(true, { title: ch.title, artist: b?.author, albumTitle: b?.title, artworkUrl: bookCover(bookId) }, { showSeekBackward: true, showSeekForward: true });
-      } catch {}
-    }
-  }, [bookId, chapter]);
 
   // mirror status into the store, resume position, count minutes, save progress
   useEffect(() => {
@@ -151,6 +151,7 @@ export function BookAudio() {
           pendingSeek = 0;
           usePlayer.setState({ chapter: next, time: 0, duration: st.chapters[next].seconds });
           useApp.getState().saveBookProgress(bookId, { chapter: next, position: 0 });
+          load(bookId, next);
         } else {
           usePlayer.setState({ playing: false });
           requireMax('books');

@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import type { Book } from '../data/audiobooks';
 
@@ -9,11 +10,21 @@ const parseLength = (v?: string) => {
   return Math.round(Number(v) || 0);
 };
 
+// straight from archive.org; if the browser blocks it, through our own relay (api/archive.js)
+async function loadFiles(id: string): Promise<unknown> {
+  try {
+    const res = await fetch(`https://archive.org/metadata/${id}/files`);
+    if (res.ok) return await res.json();
+  } catch {}
+  const base = Platform.OS === 'web' ? '' : 'https://thingual.vercel.app';
+  const res = await fetch(`${base}/api/archive?id=${encodeURIComponent(id)}`);
+  if (!res.ok) throw new Error('archive ' + res.status);
+  return res.json();
+}
+
 /** Chapter list straight from the Internet Archive (LibriVox recordings are public domain). */
 export async function fetchChapters(book: Book): Promise<Chapter[]> {
-  const res = await fetch(`https://archive.org/metadata/${book.id}/files`);
-  if (!res.ok) throw new Error('archive ' + res.status);
-  const data = (await res.json()) as { result?: { name: string; format?: string; title?: string; length?: string; track?: string }[] };
+  const data = (await loadFiles(book.id)) as { result?: { name: string; format?: string; title?: string; length?: string; track?: string }[] };
   const files = (data.result ?? []).filter((f) => f.name.toLowerCase().endsWith('.mp3'));
   const preferred = files.filter((f) => f.format === book.mp3Format);
   const list = (preferred.length ? preferred : files.filter((f) => /64kb\.mp3$/i.test(f.name)).length ? files.filter((f) => /64kb\.mp3$/i.test(f.name)) : files)
