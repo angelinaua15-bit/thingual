@@ -60,6 +60,29 @@ npx expo start          # QR-код для Expo Go, або натисни w дл
 
 «Планета слів»: справжній знімок Землі NASA (Blue Marble вдень і Black Marble з вогнями міст уночі, суспільне надбання) з кільцем літер різних мов. Джерело й скрипти — `assets/brand/earth`, інші концепти — `assets/brand/concepts`.
 
+
+## Запуск у продакшен — чекліст
+
+**Вже працює:** синхронізація прогресу (таблиця `user_state`, вхід посиланням на email), PWA (встановлення на телефон, офлайн), AI-модерація фото (`moderate`), AI-співрозмовник (`chat`), розпізнавання (`recognize`), ліги (`league_xp`), звіти про помилки (`client_errors`), політика конфіденційності й умови (`/legal/privacy`, `/legal/terms`), автотести (`npm run test:e2e`) і CI на GitHub Actions.
+
+**Що треба зробити власниці проєкту:**
+1. Supabase → Authentication → URL Configuration → **Site URL** = `https://thingual.vercel.app` (і додати його в Redirect URLs). Без цього посилання для входу з email вестиме на localhost.
+2. Supabase → Edge Functions → Secrets: `ANTHROPIC_API_KEY` (вже є). За бажання `CHAT_MODEL`, `MODERATION_MODEL`.
+3. Vercel → Settings → Environment Variables: `EXPO_PUBLIC_CONTACT_EMAIL` — контактна адреса для політики конфіденційності.
+4. Власний домен: Vercel → Domains; потім оновити Site URL у Supabase і `SITE_URL` у `src/lib/api.ts`.
+5. App Store / Google Play: акаунти розробника (Apple $99/рік, Google $25), потім `npx eas-cli@latest build -p all --profile production` і `npx eas-cli@latest submit`.
+6. Оплати Thingual Max: акаунт RevenueCat + продукти в App Store Connect / Google Play Console, потім підключити `react-native-purchases` (потрібна development build).
+7. Перевірка перекладів носіями мов (дані — `src/data/words`, `src/data/phrases`).
+
+## Команди
+
+```bash
+npm run typecheck     # TypeScript
+npm run build:web     # збірка сайту в dist/
+npm run test:e2e      # автотести Playwright (після build:web)
+npm run emoji -- <шлях до @lobehub/fluent-emoji-3d/assets>   # оновити 3D-ілюстрації
+```
+
 ## Структура
 
 ```

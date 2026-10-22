@@ -49,6 +49,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "@types/react": "~19.3.0",
     "typescript": "~6.0.3"
   },
@@ -56,7 +57,11 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit -p .",
+    "build:web": "expo export -p web",
+    "test:e2e": "playwright test",
+    "emoji": "node scripts/copy-emoji.js"
   },
   "private": true
 }
