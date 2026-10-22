@@ -5,7 +5,7 @@ import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Plus, Search, X } from '../../src/components/icons';
 import { Txt, Button, Chip, Segmented, PressableScale, ProgressBar } from '../../src/components/ui';
-import { EmojiArt, DoneCheck, SpeakButton } from '../../src/components/NoteBits';
+import { EmojiArt, NoteArt, DoneCheck, SpeakButton } from '../../src/components/NoteBits';
 import { toast } from '../../src/components/Overlay';
 import { useTheme, fonts, radius, space } from '../../src/theme/tokens';
 import { useT, languageName } from '../../src/i18n';
@@ -126,7 +126,7 @@ export default function Notebook() {
         renderItem={({ item: w, index }) => (
           <Animated.View entering={index < 12 ? FadeInDown.delay(index * 30) : undefined} layout={LinearTransition.springify().damping(18)}>
             <PressableScale onPress={() => router.push({ pathname: '/notebook/[id]', params: { id: w.id } })} style={[styles.row, { backgroundColor: c.surface, borderColor: c.divider, opacity: w.done ? 0.72 : 1 }]}>
-              <View style={[styles.ic, { backgroundColor: c.surfaceAlt }]}><EmojiArt emoji={w.emoji} size={30} /></View>
+              <View style={[styles.ic, { backgroundColor: c.surfaceAlt }]}><NoteArt photo={w.photo} emoji={w.emoji} size={52} /></View>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', columnGap: 8 }}>
                   <Txt style={{ fontFamily: fonts.serif, fontSize: 24, lineHeight: 28, color: c.text, textDecorationLine: w.done ? 'line-through' : 'none' }} numberOfLines={1}>{w.word}</Txt>
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   search: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 44, borderRadius: radius.m, paddingHorizontal: 14, marginTop: space.m },
   searchInput: { flex: 1, fontFamily: fonts.regular, fontSize: 15, height: 44 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: radius.l, borderWidth: StyleSheet.hairlineWidth },
-  ic: { width: 48, height: 48, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+  ic: { width: 52, height: 52, borderRadius: 15, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   empty: { alignItems: 'center', padding: space.l, paddingTop: space.xl, borderRadius: radius.xl, borderWidth: StyleSheet.hairlineWidth, marginTop: space.m },
   emptyTile: { width: 64, height: 64, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   fabWrap: { position: 'absolute', alignSelf: 'center' },

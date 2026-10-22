@@ -114,3 +114,15 @@ test('audiobook plays, saves progress and moves to the next chapter', async ({ p
   expect(books['fabulas_esopo_01_librivox'].chapter).toBe(1);
   expect(errs).toEqual([]);
 });
+
+test('My vocabulary fills a known word from the built-in dictionary (no AI)', async ({ page }) => {
+  const errs = errors(page);
+  await page.goto('/');
+  await page.evaluate((s) => localStorage.setItem('thingual-v1', s), seed());
+  await page.goto('/notebook/edit');
+  await page.getByPlaceholder('свобода, la libertad…').fill('кіт');
+  await page.getByText('Підставити').first().click();
+  await expect(page.getByPlaceholder('свобода, la libertad…')).toHaveValue('el gato');
+  await expect(page.getByPlaceholder('Що означає')).toHaveValue('кіт');
+  expect(errs).toEqual([]);
+});

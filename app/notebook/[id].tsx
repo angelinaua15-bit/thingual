@@ -5,7 +5,7 @@ import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Check, Lightbulb, Pencil, RotateCcw, Turtle, Volume2 } from '../../src/components/icons';
 import { Txt, Button } from '../../src/components/ui';
-import { EmojiArt } from '../../src/components/NoteBits';
+import { NoteArt } from '../../src/components/NoteBits';
 import { toast } from '../../src/components/Overlay';
 import { useTheme, fonts, radius, space } from '../../src/theme/tokens';
 import { useT, languageName } from '../../src/i18n';
@@ -49,8 +49,8 @@ export default function NoteDetail() {
         </Pressable>
       </View>
       <ScrollView contentContainerStyle={{ padding: space.m, paddingTop: 0, paddingBottom: insets.bottom + 40, maxWidth: 640, width: '100%', alignSelf: 'center' }}>
-        <Animated.View entering={ZoomIn.springify().damping(14)} style={[styles.art, { backgroundColor: c.surfaceAlt }]}>
-          <EmojiArt emoji={w.emoji} size={72} />
+        <Animated.View entering={ZoomIn.springify().damping(14)} style={[styles.art, w.photo ? styles.artPhoto : null, { backgroundColor: c.surfaceAlt }]}>
+          <NoteArt photo={w.photo} emoji={w.emoji} size={w.photo ? 220 : 112} />
           {w.done && <View style={[styles.doneBadge, { backgroundColor: c.success }]}><Check size={14} color="#fff" strokeWidth={3} /></View>}
         </Animated.View>
 
@@ -104,7 +104,7 @@ export default function NoteDetail() {
         ) : null}
 
         {!w.association && !w.example && (
-          <Button title={t('nb.aiFill')} variant="secondary" style={{ marginTop: space.l }} onPress={() => router.push({ pathname: '/notebook/edit', params: { id: w.id } })} />
+          <Button title={t('nb.addMore')} variant="secondary" style={{ marginTop: space.l }} onPress={() => router.push({ pathname: '/notebook/edit', params: { id: w.id } })} />
         )}
 
         <Animated.View entering={FadeInDown.delay(260).springify()} style={{ marginTop: space.l }}>
@@ -128,7 +128,8 @@ const styles = StyleSheet.create({
   bar: { flexDirection: 'row', alignItems: 'center', height: 52, paddingHorizontal: 16 },
   round: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
   art: { width: 112, height: 112, borderRadius: 34, alignItems: 'center', justifyContent: 'center' },
-  doneBadge: { position: 'absolute', right: -4, top: -4, width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  artPhoto: { width: 220, height: 220, borderRadius: 28, overflow: 'hidden' },
+  doneBadge: { position: 'absolute', right: 6, top: 6, width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   pos: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 },
   say: { flex: 1, height: 50, borderRadius: 25, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   card: { marginTop: space.m, padding: 16, borderRadius: radius.l, borderWidth: 1 },

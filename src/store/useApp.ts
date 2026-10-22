@@ -161,6 +161,10 @@ export type NoteInput = {
   example?: string;
   exampleTr?: string;
   emoji?: string;
+  /** photo the learner added (or a built-in one) */
+  photo?: string;
+  /** built-in word it came from, if any */
+  conceptId?: string;
   note?: string;
 };
 export type BookProgress = { chapter: number; position: number; done: number[]; updatedAt: number };

@@ -10,6 +10,7 @@ import { useT } from '../i18n';
 import { useApp } from '../store/useApp';
 import { useTheme, radius } from '../theme/tokens';
 import { emojiUrl } from '../data/emoji';
+import { Photo } from './Photo';
 import { speak, haptic } from '../lib/feedback';
 import type { LangCode } from '../data/languages';
 
@@ -19,6 +20,16 @@ export function EmojiArt({ emoji, size }: { emoji?: string; size: number }) {
   const e = emoji?.trim() || '📝';
   if (failed) return <Text style={{ fontSize: size * 0.82, lineHeight: size, textAlign: 'center', width: size }}>{e}</Text>;
   return <Image source={{ uri: emojiUrl(e) }} style={{ width: size, height: size }} contentFit="contain" onError={() => setFailed(true)} />;
+}
+
+/** The word's picture: the learner's photo if there is one, otherwise its emoji, filling a square box. */
+export function NoteArt({ photo, emoji, size }: { photo?: string; emoji?: string; size: number }) {
+  if (photo) return <Photo uri={photo} style={{ width: size, height: size }} />;
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <EmojiArt key={emoji} emoji={emoji} size={size * 0.62} />
+    </View>
+  );
 }
 
 /** Round "done" checkbox with a little bounce. */

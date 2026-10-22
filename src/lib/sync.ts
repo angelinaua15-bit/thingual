@@ -23,6 +23,7 @@ function snapshot(s: S): Snapshot {
   KEYS.forEach((k) => { out[k] = (s as unknown as Record<string, unknown>)[k]; });
   // photos stored only on this device can't travel; real (uploaded) photos can
   out.words = Object.fromEntries(Object.entries(s.words).map(([id, w]) => [id, { ...w, photo: portablePhoto(w.photo) }]));
+  out.notebook = Object.fromEntries(Object.entries(s.notebook).map(([id, w]) => [id, { ...w, photo: w.photo ? portablePhoto(w.photo) || undefined : undefined }]));
   out.profile = { nickname: s.profile.nickname, displayName: s.profile.displayName, ageGroup: s.profile.ageGroup, termsAt: s.profile.termsAt };
   return out as Snapshot;
 }
@@ -45,7 +46,8 @@ function mergeNotebook(local: S, remote: Snapshot) {
   Object.entries(remote.noteTomb ?? {}).forEach(([id, t]) => { noteTomb[id] = Math.max(t, local.noteTomb[id] ?? 0); });
   const notebook = { ...local.notebook };
   Object.values(remote.notebook ?? {}).forEach((w) => {
-    if (!notebook[w.id] || w.updatedAt > notebook[w.id].updatedAt) notebook[w.id] = w;
+    // photos from the gallery stay on the device they were taken on
+    if (!notebook[w.id] || w.updatedAt > notebook[w.id].updatedAt) notebook[w.id] = { ...w, photo: w.photo || notebook[w.id]?.photo };
   });
   Object.keys(notebook).forEach((id) => { if (noteTomb[id] && noteTomb[id] >= notebook[id].updatedAt) delete notebook[id]; });
   return { notebook, noteTomb };

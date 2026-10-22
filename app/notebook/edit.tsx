@@ -1,20 +1,20 @@
-import React, { useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Lightbulb, Trash2, Volume2, WandSparkles } from '../../src/components/icons';
+import { BookOpen, Camera, ImagePlus, Lightbulb, Trash2, Volume2, X } from '../../src/components/icons';
 import { Txt, Button, Chip } from '../../src/components/ui';
-import { EmojiArt } from '../../src/components/NoteBits';
+import { EmojiArt, NoteArt } from '../../src/components/NoteBits';
 import { toast, Sheet } from '../../src/components/Overlay';
 import { useTheme, fonts, radius, space } from '../../src/theme/tokens';
 import { useT, languageName } from '../../src/i18n';
 import { useApp, type NoteInput } from '../../src/store/useApp';
-import { enrichWord } from '../../src/lib/notebook';
-import { quotaLeft, requireMax, useIsMax } from '../../src/lib/premium';
+import { PICK_EMOJI, fromConcept, lookupWord } from '../../src/lib/notebook';
+import { pickImage } from '../../src/lib/pickImage';
+import { needsPersist, persistPhoto } from '../../src/lib/photoStore';
+import { fullWord, labelOf } from '../../src/data/concepts';
 import { speak, haptic } from '../../src/lib/feedback';
-import { cefrOf } from '../../src/lib/level';
 import { goBack } from '../../src/lib/nav';
 import type { LangCode } from '../../src/data/languages';
 
@@ -27,40 +27,39 @@ export default function EditNote() {
   const { id, word: preset } = useLocalSearchParams<{ id?: string; word?: string }>();
   const s = useApp((x) => x.settings);
   const existing = useApp((x) => (id ? x.notebook[id] : undefined));
-  const max = useIsMax();
   const [f, setF] = useState<NoteInput>(() =>
     existing
-      ? { word: existing.word, lang: existing.lang, translation: existing.translation, ipa: existing.ipa, roman: existing.roman, pos: existing.pos, association: existing.association, example: existing.example, exampleTr: existing.exampleTr, emoji: existing.emoji, note: existing.note }
+      ? { word: existing.word, lang: existing.lang, translation: existing.translation, ipa: existing.ipa, roman: existing.roman, pos: existing.pos, association: existing.association, example: existing.example, exampleTr: existing.exampleTr, emoji: existing.emoji, photo: existing.photo, conceptId: existing.conceptId, note: existing.note }
       : { word: preset ?? '', lang: s.active, translation: '' },
   );
-  const [busy, setBusy] = useState(false);
-  const [aiMsg, setAiMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [saving, setSaving] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const set = (patch: Partial<NoteInput>) => setF((x) => ({ ...x, ...patch }));
-  const left = quotaLeft('word');
-
-  const ai = async () => {
-    if (!f.word.trim()) return setAiMsg({ text: t('nb.needWord'), ok: false });
-    if (left <= 0) return requireMax('word');
-    setBusy(true);
-    setAiMsg(null);
-    const r = await enrichWord({ word: f.word.trim(), target: f.lang, native: s.native, translation: f.translation.trim() || undefined, level: cefrOf(s) });
-    setBusy(false);
-    if (!r.ok) {
-      if (r.error === 'limit') return requireMax('word');
-      return setAiMsg({ text: t(r.error === 'unknown' ? 'nb.aiUnknown' : r.error === 'no_key' ? 'nb.noKey' : r.error === 'service' ? 'nb.aiService' : 'nb.aiOffline'), ok: false });
-    }
-    const d = r.data;
+  // offline helper: words we already know in any language
+  const matches = useMemo(() => (f.conceptId && fullWord(f.conceptId, f.lang) === f.word ? [] : lookupWord(f.word)), [f.word, f.lang, f.conceptId]);
+  const useMatch = (id: string) => {
+    const cc = matches.find((m) => m.id === id);
+    if (!cc) return;
     haptic.success();
-    set({ word: d.word || f.word, translation: d.translation || f.translation, ipa: d.ipa, roman: d.roman, pos: d.pos, association: d.association, example: d.example, exampleTr: d.exampleTr, emoji: d.emoji || f.emoji });
-    setAiMsg({ text: t('nb.aiFilled'), ok: true });
-    speak(d.word || f.word, f.lang);
+    const d = fromConcept(cc, f.lang, s.native);
+    setF((x) => ({ ...x, ...d, translation: x.translation || d.translation || '', association: x.association, note: x.note, photo: x.photo || d.photo }));
+    setMsg({ text: t('nb.filled'), ok: true });
+    speak(d.word ?? f.word, f.lang);
+  };
+  const addPhoto = async (camera?: boolean) => {
+    const uri = await pickImage({ square: true, camera, max: 1080 });
+    if (uri) set({ photo: uri });
   };
 
-  const save = () => {
+  const save = async () => {
     const word = f.word.trim();
-    if (!word) return setAiMsg({ text: t('nb.needWord'), ok: false });
-    const clean: NoteInput = { ...f, word, translation: f.translation.trim() };
+    if (!word) return setMsg({ text: t('nb.needWord'), ok: false });
+    setSaving(true);
+    // keep photos from the gallery/camera on the device (not just in memory)
+    const photo = f.photo && needsPersist(f.photo) ? await persistPhoto(f.photo).catch(() => f.photo) : f.photo;
+    setSaving(false);
+    const clean: NoteInput = { ...f, word, photo, translation: f.translation.trim() };
     const st = useApp.getState();
     if (existing) {
       st.updateNote(existing.id, clean);
@@ -87,7 +86,7 @@ export default function EditNote() {
       <View style={[styles.bar, { borderBottomColor: c.divider }]}>
         <Pressable onPress={() => goBack('/notebook')} hitSlop={10}><Txt v="body" color={c.textSecondary}>{t('nb.cancel')}</Txt></Pressable>
         <Txt v="headline" style={{ flex: 1, textAlign: 'center' }}>{existing ? t('nb.edit') : t('nb.new')}</Txt>
-        <Pressable onPress={save} hitSlop={10} disabled={!f.word.trim()}><Txt v="bodyMedium" color={f.word.trim() ? c.accent : c.textTertiary}>{t('nb.save')}</Txt></Pressable>
+        <Pressable onPress={save} hitSlop={10} disabled={!f.word.trim() || saving}><Txt v="bodyMedium" color={f.word.trim() ? c.accent : c.textTertiary}>{t('nb.save')}</Txt></Pressable>
       </View>
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: space.m, paddingBottom: insets.bottom + 40, maxWidth: 640, width: '100%', alignSelf: 'center' }}>
         {/* language */}
@@ -99,9 +98,6 @@ export default function EditNote() {
 
         {/* word */}
         <View style={[styles.wordCard, { backgroundColor: c.surface, borderColor: c.divider }]}>
-          <View style={[styles.emoji, { backgroundColor: c.surfaceAlt }]}>
-            <EmojiArt key={f.emoji} emoji={f.emoji} size={40} />
-          </View>
           <View style={{ flex: 1 }}>
             <Txt v="overline" color={c.textTertiary}>{t('nb.word')}</Txt>
             <TextInput
@@ -124,34 +120,67 @@ export default function EditNote() {
           </View>
         </View>
 
-        {/* AI */}
-        <Pressable onPress={ai} disabled={busy} style={({ pressed }) => [styles.aiBtn, { opacity: pressed || busy ? 0.85 : 1 }]}>
-          <LinearGradient colors={['#5B3FD0', '#8B5CF6', '#C084FC']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.aiGrad}>
-            {busy ? <ActivityIndicator color="#fff" /> : <WandSparkles size={19} color="#fff" />}
-            <Txt v="bodyMedium" color="#fff">{busy ? t('nb.aiWorking') : f.association ? t('nb.aiAgain') : t('nb.aiFill')}</Txt>
-          </LinearGradient>
-        </Pressable>
-        {!max && <Txt v="caption" color={c.textTertiary} center style={{ marginTop: 6 }}>{t('nb.aiLeft', { n: Math.max(0, left) })}</Txt>}
-        {aiMsg && (
-          <Animated.View entering={FadeIn} style={[styles.msg, { backgroundColor: aiMsg.ok ? c.successSoft : c.errorSoft }]}>
-            <Txt v="caption" color={aiMsg.ok ? c.success : c.error}>{aiMsg.text}</Txt>
+        {/* built-in dictionary suggestions */}
+        {matches.length > 0 && (
+          <Animated.View entering={FadeIn} style={[styles.found, { backgroundColor: c.accentSoft }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <BookOpen size={14} color={c.accent} />
+              <Txt v="captionMedium" color={c.accent}>{t('nb.found')}</Txt>
+            </View>
+            {matches.map((m) => (
+              <Pressable key={m.id} onPress={() => useMatch(m.id)} style={[styles.foundRow, { backgroundColor: c.surface }]}>
+                <EmojiArt emoji={m.emoji} size={28} />
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Txt v="bodyMedium" numberOfLines={1}>{fullWord(m.id, f.lang)}</Txt>
+                  <Txt v="caption" color={c.textSecondary} numberOfLines={1}>{labelOf(m.id, s.native)?.word}</Txt>
+                </View>
+                <Txt v="captionMedium" color={c.accent}>{t('nb.use')}</Txt>
+              </Pressable>
+            ))}
           </Animated.View>
         )}
+        {msg && (
+          <Animated.View entering={FadeIn} style={[styles.msg, { backgroundColor: msg.ok ? c.successSoft : c.errorSoft }]}>
+            <Txt v="caption" color={msg.ok ? c.success : c.error}>{msg.text}</Txt>
+          </Animated.View>
+        )}
+
+        {/* picture */}
+        <Field label={t('nb.picture')}>
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            <View style={[styles.pic, { backgroundColor: c.surfaceAlt }]}>
+              <NoteArt photo={f.photo} emoji={f.emoji} size={120} />
+              {f.photo ? (
+                <Pressable onPress={() => set({ photo: undefined })} hitSlop={8} style={styles.picX} accessibilityLabel="remove photo"><X size={14} color="#fff" /></Pressable>
+              ) : null}
+            </View>
+            <View style={{ flex: 1, gap: 8, justifyContent: 'center' }}>
+              <Button title={t('nb.gallery')} variant="secondary" size="m" icon={<ImagePlus size={17} color={c.text} />} onPress={() => addPhoto(false)} />
+              {Platform.OS !== 'web' && <Button title={t('nb.camera')} variant="secondary" size="m" icon={<Camera size={17} color={c.text} />} onPress={() => addPhoto(true)} />}
+              <Txt v="caption" color={c.textTertiary}>{t('nb.pictureHint')}</Txt>
+            </View>
+          </View>
+          <View style={styles.emojiGrid}>
+            {PICK_EMOJI.map((e) => {
+              const on = !f.photo && f.emoji === e;
+              return (
+                <Pressable key={e} onPress={() => { haptic.light(); set({ emoji: e, photo: undefined }); }} style={[styles.emojiCell, { backgroundColor: on ? c.accentSoft : c.surface, borderColor: on ? c.accent : c.divider }]}>
+                  <EmojiArt emoji={e} size={26} />
+                </Pressable>
+              );
+            })}
+          </View>
+        </Field>
 
         {/* fields */}
         <Field label={t('nb.translation')}>
           <TextInput value={f.translation} onChangeText={(v) => set({ translation: v })} placeholder={t('nb.translationPh')} placeholderTextColor={c.textTertiary} style={[styles.input, { backgroundColor: c.surface, borderColor: c.divider, color: c.text }]} />
         </Field>
 
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          <View style={{ flex: 1 }}>
+        <View>
+          <View>
             <Field label={t('nb.transcription')}>
               <TextInput value={f.ipa ?? ''} onChangeText={(v) => set({ ipa: v })} placeholder="/liβeɾˈtað/" placeholderTextColor={c.textTertiary} autoCapitalize="none" style={[styles.input, { backgroundColor: c.surface, borderColor: c.divider, color: c.text }]} />
-            </Field>
-          </View>
-          <View style={{ width: 92 }}>
-            <Field label={t('nb.emoji')}>
-              <TextInput value={f.emoji ?? ''} onChangeText={(v) => set({ emoji: [...v].slice(-2).join('') })} placeholder="🕊️" placeholderTextColor={c.textTertiary} style={[styles.input, { backgroundColor: c.surface, borderColor: c.divider, color: c.text, textAlign: 'center', fontSize: 22 }]} />
             </Field>
           </View>
         </View>
@@ -169,7 +198,7 @@ export default function EditNote() {
           <TextInput value={f.note ?? ''} onChangeText={(v) => set({ note: v })} placeholder={t('nb.notePh')} placeholderTextColor={c.textTertiary} multiline style={[styles.input, styles.multi, { backgroundColor: c.surface, borderColor: c.divider, color: c.text }]} />
         </Field>
 
-        <Button title={t('nb.save')} disabled={!f.word.trim()} onPress={save} style={{ marginTop: space.l }} />
+        <Button title={t('nb.save')} disabled={!f.word.trim()} loading={saving} onPress={save} style={{ marginTop: space.l }} />
         {existing && (
           <Button title={t('nb.delete')} variant="ghost" icon={<Trash2 size={18} color={c.error} />} onPress={() => setConfirm(true)} style={{ marginTop: 8 }} />
         )}
@@ -202,10 +231,13 @@ function Field({ label, icon, children }: { label: string; icon?: React.ReactNod
 const styles = StyleSheet.create({
   bar: { flexDirection: 'row', alignItems: 'center', gap: 12, height: 52, paddingHorizontal: 16, borderBottomWidth: StyleSheet.hairlineWidth },
   wordCard: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: radius.xl, borderWidth: StyleSheet.hairlineWidth },
-  emoji: { width: 64, height: 64, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  found: { marginTop: space.m, padding: 12, borderRadius: radius.l, gap: 8 },
+  foundRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: radius.m },
+  pic: { width: 120, height: 120, borderRadius: 24, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  picX: { position: 'absolute', top: 6, right: 6, width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(0,0,0,.55)', alignItems: 'center', justifyContent: 'center' },
+  emojiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
+  emojiCell: { width: 44, height: 44, borderRadius: 14, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   wordInput: { fontFamily: fonts.serif, fontSize: 34, lineHeight: 40, paddingVertical: 2, minHeight: 44 },
-  aiBtn: { marginTop: space.m, borderRadius: 26, overflow: 'hidden' },
-  aiGrad: { height: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
   msg: { marginTop: 10, paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.s },
   input: { minHeight: 48, borderRadius: radius.m, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 14, paddingVertical: 12, fontFamily: fonts.regular, fontSize: 16 },
   multi: { minHeight: 76, textAlignVertical: 'top' },

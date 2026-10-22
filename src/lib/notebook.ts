@@ -1,29 +1,67 @@
-import { supabase } from './supabase';
-import { ensureSession } from './api';
-import { hasQuota, spendQuota } from './premium';
+import { CONCEPTS, fullWord, labelOf, type Concept } from '../data/concepts';
+import { coverFor } from '../data/photos';
+import { isEmojiUrl } from '../data/emoji';
 import type { LangCode } from '../data/languages';
-
-export type WordAI = { word: string; translation: string; ipa: string; roman: string | null; pos: string; association: string; example: string; exampleTr: string; emoji: string };
-export type WordAIError = 'limit' | 'offline' | 'unknown' | 'no_key' | 'service';
+import type { NoteInput } from '../store/useApp';
 
 /**
- * AI help for a word the learner wrote: translation, IPA transcription, an association that makes it stick,
- * an example and an emoji. Runs in the Supabase Edge Function `word` (key stays on the server).
+ * My vocabulary works offline, without AI: when the learner types a word we already know
+ * (in any of the 16 languages, with or without an article), we offer to fill in the
+ * translation, example, transcription and a picture from the built-in dictionary.
  */
-export async function enrichWord(input: { word: string; target: LangCode; native: LangCode; translation?: string; level?: string }): Promise<{ ok: true; data: WordAI } | { ok: false; error: WordAIError }> {
-  if (!hasQuota('word')) return { ok: false, error: 'limit' };
-  try {
-    await ensureSession();
-    const { data, error } = await supabase.functions.invoke('word', { body: input });
-    if (error || !data) return { ok: false, error: 'offline' };
-    const d = data as Partial<WordAI> & { error?: string };
-    if (d.error === 'no_key') return { ok: false, error: 'no_key' };
-    // the server answered but the AI provider refused (key, balance, model) — not the user's connection
-    if (d.error) return { ok: false, error: d.error === 'unknown' ? 'unknown' : 'service' };
-    spendQuota('word');
-    return { ok: true, data: d as WordAI };
-  } catch {
-    return { ok: false, error: 'offline' };
+const ARTICLES = /^(the|a|an|to|el|la|los|las|le|les|l’|l'|der|die|das|den|dem|il|lo|gli|i|o|os|as|un|una|une|ein|eine)\s+/;
+export const normWord = (s: string) =>
+  s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[’']/g, '’').trim().replace(ARTICLES, '').replace(/^l’/, '').trim();
+
+let index: Map<string, Concept[]> | null = null;
+function getIndex() {
+  if (index) return index;
+  index = new Map();
+  for (const c of CONCEPTS) {
+    for (const l of Object.values(c.labels)) {
+      for (const v of [l.word, l.roman].filter(Boolean) as string[]) {
+        const k = normWord(v);
+        if (!k) continue;
+        const list = index.get(k) ?? [];
+        if (!list.includes(c)) list.push(c);
+        index.set(k, list);
+      }
+    }
   }
+  return index;
 }
 
+/** Built-in words that match what the learner typed: exact matches first, then words starting with it. */
+export function lookupWord(text: string, limit = 4): Concept[] {
+  const q = normWord(text);
+  if (q.length < 2) return [];
+  const idx = getIndex();
+  const out: Concept[] = [...(idx.get(q) ?? [])];
+  if (out.length < limit && q.length >= 3) {
+    for (const [k, list] of idx) {
+      if (out.length >= limit) break;
+      if (k !== q && k.startsWith(q)) list.forEach((c) => !out.includes(c) && out.length < limit && out.push(c));
+    }
+  }
+  return out.slice(0, limit);
+}
+
+/** What a built-in word can fill in for the learner's card. */
+export function fromConcept(c: Concept, target: LangCode, native: LangCode): Partial<NoteInput> {
+  const cover = coverFor(c.id, 600);
+  const ex = c.examples as Partial<Record<LangCode, string>>;
+  return {
+    word: fullWord(c.id, target),
+    translation: labelOf(c.id, native)?.word ?? '',
+    ipa: target === 'en' ? c.ipa : undefined,
+    roman: labelOf(c.id, target)?.roman ?? null,
+    example: ex[target] || undefined,
+    exampleTr: ex[target] ? ex[native] || undefined : undefined,
+    emoji: c.emoji,
+    photo: cover && !isEmojiUrl(cover) ? cover : undefined,
+    conceptId: c.id,
+  };
+}
+
+/** Pictures to choose from when the word has no photo. */
+export const PICK_EMOJI = ['💡', '❤️', '🌈', '⭐', '🔥', '🌊', '🌱', '🌙', '☀️', '🎯', '🧠', '💬', '🎵', '🏠', '✈️', '🍀', '🕊️', '⏳', '🎨', '📚', '💪', '🤝', '😊', '😢', '😡', '😮', '🤔', '🙏', '🎉', '🔑', '🧩', '⚖️'];

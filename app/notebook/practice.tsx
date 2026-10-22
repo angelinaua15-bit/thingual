@@ -5,7 +5,7 @@ import Animated, { FadeIn, FadeInDown, SlideInRight, ZoomIn } from 'react-native
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Check, Lightbulb, Volume2, X } from '../../src/components/icons';
 import { Txt, Button, ProgressBar } from '../../src/components/ui';
-import { EmojiArt } from '../../src/components/NoteBits';
+import { EmojiArt, NoteArt } from '../../src/components/NoteBits';
 import { useTheme, fonts, radius, space } from '../../src/theme/tokens';
 import { useT } from '../../src/i18n';
 import { useApp } from '../../src/store/useApp';
@@ -74,7 +74,7 @@ export default function NotePractice() {
 
       <Animated.View key={w.id} entering={SlideInRight.springify().damping(20)} style={{ flex: 1, padding: space.l, maxWidth: 560, width: '100%', alignSelf: 'center', justifyContent: 'center' }}>
         <View style={{ alignItems: 'center' }}>
-          <View style={[styles.art, { backgroundColor: c.surfaceAlt }]}><EmojiArt emoji={w.emoji} size={64} /></View>
+          <View style={[styles.art, { backgroundColor: c.surfaceAlt }]}><NoteArt photo={w.photo} emoji={w.emoji} size={w.photo ? 160 : 104} /></View>
           <Txt v="overline" color={c.textSecondary} style={{ marginTop: 18 }}>{t('nb.remember')}</Txt>
           <Txt center style={{ fontFamily: fonts.serif, fontSize: 36, lineHeight: 42, color: c.text, marginTop: 6 }}>{w.translation || '—'}</Txt>
           {!shown && w.association && (
@@ -127,7 +127,7 @@ export default function NotePractice() {
 
 const styles = StyleSheet.create({
   bar: { flexDirection: 'row', alignItems: 'center', gap: 14, height: 52, paddingHorizontal: 16 },
-  art: { width: 104, height: 104, borderRadius: 32, alignItems: 'center', justifyContent: 'center' },
+  art: { borderRadius: 32, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   assoc: { flexDirection: 'row', gap: 8, padding: 12, borderRadius: radius.m, marginTop: 16, alignSelf: 'stretch' },
   hintBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 16, paddingHorizontal: 14, height: 36, borderRadius: 18, borderWidth: 1 },
   answer: { marginTop: space.l, padding: 18, borderRadius: radius.xl, borderWidth: StyleSheet.hairlineWidth },

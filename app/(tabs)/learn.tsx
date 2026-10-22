@@ -1,4 +1,3 @@
-import { QuestsCard } from '../../src/components/QuestsCard';
 import { InstallBanner } from '../../src/components/InstallBanner';
 import { Image } from 'expo-image';
 import { emojiUrl } from '../../src/data/emoji';
@@ -98,8 +97,6 @@ export default function Learn() {
             </>
           )}
         </Animated.View>
-
-        <QuestsCard />
 
         {/* study: 2 × 2 */}
         <View style={styles.grid}>
