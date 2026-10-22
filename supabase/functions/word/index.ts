@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
     const target = String(body.target ?? '').slice(0, 10);
     const native = String(body.native ?? 'en').slice(0, 10);
     if (!word || !target) return json({ error: 'bad request' }, 400);
-    const key = Deno.env.get('ANTHROPIC_API_KEY');
+    const key = cleanKey(Deno.env.get('ANTHROPIC_API_KEY'));
     if (!key) return json({ error: 'no_key' });
     const system =
       `You help a language learner build a personal vocabulary. The learner studies the language with code "${target}" and speaks the language with code "${native}". ` +
@@ -31,6 +31,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({ model: MODEL, max_tokens: 400, system, messages: [{ role: 'user', content: user }] }),
     });
     if (!res.ok) {
+      if (res.status === 401) console.error('key check', describeKey(Deno.env.get('ANTHROPIC_API_KEY')));
       // log the provider's reason (no secrets in it) so problems with the key, balance or model are visible in Supabase logs
       const detail = (await res.text()).slice(0, 300);
       console.error('anthropic error', res.status, detail);
@@ -48,6 +49,15 @@ Deno.serve(async (req) => {
     return json({ error: String(e) }, 500);
   }
 });
+
+// tolerate a key pasted with quotes, spaces or a line break
+const cleanKey = (k?: string) => (k ?? '').trim().replace(/^['"]+|['"]+$/g, '').replace(/\s+/g, '');
+// safe description for the logs: shape only, never the secret itself
+const describeKey = (k?: string) => {
+  const raw = k ?? '';
+  const c = cleanKey(raw);
+  return JSON.stringify({ rawLength: raw.length, length: c.length, prefix: c.slice(0, 10), last4: c.slice(-4), hadSpacesOrQuotes: raw !== c });
+};
 
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, content-type, apikey, x-client-info', 'Access-Control-Allow-Methods': 'POST, OPTIONS' };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...cors, 'content-type': 'application/json' } });
