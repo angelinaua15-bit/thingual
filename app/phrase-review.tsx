@@ -74,7 +74,7 @@ export default function PhraseReview() {
   }
 
   const e = exprById(queue[idx])!;
-  const target = exprTarget(e, s.active);
+  const target = exprTarget(e, s.active, s.speakerGender === 'female');
   const code = exprLang(e, s.active);
 
   return (
@@ -86,7 +86,7 @@ export default function PhraseReview() {
       </View>
       <Animated.View key={idx} entering={SlideInRight.springify().damping(20)} style={{ flex: 1, padding: space.l, maxWidth: 560, width: '100%', alignSelf: 'center', justifyContent: 'center' }}>
         <Txt v="overline" color={c.textSecondary}>{t('phr.remember', { lang: languageName(code, s.uiLang) })}</Txt>
-        <Txt style={{ fontFamily: fonts.serif, fontSize: 34, lineHeight: 40, color: c.text, marginTop: 10 }}>{exprMeaning(e, s.native)}</Txt>
+        <Txt style={{ fontFamily: fonts.serif, fontSize: 34, lineHeight: 40, color: c.text, marginTop: 10 }}>{exprMeaning(e, s.native, s.speakerGender === 'female')}</Txt>
         {e.kind !== 'phrase' && e.exEn && !shown ? (
           <Txt v="callout" color={c.textTertiary} style={{ marginTop: 12, fontStyle: 'italic' }}>{e.exEn.replace(new RegExp(e.en.split(' ')[0], 'i'), '____')}</Txt>
         ) : null}

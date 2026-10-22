@@ -1,3 +1,4 @@
+import { InstallBanner } from '../src/components/InstallBanner';
 import { haptic } from '../src/lib/feedback';
 import { shareFile } from '../src/lib/share';
 import React, { useState } from 'react';
@@ -15,7 +16,7 @@ import { useApp, Level } from '../src/store/useApp';
 import { LANGUAGES, LangCode, UI_LANGUAGES } from '../src/data/languages';
 import { backendConnected } from '../src/lib/recognize';
 import { MaxBanner } from '../src/components/MaxBanner';
-import { deleteMyData, linkEmail } from '../src/lib/api';
+import { deleteMyData, linkEmail, myEmail } from '../src/lib/api';
 import { qc, useNet } from '../src/lib/queries';
 
 export default function SettingsScreen() {
@@ -28,6 +29,8 @@ export default function SettingsScreen() {
   const [familyOpen, setFamilyOpen] = useState<false | 'set' | 'unlock'>(false);
   const [pin, setPin] = useState('');
   const [email, setEmail] = useState('');
+  const [linked, setLinked] = useState<string | null>(null);
+  React.useEffect(() => { myEmail().then(setLinked).catch(() => {}); }, []);
   const uid = useNet((x) => x.uid);
 
   const confirmDelete = () => {
@@ -51,7 +54,9 @@ export default function SettingsScreen() {
         <Txt v="headline">{t('settings.title')}</Txt>
       </View>
       <ScrollView contentContainerStyle={{ padding: space.m, paddingBottom: insets.bottom + 40, maxWidth: 640, width: '100%', alignSelf: 'center' }}>
-        <MaxBanner style={{ marginBottom: 20 }} />
+        <MaxBanner style={{ marginBottom: 8 }} />
+        <InstallBanner always />
+        <View style={{ height: 12 }} />
         <Group title={t('settings.languages')}>
           <ListRow title={t('settings.myLanguage')} value={LANGUAGES.find((l) => l.code === s.native)?.native} onPress={() => setLangSheet('native')} />
           <ListRow title={t('settings.learning')} value={s.targets.map((l) => languageName(l, s.uiLang)).join(', ')} onPress={() => setLangSheet('target')} />
@@ -93,8 +98,17 @@ export default function SettingsScreen() {
 
         <Group title={t('settings.account')} footer={uid ? `${t('settings.accountId')}: ${uid}` : undefined}>
           <View style={{ padding: 16, gap: 10 }}>
-            <Txt v="bodyMedium">{t('settings.linkEmail')}</Txt>
-            <Txt v="caption" color={c.textSecondary}>{t('settings.linkEmailSub')}</Txt>
+            {linked ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.success }} />
+                <View style={{ flex: 1 }}>
+                  <Txt v="bodyMedium">{t('sync.on')}</Txt>
+                  <Txt v="caption" color={c.textSecondary}>{linked}</Txt>
+                </View>
+              </View>
+            ) : null}
+            <Txt v="bodyMedium">{linked ? t('sync.changeEmail') : t('settings.linkEmail')}</Txt>
+            <Txt v="caption" color={c.textSecondary}>{t('sync.linkSub')}</Txt>
             <View style={{ flexDirection: 'row', gap: 8 }}>
               <TextInput
                 value={email}
@@ -120,6 +134,7 @@ export default function SettingsScreen() {
               />
             </View>
           </View>
+          <ListRow title={t('sync.signinOther')} subtitle={t('sync.signinOtherSub')} onPress={() => router.push('/signin')} />
         </Group>
 
         <Group title={t('settings.appearance')}>

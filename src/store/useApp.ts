@@ -47,6 +47,8 @@ export type Settings = {
   reduceMotion: boolean;
   weeklyFriendsSummary: boolean;
   mapStyle?: 'color' | 'satellite' | 'minimal';
+  /** grammatical gender for first-person phrases (“I’m tired” → втомився / втомилася) */
+  speakerGender?: 'male' | 'female';
 };
 
 type State = {
@@ -75,6 +77,8 @@ type State = {
   maxWaitlist?: 'monthly' | 'yearly' | 'family';
   /** saved phrases, phrasal verbs, collocations and idioms (spaced repetition) */
   exprs: Record<string, { card: StoredCard; addedAt: number }>;
+  /** daily quests progress: day → counters + claimed quest ids */
+  quests: { day: string; words: number; reviews: number; phrases: number; photos: number; claimed: string[] };
   drops: Record<string, string>; // dateKey -> post id of my Daily Drop
   achievements: string[];
   familyMode: { enabled: boolean; pin?: string; childName?: string };
@@ -179,6 +183,7 @@ const initialState = (): State => {
     flame: 'classic',
     celebrate: null,
     exprs: {},
+    quests: { day: '', words: 0, reviews: 0, phrases: 0, photos: 0, claimed: [] },
     drops: {},
     achievements: [],
     familyMode: { enabled: false },

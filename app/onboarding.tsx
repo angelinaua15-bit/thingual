@@ -208,6 +208,9 @@ function Welcome({ t, onStart }: { t: (k: string) => string; onStart: () => void
         <Animated.View entering={FadeInUp.delay(750).duration(700)}>
           <Button title={t('onboarding.start')} variant="inverse" onPress={onStart} />
           <Txt v="caption" color="rgba(255,255,255,0.5)" center style={{ marginTop: 14 }}>{t('onboarding.noSignup')}</Txt>
+          <Pressable onPress={() => router.push('/signin')} hitSlop={8} style={{ alignSelf: 'center', marginTop: 10 }}>
+            <Txt v="captionMedium" color="rgba(255,255,255,0.85)" style={{ textDecorationLine: 'underline' }}>{t('sync.haveAccount')}</Txt>
+          </Pressable>
         </Animated.View>
       </View>
     </View>

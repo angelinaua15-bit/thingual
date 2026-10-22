@@ -434,3 +434,6 @@ export const en = {
 
 type Widen<T> = T extends string ? string : T extends readonly string[] ? string[] : { [K in keyof T]: Widen<T[K]> };
 export type Strings = Widen<typeof en>;
+type DeepPartial<T> = T extends string | string[] ? T : { [K in keyof T]?: DeepPartial<T[K]> };
+/** Newer languages may lag behind English; missing keys fall back to English. */
+export type PartialStrings = DeepPartial<Strings>;

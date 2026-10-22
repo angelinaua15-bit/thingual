@@ -41,7 +41,7 @@ export default function ExprList() {
     return exprsOfKind(kind).filter((e) => {
       if (group !== 'all' && (kind === 'phrasal' || kind === 'idiom' ? e.level !== group : e.group !== group)) return false;
       if (!query) return true;
-      const hay = [e.en, e.uk, e.def, exprTarget(e, s.active).text, exprMeaning(e, s.native)].join(' ').toLowerCase();
+      const hay = [e.en, e.uk, e.def, exprTarget(e, s.active, s.speakerGender === 'female').text, exprMeaning(e, s.native, s.speakerGender === 'female')].join(' ').toLowerCase();
       return hay.includes(query);
     });
   }, [kind, group, q, s.active, s.native]);
@@ -98,8 +98,8 @@ function Row({ e, i, open, onToggle }: { e: Expr; i: number; open: boolean; onTo
   const { t } = useT();
   const s = useApp((x) => x.settings);
   const saved = useApp((x) => !!x.exprs[e.id]);
-  const target = exprTarget(e, s.active);
-  const meaning = exprMeaning(e, s.native);
+  const target = exprTarget(e, s.active, s.speakerGender === 'female');
+  const meaning = exprMeaning(e, s.native, s.speakerGender === 'female');
   const langCode = exprLang(e, s.active);
   const ex = s.native === 'uk' ? e.exUk : undefined;
   return (

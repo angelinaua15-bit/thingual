@@ -323,9 +323,29 @@ export async function activity(): Promise<Activity[]> {
 }
 
 /* ---------------- account ---------------- */
+export const SITE_URL = 'https://thingual.vercel.app';
+
+/** Attach an email to the current (anonymous) account so progress can be restored elsewhere. */
 export async function linkEmail(email: string) {
-  const { error } = await supabase.auth.updateUser({ email });
+  const { error } = await supabase.auth.updateUser({ email }, { emailRedirectTo: SITE_URL });
   if (error) throw error;
+}
+
+/** Sign in on another device with a magic link (only for accounts that already have an email). */
+export async function signInWithEmail(email: string) {
+  const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: SITE_URL } });
+  if (error) throw error;
+}
+
+/** Forget the cached session id (after a sign-in on this device switched accounts). */
+export function resetSession(uid?: string) {
+  sessionPromise = uid ? Promise.resolve(uid) : null;
+  currentUid = uid ?? null;
+}
+
+export async function myEmail(): Promise<string | null> {
+  const { data } = await supabase.auth.getUser();
+  return data.user?.email ?? data.user?.new_email ?? null;
 }
 
 export async function deleteMyData() {

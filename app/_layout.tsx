@@ -15,6 +15,9 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { qc, useBootstrap } from '../src/lib/queries';
 import { useNotificationSchedule } from '../src/lib/notifications';
 import { StreakCelebration } from '../src/components/StreakBits';
+import { initSync } from '../src/lib/sync';
+
+initSync();
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 

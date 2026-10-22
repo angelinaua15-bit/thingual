@@ -39,4 +39,4 @@ export const LANGUAGES: Language[] = [
 export const lang = (code: LangCode) => LANGUAGES.find((l) => l.code === code) ?? LANGUAGES[0];
 
 /** Languages that have a fully translated interface. Others fall back to English. */
-export const UI_LANGUAGES: LangCode[] = ['en', 'uk'];
+export const UI_LANGUAGES: LangCode[] = ['en', 'uk', 'es', 'de', 'pl', 'fr'];

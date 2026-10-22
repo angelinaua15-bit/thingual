@@ -4,6 +4,7 @@ import { QueryClient, useQuery } from '@tanstack/react-query';
 import { create } from 'zustand';
 import { createProfile, ensureSession, getMyProfile, myLikes, updateProfile, uploadImage, type PostRow, type Profile } from './api';
 import { useApp } from '../store/useApp';
+import { pullState } from './sync';
 
 export const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 20_000, retry: 1, refetchOnWindowFocus: false } } });
 
@@ -34,6 +35,7 @@ export async function connect() {
     }
     qc.setQueryData(['me'], me);
     useNet.getState().set({ status: 'ok', uid });
+    await pullState().catch(() => {});
     qc.invalidateQueries();
     syncStreak();
   } catch {

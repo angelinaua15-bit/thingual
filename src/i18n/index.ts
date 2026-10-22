@@ -1,10 +1,14 @@
-import { en, type Strings } from './en';
+import { en, type PartialStrings } from './en';
 import { uk } from './uk';
+import { es } from './es';
+import { de } from './de';
+import { pl } from './pl';
+import { fr } from './fr';
 import { useApp } from '../store/useApp';
 import { LangCode, lang as langInfo } from '../data/languages';
 import { I18nManager } from 'react-native';
 
-const DICTS: Partial<Record<LangCode, Strings>> = { en, uk };
+const DICTS: Partial<Record<LangCode, PartialStrings>> = { en, uk, es, de, pl, fr };
 
 type Vars = Record<string, string | number>;
 

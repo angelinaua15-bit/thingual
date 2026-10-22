@@ -1,5 +1,6 @@
 import { LangCode } from './languages';
 import { COLLOCATIONS, IDIOMS, PHRASAL, PHRASES } from './phrases';
+import { FEMININE } from './phrases/feminine';
 
 /**
  * Expressions beyond single objects:
@@ -53,13 +54,19 @@ export const SITUATION_EMOJI: Record<string, string> = {
 export const KIND_EMOJI: Record<ExprKind, string> = { phrase: '💬', phrasal: '🧩', collocation: '🔗', idiom: '🎭' };
 
 /** What the learner should produce (front of the card is the meaning). */
-export function exprTarget(e: Expr, target: LangCode) {
-  if (e.kind === 'phrase') return e.texts?.[target] ?? e.texts?.en ?? { text: e.en };
+/** Phrase text in a language, in the feminine form when the learner chose it. */
+function phraseIn(e: Expr, code: LangCode, female?: boolean) {
+  const f = female ? FEMININE[e.id.slice(3)]?.[code] : undefined;
+  if (f) { const [text, roman] = f.split('|'); return { text, roman: roman || undefined }; }
+  return e.texts?.[code];
+}
+export function exprTarget(e: Expr, target: LangCode, female?: boolean) {
+  if (e.kind === 'phrase') return phraseIn(e, target, female) ?? e.texts?.en ?? { text: e.en };
   return { text: e.en };
 }
 /** Meaning shown to the learner in their own language. */
-export function exprMeaning(e: Expr, native: LangCode) {
-  if (e.kind === 'phrase') return e.texts?.[native]?.text ?? e.en;
+export function exprMeaning(e: Expr, native: LangCode, female?: boolean) {
+  if (e.kind === 'phrase') return phraseIn(e, native, female)?.text ?? e.en;
   return native === 'uk' ? e.uk ?? e.def ?? '' : e.def ?? e.uk ?? '';
 }
 /** Speech language for the expression. */

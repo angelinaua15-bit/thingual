@@ -1,3 +1,4 @@
+import { InstallBanner } from '../../src/components/InstallBanner';
 import { Image } from 'expo-image';
 import { emojiUrl } from '../../src/data/emoji';
 import { EXPRESSIONS, EXPR_KINDS, KIND_EMOJI } from '../../src/data/expressions';
@@ -119,6 +120,8 @@ export default function Learn() {
             </>
           )}
         </Animated.View>
+
+        <InstallBanner />
 
         {/* phrases & expressions */}
         <Animated.View entering={FadeInDown.delay(210)}>
