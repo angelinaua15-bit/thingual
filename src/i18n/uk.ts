@@ -291,6 +291,7 @@ export const uk: Strings = {
     free: 'Free',
     rows: { books: 'Аудіокниги', notebook: 'AI у «Моєму словнику»', words: 'Камера, словник, повторення', drop: 'Daily Drop, карта і спільнота', ai: 'AI-сканування', chat: 'AI-співрозмовник', phrases: 'Ситуації розмовника', english: 'Фразові дієслова, ідіоми…', grammar: 'Граматика', topics: 'Теми слів', bulk: 'Додати всю тему', langs: 'Мов одночасно', freeze: 'Заморозки серії', sparks: 'Іскри', map: 'Супутникова карта' },
     cells: { booksFree: '{n} на мову', wordFree: '{word} / день', aiFree: '{ai} / день', chatFree: '{chat} / день', unlimited: 'Без меж', phrasesFree: '3 з 12', englishFree: 'Перші {n}', all: 'Усе', grammarFree: 'A1', grammarMax: 'A1–C2', topicsFree: '{free} з {total}', freezeFree: 'За іскри', freezeMax: '+2 / міс', sparksMax: '×2', langsFree: '2', langsMax: '10' },
+    buy: 'Оформити Max', restore: 'Відновити покупки', welcome: 'Вітаємо в Max 🎉', buyError: 'Покупка не пройшла — нічого не списано. Спробуй ще раз.', restored: 'Max відновлено', nothingToRestore: 'Немає покупок для відновлення', storeNote: 'Оплата списується з акаунта App Store / Google Play. Підписка продовжується автоматично, якщо не скасувати її щонайменше за 24 години до кінця періоду; керувати нею можна в налаштуваннях акаунта магазину.',
     plans: 'Плани',
     monthly: 'Місяць', yearly: 'Рік', family: 'Сімейний · до 6',
     perMonth: '/ міс', perYear: '/ рік', save: '−{n}%', popular: 'Найвигідніше',

@@ -289,6 +289,7 @@ export const en = {
     free: 'Free',
     rows: { books: 'Audiobooks', notebook: 'AI in My vocabulary', words: 'Camera, dictionary, reviews', drop: 'Daily Drop, map and community', ai: 'AI scans', chat: 'AI conversation', phrases: 'Phrasebook situations', english: 'Phrasal verbs, idioms…', grammar: 'Grammar', topics: 'Word topics', bulk: 'Add a whole topic', langs: 'Languages at once', freeze: 'Streak freezes', sparks: 'Sparks', map: 'Satellite map' },
     cells: { booksFree: '{n} per language', wordFree: '{word} / day', aiFree: '{ai} / day', chatFree: '{chat} / day', unlimited: 'Unlimited', phrasesFree: '3 of 12', englishFree: 'First {n}', all: 'All', grammarFree: 'A1', grammarMax: 'A1–C2', topicsFree: '{free} of {total}', freezeFree: 'For sparks', freezeMax: '+2 / month', sparksMax: '×2', langsFree: '2', langsMax: '10' },
+    buy: 'Get Max', restore: 'Restore purchases', welcome: 'Welcome to Max 🎉', buyError: 'The purchase didn’t go through — nothing was charged. Try again.', restored: 'Max restored', nothingToRestore: 'No purchases to restore', storeNote: 'Payment is charged to your App Store / Google Play account. The subscription renews automatically unless cancelled at least 24 hours before the end of the period; manage or cancel it in your store account settings.',
     plans: 'Plans',
     monthly: 'Monthly', yearly: 'Yearly', family: 'Family · up to 6',
     perMonth: '/ month', perYear: '/ year', save: '−{n}%', popular: 'Best value',

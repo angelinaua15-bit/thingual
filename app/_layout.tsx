@@ -20,6 +20,7 @@ import { initLeague } from '../src/lib/league';
 import { initErrorLog, logError } from '../src/lib/errorLog';
 import { Txt, Button } from '../src/components/ui';
 import { BookAudio } from '../src/lib/player';
+import { useBilling } from '../src/lib/billing';
 import { LogoMark } from '../src/components/Logo';
 
 initSync();
@@ -67,6 +68,7 @@ export default function RootLayout() {
     if (ready && !onboarded && pathname !== '/' && !['/onboarding', '/signin', '/legal'].some((p) => pathname.startsWith(p))) router.replace('/onboarding');
   }, [ready, onboarded, pathname]);
   useNotificationSchedule();
+  useBilling();
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync().catch(() => {});

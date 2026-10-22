@@ -46,3 +46,12 @@ npx eas-cli@latest build -p android --profile production   # створить к
 
 ## 6. Підписка Thingual Max (коли захочеш)
 App Store Connect / Play Console → In-app purchases → підписки (місяць, рік, сімейна) → акаунт RevenueCat → ключі передати мені, і я підключу оплату.
+
+## Payments (RevenueCat)
+
+The app already contains the RevenueCat SDK (`src/lib/billing.ts`). Until the store keys are set it uses the RevenueCat **Test Store** key, so purchases can be tried in a development build (`eas build --profile development`) before publishing. Expo Go and the web version don't sell subscriptions.
+
+1. In RevenueCat → **Product catalog → Entitlements** create an entitlement with identifier **`max`**.
+2. **Products**: create `thingual_max_monthly` and `thingual_max_yearly` (in the Test Store now; later the same ids in App Store Connect and Google Play Console) and attach both to the `max` entitlement.
+3. **Offerings**: in the `default` offering add two packages — **Monthly** ($monthly) and **Annual** ($annual) — with those products.
+4. When the app is in the stores: add the App Store and Play Store apps in RevenueCat (bundle id / package `app.thingual`), then set the public SDK keys as EAS environment variables `EXPO_PUBLIC_RC_IOS_KEY` (starts with `appl_`) and `EXPO_PUBLIC_RC_ANDROID_KEY` (starts with `goog_`). Never put a secret key (`sk_…`) in the app.

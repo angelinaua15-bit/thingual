@@ -13,6 +13,7 @@ import { useTheme, fonts, radius, space } from '../src/theme/tokens';
 import { useT } from '../src/i18n';
 import { useApp } from '../src/store/useApp';
 import { joinPremiumWaitlist } from '../src/lib/api';
+import { billingAvailable, buy, getPlans, restore, type Plan as StorePlan } from '../src/lib/billing';
 import { haptic } from '../src/lib/feedback';
 import { FREE_TOPICS, LIMITS, useIsMax, type MaxReason } from '../src/lib/premium';
 import { TOPICS } from '../src/data/concepts';
@@ -32,6 +33,26 @@ export default function Premium() {
   const waitlist = useApp((s) => s.maxWaitlist);
   const setWaitlist = useApp((s) => s.setMaxWaitlist);
   const [plan, setPlan] = useState<Plan>(waitlist ?? 'yearly');
+  const [storePlans, setStorePlans] = useState<StorePlan[]>([]);
+  const [storePick, setStorePick] = useState<string | null>(null);
+  const [buying, setBuying] = useState(false);
+  React.useEffect(() => {
+    if (billingAvailable()) getPlans().then(setStorePlans).catch(() => {});
+  }, []);
+  const purchase = async () => {
+    const p = storePlans.find((x) => x.id === (storePick ?? storePlans[0]?.id));
+    if (!p) return;
+    setBuying(true);
+    const r = await buy(p);
+    setBuying(false);
+    if (r === 'ok') { haptic.success(); toast(t('premium.welcome'), 'success'); goBack(); }
+    else if (r === 'error') toast(t('premium.buyError'));
+  };
+  const restoreBuys = async () => {
+    const ok = await restore();
+    toast(ok ? t('premium.restored') : t('premium.nothingToRestore'), ok ? 'success' : 'default');
+    if (ok) goBack();
+  };
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState<number | null>(null);
   const { reason } = useLocalSearchParams<{ reason?: MaxReason }>();
@@ -152,41 +173,75 @@ export default function Premium() {
 
         <View style={{ padding: space.m, maxWidth: 560, width: '100%', alignSelf: 'center' }}>
           {/* plans */}
-          <Txt v="overline" color={c.textSecondary} style={styles.section}>{t('premium.plans')}</Txt>
-          <View style={{ gap: 10 }}>
-            {PLANS.map((p) => {
-              const on = plan === p.id;
-              return (
-                <Pressable key={p.id} onPress={() => { haptic.light(); setPlan(p.id); }} style={[styles.plan, { backgroundColor: c.surface, borderColor: on ? c.text : c.divider, borderWidth: on ? 2 : StyleSheet.hairlineWidth }]}>
-                  <View style={[styles.radio, { borderColor: on ? c.text : c.textTertiary }]}>{on && <View style={[styles.radioIn, { backgroundColor: c.text }]} />}</View>
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Txt v="bodyMedium">{t(`premium.${p.id}`)}</Txt>
-                      {p.save ? <View style={[styles.save, { backgroundColor: c.success }]}><Txt v="caption" color="#fff" style={{ fontSize: 11 }}>{t('premium.save', { n: p.save })}</Txt></View> : null}
+          {storePlans.length > 0 && !max ? (
+            <>
+              <Txt v="overline" color={c.textSecondary} style={styles.section}>{t('premium.plans')}</Txt>
+              <View style={{ gap: 10 }}>
+                {storePlans.map((p) => {
+                  const on = (storePick ?? storePlans[0].id) === p.id;
+                  return (
+                    <Pressable key={p.id} onPress={() => { haptic.light(); setStorePick(p.id); }} style={[styles.plan, { backgroundColor: c.surface, borderColor: on ? c.text : c.divider, borderWidth: on ? 2 : StyleSheet.hairlineWidth }]}>
+                      <View style={[styles.radio, { borderColor: on ? c.text : c.textTertiary }]}>{on && <View style={[styles.radioIn, { backgroundColor: c.text }]} />}</View>
+                      <View style={{ flex: 1 }}>
+                        <Txt v="bodyMedium">{p.kind === 'annual' ? t('premium.yearly') : p.kind === 'monthly' ? t('premium.monthly') : p.pkg.product.title}</Txt>
+                        {p.perMonth ? <Txt v="caption" color={c.textSecondary}>{p.perMonth} {t('premium.perMonth')} · {t('premium.popular')}</Txt> : null}
+                      </View>
+                      <Txt v="bodyMedium">{p.price}</Txt>
+                      {p.kind !== 'other' ? <Txt v="caption" color={c.textSecondary}> {t(p.kind === 'annual' ? 'premium.perYear' : 'premium.perMonth')}</Txt> : null}
+                    </Pressable>
+                  );
+                })}
+              </View>
+              <Button title={t('premium.buy')} loading={buying} icon={<Crown size={18} color={c.onAccent} />} onPress={purchase} style={{ marginTop: space.m }} />
+              <Pressable onPress={restoreBuys} hitSlop={8} style={{ alignSelf: 'center', marginTop: 12 }}>
+                <Txt v="captionMedium" color={c.accent}>{t('premium.restore')}</Txt>
+              </Pressable>
+              <Txt v="caption" color={c.textTertiary} center style={{ marginTop: 10 }}>{t('premium.storeNote')}</Txt>
+              <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16, marginTop: 6 }}>
+                <Pressable onPress={() => router.push({ pathname: '/legal/[doc]', params: { doc: 'terms' } })}><Txt v="caption" color={c.textSecondary} style={{ textDecorationLine: 'underline' }}>{t('legal.terms')}</Txt></Pressable>
+                <Pressable onPress={() => router.push({ pathname: '/legal/[doc]', params: { doc: 'privacy' } })}><Txt v="caption" color={c.textSecondary} style={{ textDecorationLine: 'underline' }}>{t('legal.privacy')}</Txt></Pressable>
+              </View>
+            </>
+          ) : !max ? (
+            <>
+                    <Txt v="overline" color={c.textSecondary} style={styles.section}>{t('premium.plans')}</Txt>
+            <View style={{ gap: 10 }}>
+              {PLANS.map((p) => {
+                const on = plan === p.id;
+                return (
+                  <Pressable key={p.id} onPress={() => { haptic.light(); setPlan(p.id); }} style={[styles.plan, { backgroundColor: c.surface, borderColor: on ? c.text : c.divider, borderWidth: on ? 2 : StyleSheet.hairlineWidth }]}>
+                    <View style={[styles.radio, { borderColor: on ? c.text : c.textTertiary }]}>{on && <View style={[styles.radioIn, { backgroundColor: c.text }]} />}</View>
+                    <View style={{ flex: 1 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Txt v="bodyMedium">{t(`premium.${p.id}`)}</Txt>
+                        {p.save ? <View style={[styles.save, { backgroundColor: c.success }]}><Txt v="caption" color="#fff" style={{ fontSize: 11 }}>{t('premium.save', { n: p.save })}</Txt></View> : null}
+                      </View>
+                      {p.monthly ? <Txt v="caption" color={c.textSecondary}>{p.monthly} {t('premium.perMonth')} · {t('premium.popular')}</Txt> : null}
                     </View>
-                    {p.monthly ? <Txt v="caption" color={c.textSecondary}>{p.monthly} {t('premium.perMonth')} · {t('premium.popular')}</Txt> : null}
+                    <Txt v="bodyMedium">{p.price}</Txt>
+                    <Txt v="caption" color={c.textSecondary}> {t(`premium.${p.per}`)}</Txt>
+                  </Pressable>
+                );
+              })}
+            </View>
+  
+            <Animated.View layout={LinearTransition} style={{ marginTop: space.m }}>
+              {waitlist ? (
+                <Animated.View entering={FadeIn} style={[styles.onList, { backgroundColor: c.successSoft }]}>
+                  <Check size={20} color={c.success} />
+                  <View style={{ flex: 1 }}>
+                    <Txt v="bodyMedium">{t('premium.onList')}</Txt>
+                    <Txt v="caption" color={c.textSecondary}>{t('premium.onListSub')}</Txt>
                   </View>
-                  <Txt v="bodyMedium">{p.price}</Txt>
-                  <Txt v="caption" color={c.textSecondary}> {t(`premium.${p.per}`)}</Txt>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          <Animated.View layout={LinearTransition} style={{ marginTop: space.m }}>
-            {waitlist ? (
-              <Animated.View entering={FadeIn} style={[styles.onList, { backgroundColor: c.successSoft }]}>
-                <Check size={20} color={c.success} />
-                <View style={{ flex: 1 }}>
-                  <Txt v="bodyMedium">{t('premium.onList')}</Txt>
-                  <Txt v="caption" color={c.textSecondary}>{t('premium.onListSub')}</Txt>
-                </View>
-              </Animated.View>
-            ) : (
-              <Button title={t('premium.notify')} loading={busy} icon={<Crown size={18} color={c.onAccent} />} onPress={notify} />
-            )}
-            <Txt v="caption" color={c.textTertiary} center style={{ marginTop: 10 }}>{t('premium.note')}</Txt>
-          </Animated.View>
+                </Animated.View>
+              ) : (
+                <Button title={t('premium.notify')} loading={busy} icon={<Crown size={18} color={c.onAccent} />} onPress={notify} />
+              )}
+              <Txt v="caption" color={c.textTertiary} center style={{ marginTop: 10 }}>{t('premium.note')}</Txt>
+            </Animated.View>
+  
+    </>
+          ) : null}
 
           {/* compare */}
           <Txt v="overline" color={c.textSecondary} style={styles.section}>{t('premium.compare')}</Txt>
