@@ -30,15 +30,21 @@ Deno.serve(async (req) => {
       headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({ model: MODEL, max_tokens: 400, system, messages: [{ role: 'user', content: user }] }),
     });
-    if (!res.ok) return json({ error: 'api_' + res.status });
+    if (!res.ok) {
+      // log the provider's reason (no secrets in it) so problems with the key, balance or model are visible in Supabase logs
+      const detail = (await res.text()).slice(0, 300);
+      console.error('anthropic error', res.status, detail);
+      return json({ error: 'api_' + res.status, detail });
+    }
     const data = await res.json();
     const text: string = data?.content?.[0]?.text ?? '{}';
     let parsed: Record<string, unknown> = {};
-    try { parsed = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1)); } catch { return json({ error: 'parse' }); }
+    try { parsed = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1)); } catch { console.error('parse', text.slice(0, 200)); return json({ error: 'parse' }); }
     if (parsed.error) return json({ error: String(parsed.error) });
     const s = (k: string, max = 300) => (typeof parsed[k] === 'string' ? (parsed[k] as string).slice(0, max) : '');
     return json({ word: s('word', 80) || word, translation: s('translation', 120), ipa: s('ipa', 80), roman: s('roman', 80) || null, pos: s('pos', 30), association: s('association', 400), example: s('example', 200), exampleTr: s('exampleTr', 200), emoji: s('emoji', 16) });
   } catch (e) {
+    console.error('word failed', String(e));
     return json({ error: String(e) }, 500);
   }
 });

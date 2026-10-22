@@ -535,7 +535,7 @@ export const en = {
     save: 'Save', added: 'Added to your vocabulary', saved: 'Saved', delete: 'Delete', deleteConfirm: 'Delete “{w}”? This can’t be undone.', deleted: 'Deleted',
     markDone: 'Mark as learned', markUndone: 'Back to learning', learnedToast: 'Learned ✓',
     practice: 'Practise', practiceDue: 'Review {n}', nothingToPractice: 'Add a few words first',
-    aiLimit: 'Today’s free AI fills are used up — fill it in yourself or try Max.', aiUnknown: 'The AI doesn’t recognise this word — check the spelling.', aiOffline: 'Can’t reach the AI right now — you can fill it in yourself.', noKey: 'AI needs a server key (ANTHROPIC_API_KEY in Supabase).',
+    aiService: 'The AI service is unavailable right now — try again a bit later or fill it in yourself.', aiLimit: 'Today’s free AI fills are used up — fill it in yourself or try Max.', aiUnknown: 'The AI doesn’t recognise this word — check the spelling.', aiOffline: 'Can’t reach the AI right now — you can fill it in yourself.', noKey: 'AI needs a server key (ANTHROPIC_API_KEY in Supabase).',
     listen: 'Listen', slow: 'Slow', remember: 'Do you remember the word?', showAnswer: 'Show answer', again: 'Forgot', good: 'Remembered',
     practiceDone: 'Nice work!', practiceDoneSub: '{n} words reviewed', needWord: 'Write the word first', hint: 'Hint',
     added_on: 'Added {date}', cancel: 'Cancel',

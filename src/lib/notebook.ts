@@ -4,7 +4,7 @@ import { hasQuota, spendQuota } from './premium';
 import type { LangCode } from '../data/languages';
 
 export type WordAI = { word: string; translation: string; ipa: string; roman: string | null; pos: string; association: string; example: string; exampleTr: string; emoji: string };
-export type WordAIError = 'limit' | 'offline' | 'unknown' | 'no_key';
+export type WordAIError = 'limit' | 'offline' | 'unknown' | 'no_key' | 'service';
 
 /**
  * AI help for a word the learner wrote: translation, IPA transcription, an association that makes it stick,
@@ -18,7 +18,8 @@ export async function enrichWord(input: { word: string; target: LangCode; native
     if (error || !data) return { ok: false, error: 'offline' };
     const d = data as Partial<WordAI> & { error?: string };
     if (d.error === 'no_key') return { ok: false, error: 'no_key' };
-    if (d.error) return { ok: false, error: d.error === 'unknown' ? 'unknown' : 'offline' };
+    // the server answered but the AI provider refused (key, balance, model) — not the user's connection
+    if (d.error) return { ok: false, error: d.error === 'unknown' ? 'unknown' : 'service' };
     spendQuota('word');
     return { ok: true, data: d as WordAI };
   } catch {

@@ -48,7 +48,7 @@ export default function EditNote() {
     setBusy(false);
     if (!r.ok) {
       if (r.error === 'limit') return requireMax('word');
-      return setAiMsg({ text: t(r.error === 'unknown' ? 'nb.aiUnknown' : r.error === 'no_key' ? 'nb.noKey' : 'nb.aiOffline'), ok: false });
+      return setAiMsg({ text: t(r.error === 'unknown' ? 'nb.aiUnknown' : r.error === 'no_key' ? 'nb.noKey' : r.error === 'service' ? 'nb.aiService' : 'nb.aiOffline'), ok: false });
     }
     const d = r.data;
     haptic.success();
