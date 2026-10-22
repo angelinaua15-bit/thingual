@@ -296,6 +296,7 @@ export const en = {
     open: 'Learn more',
   },
   age: {
+    terms: 'I agree to the Terms of use and the community rules: no tolerance for objectionable content or abusive users. Content can be reported and people can be blocked.', needTerms: 'Please accept the terms first',
     title: 'Before your first post',
     sub: 'How old are you? We only keep an age group, never your birth date.',
     under13: 'Under 13', teen: '13–15', adult: '16 or older',

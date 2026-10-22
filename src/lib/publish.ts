@@ -13,7 +13,8 @@ export function ensureCanPublish(): boolean {
     return false;
   }
   const age = s.profile.ageGroup;
-  if (!age) {
+  // App Store guideline 1.2: people accept the community terms before posting
+  if (!age || !s.profile.termsAt) {
     router.push('/age');
     return false;
   }

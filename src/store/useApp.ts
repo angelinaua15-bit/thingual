@@ -58,7 +58,7 @@ type State = {
   goal?: Goal;
   quizScore?: number;
   settings: Settings;
-  profile: { id: string; nickname: string; displayName?: string; pendingAvatar?: string; ageGroup?: AgeGroup; createdAt: number };
+  profile: { id: string; nickname: string; displayName?: string; pendingAvatar?: string; ageGroup?: AgeGroup; createdAt: number; termsAt?: number };
   words: Record<string, SavedWord>;
   collections: Collection[];
   history: { day: string; reviewed: number; correct: number; minutes: number }[];

@@ -379,6 +379,14 @@ export async function myEmail(): Promise<string | null> {
 
 export async function deleteMyData() {
   const id = await ensureSession();
+  // full deletion on the server (auth user + files); fall back to removing rows if the function is unavailable
+  const { error } = await supabase.functions.invoke('delete-account', { body: {} });
+  if (!error) {
+    await supabase.auth.signOut();
+    sessionPromise = null;
+    currentUid = null;
+    return;
+  }
   await supabase.from('posts').delete().eq('author_id', id);
   await supabase.from('premium_waitlist').delete().eq('user_id', id);
   await supabase.from('profiles').delete().eq('id', id);

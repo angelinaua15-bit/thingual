@@ -23,7 +23,7 @@ function snapshot(s: S): Snapshot {
   KEYS.forEach((k) => { out[k] = (s as unknown as Record<string, unknown>)[k]; });
   // photos stored only on this device can't travel; real (uploaded) photos can
   out.words = Object.fromEntries(Object.entries(s.words).map(([id, w]) => [id, { ...w, photo: portablePhoto(w.photo) }]));
-  out.profile = { nickname: s.profile.nickname, displayName: s.profile.displayName, ageGroup: s.profile.ageGroup };
+  out.profile = { nickname: s.profile.nickname, displayName: s.profile.displayName, ageGroup: s.profile.ageGroup, termsAt: s.profile.termsAt };
   return out as Snapshot;
 }
 
