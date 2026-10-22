@@ -4,7 +4,7 @@ import { emojiUrl } from '../../src/data/emoji';
 import { EXPRESSIONS } from '../../src/data/expressions';
 import { ENGLISH_GRAMMAR as ALL_GRAMMAR } from '../../src/data/grammar/english';
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { router } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { ArrowRight, Image as ImageIcon, Keyboard, Mic, Puzzle, Search, Type as TypeIcon, Layers } from '../../src/components/icons';
@@ -28,6 +28,7 @@ export default function Learn() {
   const { c } = useTheme();
   const { t } = useT();
   const s = useApp((x) => x.settings);
+  const narrow = useWindowDimensions().width < 360;
   const words = useApp((x) => x.words);
   const update = useApp((x) => x.updateSettings);
   const exprs = useApp((x) => x.exprs);
@@ -75,12 +76,12 @@ export default function Learn() {
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <View style={{ flex: 1 }}>
                   <Txt v="overline" color={c.background} style={{ opacity: 0.6 }}>{t('common.today')}</Txt>
-                  <Txt style={{ fontFamily: fonts.serif, fontSize: 34, lineHeight: 38, color: c.background, marginTop: 4 }}>
+                  <Txt style={{ fontFamily: fonts.serif, fontSize: narrow ? 26 : 34, lineHeight: narrow ? 30 : 38, color: c.background, marginTop: 4 }}>
                     {due.length ? t('learn.due', { n: due.length }) : t('learn.nothingDue')}
                   </Txt>
                 </View>
                 <View style={{ flexDirection: 'row' }}>
-                  {(due.length ? due : list).slice(0, 3).map((w, i) => (
+                  {(due.length ? due : list).slice(0, narrow ? 2 : 3).map((w, i) => (
                     <View key={w.conceptId} style={{ width: 54, height: 68, borderRadius: 12, overflow: 'hidden', marginLeft: i ? -22 : 0, borderWidth: 2, borderColor: c.text, transform: [{ rotate: `${(i - 1) * 6}deg` }] }}>
                       <Photo uri={photoForWord(w.conceptId, w.photo, 200)} style={{ width: '100%', height: '100%' }} />
                     </View>

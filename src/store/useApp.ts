@@ -8,7 +8,7 @@ import { conceptById, Place } from '../data/concepts';
 import { needsPersist, persistPhoto } from '../lib/photoStore';
 import { questsFor, CHEST_REWARD, type QuestField } from '../lib/quests';
 import { LIMITS } from '../lib/limits';
-import { DAILY_TIME_CAP, SECONDS_PER_CRYSTAL, TIME_TIERS } from '../data/wordPacks';
+import { DAILY_TIME_CAP, SECONDS_PER_CRYSTAL, TIME_TIERS, spentOn } from '../data/wordPacks';
 import type { CEFR } from '../data/words/types';
 import { addDays, DAILY_SPARKS, dayDiff, FLAMES, FlameId, MAX_FREEZES, MILESTONES, PRICES, REPAIR_WINDOW, Reward } from '../lib/streak';
 
@@ -104,6 +104,10 @@ type State = {
   books: Record<string, BookProgress>;
   /** crystals: earned by time spent learning every day, spent on fun unlocks */
   crystals: number;
+  /** lifetime crystals earned per device (grow-only, so syncing can never mint or lose crystals) */
+  crystalEarn: Record<string, number>;
+  /** this install's id — never synced */
+  deviceId: string;
   /** active time today (seconds) and the crystals already given for it */
   timeToday: { day: string; seconds: number; earned: number; claimed: number[] };
   /** unlocked rewards: 'accent:mint', 'pack:idioms'… */
@@ -256,6 +260,8 @@ const initialState = (): State => {
     noteTomb: {},
     books: {},
     crystals: 0,
+    crystalEarn: {},
+    deviceId: `d-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
     timeToday: { day: '', seconds: 0, earned: 0, claimed: [] },
     unlocks: [],
     drops: {},
@@ -561,7 +567,7 @@ export const useApp = create<State & Actions>()(
           const due = Math.min(DAILY_TIME_CAP, Math.floor(seconds / SECONDS_PER_CRYSTAL));
           const fresh = Math.max(0, due - t.earned);
           const mult = s.maxUntil && s.maxUntil > Date.now() ? 2 : 1;
-          return { timeToday: { ...t, seconds, earned: t.earned + fresh }, crystals: s.crystals + fresh * mult };
+          return { timeToday: { ...t, seconds, earned: t.earned + fresh }, ...earn(s, fresh * mult) };
         }),
       claimTimeTier: (min) => {
         const s = get();
@@ -569,7 +575,7 @@ export const useApp = create<State & Actions>()(
         const t = s.timeToday;
         if (!tier || t.day !== dateKey() || t.seconds < min * 60 || t.claimed.includes(min)) return 0;
         const bonus = tier.bonus * (s.maxUntil && s.maxUntil > Date.now() ? 2 : 1);
-        set({ crystals: s.crystals + bonus, timeToday: { ...t, claimed: [...t.claimed, min] } });
+        set({ ...earn(s, bonus), timeToday: { ...t, claimed: [...t.claimed, min] } });
         return bonus;
       },
       unlockReward: (id, price) => {
@@ -597,8 +603,8 @@ export const useApp = create<State & Actions>()(
         }),
       toggleNoteDone: (id) =>
         set((s) => (s.notebook[id] ? { notebook: { ...s.notebook, [id]: { ...s.notebook[id], done: !s.notebook[id].done, updatedAt: Date.now() } } } : {})),
+      // reviews are counted once, by logSession at the end of the practice
       answerNote: (id, a) => {
-        get().questBump('reviews');
         set((s) => (s.notebook[id] ? { notebook: { ...s.notebook, [id]: { ...s.notebook[id], card: srsReview(s.notebook[id].card, a), updatedAt: Date.now() } } } : {}));
       },
 
@@ -636,6 +642,24 @@ export const useApp = create<State & Actions>()(
 );
 
 export { weekKey };
+
+/** Add crystals to the balance and to this device's lifetime ledger. */
+function earn(s: State, n: number): Pick<State, 'crystals' | 'crystalEarn'> {
+  if (n <= 0) return { crystals: s.crystals, crystalEarn: s.crystalEarn };
+  const base = withLedger(s).crystalEarn;
+  return { crystals: s.crystals + n, crystalEarn: { ...base, [s.deviceId]: (base[s.deviceId] ?? 0) + n } };
+}
+
+/** Older installs kept only a balance: turn it into ledger entries for this device. */
+export function withLedger(s: Pick<State, 'crystals' | 'crystalEarn' | 'unlocks' | 'deviceId'>) {
+  const total = Object.values(s.crystalEarn ?? {}).reduce((a, b) => a + b, 0);
+  if (total > 0 || s.crystals <= 0) return { crystalEarn: s.crystalEarn ?? {} };
+  return { crystalEarn: { [s.deviceId]: s.crystals + spentOn(s.unlocks) } };
+}
+
+/** Balance = everything earned on every device − the price of everything unlocked. */
+export const crystalBalance = (earned: Record<string, number>, unlocks: string[]) =>
+  Math.max(0, Object.values(earned).reduce((a, b) => a + b, 0) - spentOn(unlocks));
 
 /** Move photos saved by older versions (base64 / blob: inside the state) out of localStorage. */
 async function migratePhotos() {

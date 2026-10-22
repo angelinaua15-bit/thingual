@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { router } from 'expo-router';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -53,6 +53,7 @@ export function BookCover({ id, width, radiusPx = 14 }: { id: string; width: num
 /** Big photo banner on the Learn screen. */
 export function AudiobooksBanner() {
   const { t } = useT();
+  const narrow = useWindowDimensions().width < 360;
   if (!BOOKS.length) return null;
   return (
     <PressableScale onPress={() => router.push('/books')} style={{ borderRadius: 24, overflow: 'hidden', height: 178 }}>
@@ -65,7 +66,7 @@ export function AudiobooksBanner() {
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 12, marginTop: 8 }}>
           <View style={{ flex: 1 }}>
-            <Txt style={{ fontFamily: fonts.serif, fontSize: 34, lineHeight: 38, color: '#fff' }}>{t('books.bannerTitle')}</Txt>
+            <Txt numberOfLines={1} adjustsFontSizeToFit style={{ fontFamily: fonts.serif, fontSize: narrow ? 28 : 34, lineHeight: narrow ? 32 : 38, color: '#fff' }}>{t('books.bannerTitle')}</Txt>
             <Txt v="caption" color="rgba(255,255,255,.85)">{t('books.bannerSub')}</Txt>
           </View>
           <View style={styles.cta}>

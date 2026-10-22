@@ -72,7 +72,7 @@ export function canAddLanguage(code: string) {
 }
 export const topicOpen = (topic: Topic, max: boolean) => max || FREE_TOPICS.includes(topic);
 
-/** Audiobooks: the easiest books of each language are open in Free, plus the first chapters of every other book. */
+/** Audiobooks: the easiest books of each language are open in Free; every other book needs Max. */
 export function bookOpen(id: string, max: boolean) {
   if (max) return true;
   const b = bookById(id);

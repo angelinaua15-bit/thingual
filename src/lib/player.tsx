@@ -67,7 +67,14 @@ function load(bookId: string, ch: number) {
 
 export const togglePlay = () => {
   if (!player) return;
-  usePlayer.getState().playing ? player.pause() : player.play();
+  const { playing, bookId, chapter } = usePlayer.getState();
+  if (playing) return player.pause();
+  // the trial may have ended while a Max book was paused
+  if (bookId && !chapterOpen(bookId, chapter, isMax())) {
+    requireMax('books');
+    return;
+  }
+  player.play();
 };
 export const seekBy = (sec: number) => {
   if (!player) return;
@@ -129,8 +136,8 @@ export function BookAudio() {
       listened.current += 0.5;
       if (listened.current >= 60) {
         listened.current = 0;
+        useApp.getState().logSession(0, 0, 1);
         const st = useApp.getState();
-        st.logSession(0, 0, 1);
         const today = st.history.find((h) => h.day === dateKey());
         if (today && today.minutes >= 3) st.markActive();
       }

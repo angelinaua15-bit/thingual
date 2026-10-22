@@ -29,7 +29,7 @@ export default function Notebook() {
   const all = useMemo(() => Object.values(notebook).sort((a, b) => b.createdAt - a.createdAt), [notebook]);
   const langs = useMemo(() => [...new Set(all.map((w) => w.lang))], [all]);
   const [langPick, setLang] = useState<LangCode | 'all'>('all');
-  const lang = langs.length > 1 ? langPick : 'all';
+  const lang = langs.length > 1 && langs.includes(langPick as LangCode) ? langPick : 'all';
 
   const inLang = all.filter((w) => lang === 'all' || w.lang === lang);
   const learned = inLang.filter((w) => w.done).length;

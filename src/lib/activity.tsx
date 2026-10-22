@@ -21,7 +21,8 @@ export function ActivityTracker() {
       if (s === 'active') lastTouch = Date.now();
     });
     const onKey = () => markActivity();
-    if (Platform.OS === 'web' && typeof window !== 'undefined') window.addEventListener('keydown', onKey);
+    const WEB_EVENTS = ['keydown', 'pointerdown', 'wheel'] as const;
+    if (Platform.OS === 'web' && typeof window !== 'undefined') WEB_EVENTS.forEach((e) => window.addEventListener(e, onKey, { passive: true }));
     const id = setInterval(() => {
       const st = useApp.getState();
       if (!st.onboarded) return;
@@ -32,7 +33,7 @@ export function ActivityTracker() {
     return () => {
       clearInterval(id);
       sub.remove();
-      if (Platform.OS === 'web' && typeof window !== 'undefined') window.removeEventListener('keydown', onKey);
+      if (Platform.OS === 'web' && typeof window !== 'undefined') WEB_EVENTS.forEach((e) => window.removeEventListener(e, onKey));
     };
   }, []);
   return null;

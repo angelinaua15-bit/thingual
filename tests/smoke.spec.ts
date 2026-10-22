@@ -138,3 +138,21 @@ test('Max-only pages stay closed for a free learner', async ({ page }) => {
   await page.getByText('Покупки', { exact: true }).first().click();
   await expect(page).toHaveURL(/premium\?reason=phrases/);
 });
+
+test('crystals buy a colour theme and keep an honest ledger', async ({ page }) => {
+  const errs = errors(page);
+  await page.goto('/');
+  await page.evaluate((s) => {
+    const st = JSON.parse(s);
+    st.state.crystals = 74;
+    st.state.unlocks = ['pack:idioms'];
+    localStorage.setItem('thingual-v1', JSON.stringify(st));
+  }, seed());
+  await page.goto('/crystals');
+  await page.getByText('М’ята', { exact: true }).or(page.getByText("М'ята", { exact: true })).first().click();
+  await expect(page.getByText('34', { exact: true }).first()).toBeVisible();
+  const st = await page.evaluate(() => JSON.parse(localStorage.getItem('thingual-v1')!).state);
+  expect(st.unlocks).toContain('accent:mint');
+  expect(st.settings.accent).toBe('mint');
+  expect(errs).toEqual([]);
+});

@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
 import { supabase } from './supabase';
 import { resetSession } from './api';
-import { useApp } from '../store/useApp';
+import { useApp, withLedger, crystalBalance } from '../store/useApp';
 import type { StoredCard } from './srs';
+import { spentOn } from '../data/wordPacks';
 
 /**
  * Progress sync between devices (Supabase table user_state, one JSON row per account).
@@ -12,7 +13,7 @@ import type { StoredCard } from './srs';
 type S = ReturnType<typeof useApp.getState>;
 const KEYS = [
   'onboarded', 'goal', 'quizScore', 'settings', 'words', 'collections', 'history', 'learnStreak', 'dropStreak', 'bestStreak',
-  'activeDays', 'frozenDays', 'sparks', 'freezes', 'claimed', 'flames', 'flame', 'achievements', 'exprs', 'drops', 'quests', 'weekXp', 'grammar', 'maxUntil', 'trialUsed', 'maxFreezeMonth', 'maxWaitlist', 'lostStreak', 'notebook', 'noteTomb', 'books', 'crystals', 'unlocks',
+  'activeDays', 'frozenDays', 'sparks', 'freezes', 'claimed', 'flames', 'flame', 'achievements', 'exprs', 'drops', 'quests', 'weekXp', 'grammar', 'maxUntil', 'trialUsed', 'maxFreezeMonth', 'maxWaitlist', 'lostStreak', 'notebook', 'noteTomb', 'books', 'crystals', 'crystalEarn', 'unlocks', 'timeToday',
 ] as const;
 type Snapshot = Partial<Pick<S, (typeof KEYS)[number]>> & { profile?: Partial<S['profile']> };
 
@@ -51,6 +52,25 @@ function mergeNotebook(local: S, remote: Snapshot) {
   });
   Object.keys(notebook).forEach((id) => { if (noteTomb[id] && noteTomb[id] >= notebook[id].updatedAt) delete notebook[id]; });
   return { notebook, noteTomb };
+}
+
+// crystals: per-device lifetime totals only grow, so the balance is recomputed instead of copied
+function mergeCrystals(local: S, remote: Snapshot) {
+  const mine = withLedger(local).crystalEarn;
+  // a backup from before the ledger only has a balance: use it when this device has nothing yet
+  const legacy: Record<string, number> = Object.keys(mine).length ? {} : remote.crystals ? { legacy: remote.crystals + spentOn(remote.unlocks) } : {};
+  const theirs = remote.crystalEarn && Object.keys(remote.crystalEarn).length ? remote.crystalEarn : legacy;
+  const crystalEarn: Record<string, number> = { ...theirs };
+  Object.entries(mine).forEach(([d, n]) => { crystalEarn[d] = Math.max(n, crystalEarn[d] ?? 0); });
+  const unlocks = union(local.unlocks, remote.unlocks);
+  return { crystalEarn, unlocks, crystals: crystalBalance(crystalEarn, unlocks) };
+}
+
+// time gifts: same day → claimed ones stay claimed everywhere
+function mergeTime(a: S['timeToday'], b?: S['timeToday']): S['timeToday'] {
+  if (!b || !b.day) return a;
+  if (a.day !== b.day) return a.day > b.day ? a : b;
+  return { day: a.day, seconds: Math.max(a.seconds, b.seconds), earned: Math.max(a.earned, b.earned), claimed: union(a.claimed, b.claimed) };
 }
 
 function merge(local: S, remote: Snapshot, remoteNewer: boolean): Partial<S> {
@@ -95,8 +115,8 @@ function merge(local: S, remote: Snapshot, remoteNewer: boolean): Partial<S> {
     flame: newer('flame') ?? local.flame,
     quests: mergeQuests(local.quests, remote.quests),
     ...mergeNotebook(local, remote),
-    crystals: remoteNewer ? remote.crystals ?? local.crystals : local.crystals,
-    unlocks: union(local.unlocks, remote.unlocks),
+    ...mergeCrystals(local, remote),
+    timeToday: mergeTime(local.timeToday, remote.timeToday),
     books: Object.fromEntries(
       [...new Set([...Object.keys(local.books), ...Object.keys(remote.books ?? {})])].map((id) => {
         const a = local.books[id];

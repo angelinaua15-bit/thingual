@@ -12,7 +12,7 @@ export const WORD_PACKS: WordPack[] = [
     title: { en: 'Untranslatable words', uk: 'Неперекладні слова' },
     sub: { en: 'Feelings other languages need a whole sentence for', uk: 'Почуття, для яких іншим мовам треба ціле речення' },
     words: [
-      { word: 'hygge', lang: 'en', emoji: '🕯️', en: 'Danish: a cosy, warm feeling of comfort with people you love', uk: 'Данське: затишок і тепло поруч із близькими' },
+      { word: 'estrenar', lang: 'es', emoji: '🎁', en: 'Spanish: to wear or use something for the very first time', uk: 'Іспанське: вдягнути чи використати щось уперше' },
       { word: 'la sobremesa', lang: 'es', emoji: '☕', en: 'Spanish: lingering at the table, chatting after a meal', uk: 'Іспанське: засидітися за столом і балакати після обіду' },
       { word: 'die Schadenfreude', lang: 'de', emoji: '😏', en: 'German: joy at someone else’s small misfortune', uk: 'Німецьке: радість від чужої невдачі' },
       { word: 'die Fernweh', lang: 'de', emoji: '✈️', en: 'German: an ache for faraway places', uk: 'Німецьке: туга за далекими краями' },
@@ -21,9 +21,9 @@ export const WORD_PACKS: WordPack[] = [
       { word: 'le dépaysement', lang: 'fr', emoji: '🧭', en: 'French: the feeling of being out of your element abroad', uk: 'Французьке: відчуття, що ти не у своїй тарілці в чужій країні' },
       { word: '木漏れ日', lang: 'ja', emoji: '🌳', en: 'Japanese (komorebi): sunlight filtering through leaves', uk: 'Японське (коморебі): сонце, що просвічує крізь листя' },
       { word: '積ん読', lang: 'ja', emoji: '📚', en: 'Japanese (tsundoku): buying books and letting them pile up unread', uk: 'Японське (цундоку): купувати книжки й не читати їх' },
-      { word: 'gezellig', lang: 'en', emoji: '🧡', en: 'Dutch: cosy, friendly, nice to be together', uk: 'Нідерландське: затишно й приємно разом' },
-      { word: 'sisu', lang: 'en', emoji: '💪', en: 'Finnish: stubborn courage to keep going', uk: 'Фінське: уперта сила духу не здаватися' },
-      { word: 'lagom', lang: 'en', emoji: '⚖️', en: 'Swedish: not too much, not too little — just right', uk: 'Шведське: не забагато й не замало — якраз' },
+      { word: 'die Waldeinsamkeit', lang: 'de', emoji: '🌲', en: 'German: the peaceful feeling of being alone in a forest', uk: 'Німецьке: спокій самотності в лісі' },
+      { word: '눈치', lang: 'ko', emoji: '👀', en: 'Korean (nunchi): sensing the mood of a room without words', uk: 'Корейське (нунчі): відчувати настрій людей без слів' },
+      { word: 'la flânerie', lang: 'fr', emoji: '🚶', en: 'French: strolling aimlessly through a city just to enjoy it', uk: 'Французьке: блукати містом без мети, просто насолоджуючись' },
     ],
   },
   {
@@ -92,3 +92,11 @@ export const TIME_TIERS: { min: number; bonus: number }[] = [
 /** one crystal for every 2 active minutes, up to 30 a day from time alone */
 export const SECONDS_PER_CRYSTAL = 120;
 export const DAILY_TIME_CAP = 30;
+
+/** Crystals spent on a list of unlock ids ('accent:mint', 'pack:idioms'). */
+export const spentOn = (unlocks: string[] = []) =>
+  unlocks.reduce((sum, u) => {
+    const [kind, id] = u.split(':');
+    const price = kind === 'accent' ? ACCENTS.find((a) => a.id === id)?.price : kind === 'pack' ? packById(id)?.price : 0;
+    return sum + (price ?? 0);
+  }, 0);
