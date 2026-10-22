@@ -61,6 +61,10 @@ npx expo start          # QR-код для Expo Go, або натисни w дл
 «Планета слів»: справжній знімок Землі NASA (Blue Marble вдень і Black Marble з вогнями міст уночі, суспільне надбання) з кільцем літер різних мов. Джерело й скрипти — `assets/brand/earth`, інші концепти — `assets/brand/concepts`.
 
 
+## Публікація в магазинах
+
+Покрокова інструкція — `store/PUBLISHING.md`; тексти для сторінок, ключові слова, відповіді про приватність — `store/LISTING.md`; скріншоти — `store/ios-6.9/`, `store/android-phone/`, банер Google Play — `store/google-play-feature-*.png`.
+
 ## Запуск у продакшен — чекліст
 
 **Вже працює:** синхронізація прогресу (таблиця `user_state`, вхід посиланням на email), PWA (встановлення на телефон, офлайн), AI-модерація фото (`moderate`), AI-співрозмовник (`chat`), розпізнавання (`recognize`), ліги (`league_xp`), звіти про помилки (`client_errors`), політика конфіденційності й умови (`/legal/privacy`, `/legal/terms`), автотести (`npm run test:e2e`) і CI на GitHub Actions.
