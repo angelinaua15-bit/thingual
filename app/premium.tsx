@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { goBack } from '../src/lib/nav';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown, LinearTransition } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Camera, Check, ChevronDown, Crown, Download, Languages, Snowflake, Sparkle, X } from '../src/components/icons';
+import { BookOpen, Camera, Check, ChevronDown, Crown, Languages, Lock, MessageCircle, Snowflake, Sparkle, X } from '../src/components/icons';
 import { Txt, Button } from '../src/components/ui';
 import { Flame } from '../src/components/Flame';
 import { toast } from '../src/components/Overlay';
@@ -14,6 +14,7 @@ import { useT } from '../src/i18n';
 import { useApp } from '../src/store/useApp';
 import { joinPremiumWaitlist } from '../src/lib/api';
 import { haptic } from '../src/lib/feedback';
+import { LIMITS, useIsMax, type MaxReason } from '../src/lib/premium';
 
 type Plan = 'monthly' | 'yearly' | 'family';
 const PLANS: { id: Plan; price: string; per: 'perMonth' | 'perYear'; save?: number; monthly?: string }[] = [
@@ -32,13 +33,29 @@ export default function Premium() {
   const [plan, setPlan] = useState<Plan>(waitlist ?? 'yearly');
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState<number | null>(null);
+  const { reason } = useLocalSearchParams<{ reason?: MaxReason }>();
+  const max = useIsMax();
+  const maxUntil = useApp((s) => s.maxUntil);
+  const trialUsed = useApp((s) => s.trialUsed);
+  const fill = (x: string) => x.replace('{ai}', String(LIMITS.aiScansPerDay)).replace('{chat}', String(LIMITS.chatPerDay));
+  const until = maxUntil ? new Date(maxUntil).toLocaleDateString(undefined, { day: 'numeric', month: 'long' }) : '';
+  const trial = () => {
+    if (useApp.getState().startTrial()) {
+      haptic.success();
+      toast(t('max.trialStarted'), 'success');
+      goBack();
+    }
+  };
 
   const perks = [
     { k: 'ai', icon: <Camera size={20} color={GOLD} /> },
+    { k: 'chat', icon: <MessageCircle size={20} color="#A7F3D0" /> },
+    { k: 'phrases', icon: <BookOpen size={20} color="#FCA5A5" /> },
+    { k: 'grammar', icon: <Check size={20} color="#86EFAC" /> },
+    { k: 'topics', icon: <Sparkle size={20} color="#FDE68A" /> },
+    { k: 'langs', icon: <Languages size={20} color="#F0ABFC" /> },
     { k: 'freeze', icon: <Snowflake size={20} color="#93C5FD" /> },
     { k: 'sparks', icon: <Sparkle size={20} color="#F59F00" fill="#F59F00" /> },
-    { k: 'offline', icon: <Download size={20} color="#A7F3D0" /> },
-    { k: 'langs', icon: <Languages size={20} color="#F0ABFC" /> },
     { k: 'flame', icon: <Flame size={18} skin="gold" animate={false} /> },
   ];
 
@@ -55,12 +72,20 @@ export default function Premium() {
     }
   };
 
+  const U = t('premium.cells.unlimited');
   const rows: [string, string, string][] = [
-    ['words', '✓', '✓'], ['review', '✓', '✓'], ['drop', '✓', '✓'],
-    ['ai', t('premium.cells.aiFree'), t('premium.cells.aiMax')],
-    ['freeze', t('premium.cells.freezeFree'), t('premium.cells.freezeMax')],
+    ['words', '✓', '✓'], ['drop', '✓', '✓'],
+    ['ai', t('premium.cells.aiFree', { ai: LIMITS.aiScansPerDay }), U],
+    ['chat', t('premium.cells.chatFree', { chat: LIMITS.chatPerDay }), U],
+    ['phrases', t('premium.cells.phrasesFree'), t('premium.cells.all')],
+    ['english', t('premium.cells.englishFree', { n: LIMITS.freeExprPerKind }), t('premium.cells.all')],
+    ['grammar', t('premium.cells.grammarFree'), t('premium.cells.grammarMax')],
+    ['topics', t('premium.cells.topicsFree'), t('premium.cells.all')],
+    ['bulk', '—', '✓'],
     ['langs', t('premium.cells.langsFree'), t('premium.cells.langsMax')],
-    ['offline', '—', '✓'],
+    ['freeze', t('premium.cells.freezeFree'), t('premium.cells.freezeMax')],
+    ['sparks', '×1', t('premium.cells.sparksMax')],
+    ['map', '—', '✓'],
   ];
 
   return (
@@ -72,9 +97,15 @@ export default function Premium() {
             <Pressable onPress={() => goBack()} hitSlop={12} style={styles.close}><X size={20} color="#fff" /></Pressable>
           </View>
           <View style={{ maxWidth: 560, width: '100%', alignSelf: 'center' }}>
+            {reason && !max ? (
+              <Animated.View entering={FadeInDown.springify()} style={styles.reason}>
+                <Lock size={16} color="#1F1B3A" />
+                <Txt v="captionMedium" color="#1F1B3A" style={{ flex: 1 }}>{t(`max.reasons.${reason}`)}</Txt>
+              </Animated.View>
+            ) : null}
             <Animated.View entering={FadeInDown.springify()} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <Crown size={30} color={GOLD} />
-              <View style={styles.soon}><Txt v="caption" color="#1F1B3A" style={{ fontFamily: fonts.semibold }}>{t('premium.soon')}</Txt></View>
+              <View style={styles.soon}><Txt v="caption" color="#1F1B3A" style={{ fontFamily: fonts.semibold }}>{max ? t('max.active') : t('premium.soon')}</Txt></View>
             </Animated.View>
             <Animated.View entering={FadeInDown.delay(80).springify()}>
               <Txt style={{ fontFamily: fonts.serif, fontSize: 52, lineHeight: 56, color: '#fff', marginTop: 14 }}>{t('premium.title')}</Txt>
@@ -88,12 +119,30 @@ export default function Premium() {
                   <Animated.View key={p.k} entering={FadeInDown.delay(160 + i * 60).springify()} style={{ flexDirection: 'row', gap: 14, alignItems: 'center' }}>
                     <View style={styles.perkIc}>{p.icon}</View>
                     <View style={{ flex: 1 }}>
-                      <Txt v="bodyMedium" color="#fff">{title}</Txt>
-                      <Txt v="caption" color="rgba(255,255,255,.6)">{sub}</Txt>
+                      <Txt v="bodyMedium" color="#fff">{fill(title)}</Txt>
+                      <Txt v="caption" color="rgba(255,255,255,.6)">{fill(sub)}</Txt>
                     </View>
                   </Animated.View>
                 );
               })}
+            </View>
+            <View style={{ marginTop: space.l }}>
+              {max ? (
+                <View style={styles.activeBox}>
+                  <Crown size={18} color={GOLD} />
+                  <Txt v="bodyMedium" color="#fff" style={{ flex: 1 }}>{t('max.activeUntil', { date: until })}</Txt>
+                </View>
+              ) : !trialUsed ? (
+                <>
+                  <Pressable onPress={trial} style={styles.trialBtn}>
+                    <Crown size={18} color="#1F1B3A" />
+                    <Txt v="bodyMedium" color="#1F1B3A" style={{ fontFamily: fonts.semibold }}>{t('max.trial')}</Txt>
+                  </Pressable>
+                  <Txt v="caption" color="rgba(255,255,255,.6)" center style={{ marginTop: 8 }}>{t('max.trialSub')}</Txt>
+                </>
+              ) : (
+                <Txt v="caption" color="rgba(255,255,255,.7)" center>{t('max.trialUsed')}</Txt>
+              )}
             </View>
           </View>
         </LinearGradient>
@@ -172,6 +221,9 @@ export default function Premium() {
 
 const styles = StyleSheet.create({
   close: { width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(255,255,255,.14)', alignItems: 'center', justifyContent: 'center' },
+  reason: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: GOLD, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 14, marginBottom: 16 },
+  trialBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, height: 56, borderRadius: 28, backgroundColor: GOLD },
+  activeBox: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: 16, backgroundColor: 'rgba(255,214,107,.14)' },
   soon: { backgroundColor: GOLD, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
   perkIc: { width: 42, height: 42, borderRadius: 14, backgroundColor: 'rgba(255,255,255,.1)', alignItems: 'center', justifyContent: 'center' },
   section: { marginTop: space.l, marginBottom: 10 },

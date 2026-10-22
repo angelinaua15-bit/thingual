@@ -12,6 +12,8 @@ import { useApp } from '../../src/store/useApp';
 import { exprLang, exprMeaning, exprTarget, exprsOfKind, groupsOf, SITUATIONS, type Expr, type ExprKind } from '../../src/data/expressions';
 import { speak } from '../../src/lib/feedback';
 import { goBack } from '../../src/lib/nav';
+import { useIsMax, requireMax, FREE_SITUATIONS, LIMITS } from '../../src/lib/premium';
+import { MaxLockCard, MaxBadge } from '../../src/components/MaxLock';
 import { haptic } from '../../src/lib/feedback';
 
 const groupLabel = (t: (k: string) => string, kind: ExprKind, g: string) =>
@@ -36,7 +38,8 @@ export default function ExprList() {
     return groupsOf(kind);
   }, [kind]);
 
-  const list = useMemo(() => {
+  const max = useIsMax();
+  const all = useMemo(() => {
     const query = q.trim().toLowerCase();
     return exprsOfKind(kind).filter((e) => {
       if (group !== 'all' && (kind === 'phrasal' || kind === 'idiom' ? e.level !== group : e.group !== group)) return false;
@@ -45,6 +48,10 @@ export default function ExprList() {
       return hay.includes(query);
     });
   }, [kind, group, q, s.active, s.native]);
+  // Free: 3 phrasebook situations and the first 30 of each English list
+  const isOpen = (e: Expr) => max || (kind === 'phrase' ? FREE_SITUATIONS.includes(e.group) : exprsOfKind(kind).indexOf(e) < LIMITS.freeExprPerKind);
+  const list = useMemo(() => all.filter(isOpen), [all, max]);
+  const locked = all.length - list.length;
 
   const unsaved = list.filter((e) => !exprs[e.id]);
   const saveAll = () => {
@@ -73,7 +80,8 @@ export default function ExprList() {
           {['all', ...groups].map((g) => {
             const on = g === group;
             return (
-              <Pressable key={g} onPress={() => { haptic.light(); setGroup(g); }} style={[styles.chip, { backgroundColor: on ? c.ink : c.surface, borderColor: c.divider }]}>
+              <Pressable key={g} onPress={() => { haptic.light(); if (kind === 'phrase' && g !== 'all' && !max && !FREE_SITUATIONS.includes(g)) { requireMax('phrases'); return; } setGroup(g); }} style={[styles.chip, { backgroundColor: on ? c.ink : c.surface, borderColor: c.divider, flexDirection: 'row', alignItems: 'center', gap: 6 }]}>
+                {kind === 'phrase' && g !== 'all' && !max && !FREE_SITUATIONS.includes(g) ? <MaxBadge size={14} /> : null}
                 <Txt v="captionMedium" color={on ? c.background : c.text}>{g === 'all' ? t('phr.all') : groupLabel(t, kind, g)}</Txt>
               </Pressable>
             );
@@ -86,7 +94,8 @@ export default function ExprList() {
         initialNumToRender={20}
         contentContainerStyle={{ paddingHorizontal: space.m, paddingBottom: insets.bottom + 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}
         ListHeaderComponent={unsaved.length > 1 ? (<Button title={t('phr.saveAll', { n: unsaved.length })} variant="secondary" size="m" icon={<Plus size={16} color={c.text} />} onPress={saveAll} style={{ marginBottom: 10 }} />) : undefined}
-        ListEmptyComponent={<Txt v="callout" color={c.textSecondary} center style={{ marginTop: 40 }}>{t('phr.empty')}</Txt>}
+        ListFooterComponent={locked > 0 ? <MaxLockCard reason={kind === 'phrase' ? 'phrases' : 'english'} title={t('max.moreLocked', { n: locked })} sub={t('max.moreLockedSub')} /> : undefined}
+        ListEmptyComponent={locked > 0 ? undefined : <Txt v="callout" color={c.textSecondary} center style={{ marginTop: 40 }}>{t('phr.empty')}</Txt>}
         renderItem={({ item, index }) => <Row e={item} i={index} open={open === item.id} onToggle={() => setOpen(open === item.id ? null : item.id)} />}
       />
     </View>

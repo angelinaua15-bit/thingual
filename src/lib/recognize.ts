@@ -1,12 +1,13 @@
 import { CONCEPTS } from '../data/concepts';
 import { supabase } from './supabase';
 import { ensureSession } from './api';
+import { takeQuota } from './premium';
 
 export type Recognition = {
   concept: string | null;
   confidence: number;
   alternatives: string[];
-  source: 'server' | 'none';
+  source: 'server' | 'none' | 'limit';
 };
 
 /**
@@ -27,6 +28,8 @@ export const backendConnected = () => available;
  */
 export async function recognize(input: { base64?: string }): Promise<Recognition> {
   if (available && input.base64) {
+    // Free: a daily number of AI scans; Max: unlimited
+    if (!takeQuota('ai')) return { concept: null, confidence: 0, alternatives: [], source: 'limit' };
     try {
       await ensureSession();
       const { data, error } = await supabase.functions.invoke('recognize', {

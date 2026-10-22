@@ -12,7 +12,7 @@ import type { StoredCard } from './srs';
 type S = ReturnType<typeof useApp.getState>;
 const KEYS = [
   'onboarded', 'goal', 'quizScore', 'settings', 'words', 'collections', 'history', 'learnStreak', 'dropStreak', 'bestStreak',
-  'activeDays', 'frozenDays', 'sparks', 'freezes', 'claimed', 'flames', 'flame', 'achievements', 'exprs', 'drops', 'quests', 'weekXp', 'grammar', 'maxWaitlist', 'lostStreak',
+  'activeDays', 'frozenDays', 'sparks', 'freezes', 'claimed', 'flames', 'flame', 'achievements', 'exprs', 'drops', 'quests', 'weekXp', 'grammar', 'maxUntil', 'trialUsed', 'maxFreezeMonth', 'maxWaitlist', 'lostStreak',
 ] as const;
 type Snapshot = Partial<Pick<S, (typeof KEYS)[number]>> & { profile?: Partial<S['profile']> };
 
@@ -74,6 +74,9 @@ function merge(local: S, remote: Snapshot, remoteNewer: boolean): Partial<S> {
     weekXp: (remote.weekXp && remote.weekXp.week === local.weekXp.week && remote.weekXp.xp > local.weekXp.xp) ? remote.weekXp : local.weekXp,
     grammar: Object.fromEntries(Object.entries({ ...(remote.grammar ?? {}), ...local.grammar }).map(([k, v]) => [k, Math.max(v, remote.grammar?.[k] ?? 0)])),
     maxWaitlist: local.maxWaitlist ?? remote.maxWaitlist,
+    maxUntil: Math.max(local.maxUntil ?? 0, remote.maxUntil ?? 0) || undefined,
+    trialUsed: local.trialUsed || remote.trialUsed,
+    maxFreezeMonth: newer('maxFreezeMonth'),
     lostStreak: newer('lostStreak'),
   };
 }

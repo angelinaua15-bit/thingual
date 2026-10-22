@@ -14,6 +14,8 @@ import type { GrammarExercise } from '../../src/data/grammar/types';
 import { emojiUrl } from '../../src/data/emoji';
 import { speak, haptic } from '../../src/lib/feedback';
 import { goBack } from '../../src/lib/nav';
+import { useIsMax, FREE_GRAMMAR_LEVELS } from '../../src/lib/premium';
+import { MaxLockCard } from '../../src/components/MaxLock';
 
 const clean = (s: string) => s.trim().toLowerCase().replace(/[’']/g, '’').replace(/\s+/g, ' ').replace(/[.!?]$/, '');
 
@@ -28,7 +30,16 @@ export default function GrammarLesson() {
   const [i, setI] = useState(0);
   const [correct, setCorrect] = useState(0);
   const started = useRef(Date.now());
+  const max = useIsMax();
   if (!lesson) return null;
+  if (!max && !FREE_GRAMMAR_LEVELS.includes(lesson.level)) {
+    return (
+      <View style={{ flex: 1, backgroundColor: c.background, paddingTop: insets.top, padding: space.l, justifyContent: 'center' }}>
+        <MaxLockCard reason="grammar" title={t('max.grammarLocked')} sub={t('max.moreLockedSub')} />
+        <Button title={t('common.back')} variant="secondary" onPress={() => goBack('/grammar')} />
+      </View>
+    );
+  }
   const uk = ui === 'uk';
   const ex = lesson.exercises[i];
 

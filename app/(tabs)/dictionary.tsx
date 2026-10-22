@@ -17,11 +17,14 @@ import { conceptById, fullWord, labelOf, PLACES, CONCEPTS, TOPICS, TOPIC_EMOJI, 
 import { coverFor, SCENES } from '../../src/data/photos';
 import { mastery, formatInterval, isDue } from '../../src/lib/srs';
 import { haptic } from '../../src/lib/feedback';
+import { useIsMax, requireMax, topicOpen } from '../../src/lib/premium';
+import { MaxBadge, MaxPill } from '../../src/components/MaxLock';
 
 type View_ = 'grid' | 'list' | 'places';
 type Filter = 'all' | 'new' | 'hard' | 'learned' | 'drop' | `col:${string}`;
 
 export default function Dictionary() {
+  const max = useIsMax();
   const { c } = useTheme();
   const { t } = useT();
   const { width } = useWindowDimensions();
@@ -70,9 +73,12 @@ export default function Dictionary() {
               <Txt v="display">{t('dictionary.title')}</Txt>
               <Txt v="callout" color={c.textSecondary}>{t('dictionary.count', { n: all.length })} · {languageName(target, s.uiLang)}</Txt>
             </View>
-            <Pressable onPress={exportCsv} hitSlop={8} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-              <Download size={18} color={c.textSecondary} />
-            </Pressable>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 6 }}>
+              <MaxPill />
+              <Pressable onPress={exportCsv} hitSlop={8}>
+                <Download size={18} color={c.textSecondary} />
+              </Pressable>
+            </View>
           </View>
           {s.targets.length > 1 && (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginTop: 12 }}>
@@ -165,7 +171,8 @@ export default function Dictionary() {
             <View style={styles.topicGrid}>
               {TOPICS.map((tp, i) => (
                 <Animated.View key={tp} entering={FadeInDown.delay(Math.min(i, 10) * 30)} style={{ width: '31.5%', flexGrow: 1 }}>
-                  <PressableScale onPress={() => router.push({ pathname: '/explore', params: { topic: tp } })} style={[styles.topic, { backgroundColor: c.surface, borderColor: c.divider }]}>
+                  <PressableScale onPress={() => (topicOpen(tp, max) ? router.push({ pathname: '/explore', params: { topic: tp } }) : requireMax('topics'))} style={[styles.topic, { backgroundColor: c.surface, borderColor: c.divider }]}>
+                    {!topicOpen(tp, max) ? <View style={{ position: 'absolute', top: 6, right: 6 }}><MaxBadge size={18} /></View> : null}
                     <Image source={{ uri: emojiUrl(TOPIC_EMOJI[tp][1]) }} style={{ width: 36, height: 36 }} />
                     <Txt v="captionMedium" numberOfLines={1}>{t(`explore.topics.${tp}`)}</Txt>
                     <Txt v="caption" color={c.textTertiary}>{conceptsInTopic(tp).length}</Txt>

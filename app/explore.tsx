@@ -15,6 +15,8 @@ import { CONCEPTS, TOPICS, TOPIC_EMOJI, fullWord, labelOf, type Topic } from '..
 import { emojiUrl } from '../src/data/emoji';
 import { goBack } from '../src/lib/nav';
 import { haptic } from '../src/lib/feedback';
+import { useIsMax, requireMax, topicOpen } from '../src/lib/premium';
+import { MaxBadge, MaxLockCard } from '../src/components/MaxLock';
 
 /** Catalogue of every word in the app, by topic. */
 export default function Explore() {
@@ -27,11 +29,15 @@ export default function Explore() {
   const words = useApp((x) => x.words);
   const [topic, setTopic] = useState<Topic | 'all'>((params.topic as Topic) ?? 'all');
   const [q, setQ] = useState('');
+  const max = useIsMax();
+  const [topic0] = useState(topic);
+  React.useEffect(() => { if (topic0 !== 'all' && !topicOpen(topic0, max)) { setTopic('all'); requireMax('topics'); } }, []);
 
   const list = useMemo(() => {
     const query = q.trim().toLowerCase();
-    return CONCEPTS.filter((cc) => (topic === 'all' || cc.topic === topic) && (!query || Object.values(cc.labels).some((l) => l.word?.toLowerCase().includes(query) || l.roman?.toLowerCase().includes(query))));
-  }, [topic, q]);
+    return CONCEPTS.filter((cc) => topicOpen(cc.topic, max) && (topic === 'all' || cc.topic === topic) && (!query || Object.values(cc.labels).some((l) => l.word?.toLowerCase().includes(query) || l.roman?.toLowerCase().includes(query))));
+  }, [topic, q, max]);
+  const lockedCount = max ? 0 : CONCEPTS.filter((cc) => !topicOpen(cc.topic, false)).length;
   const missing = list.filter((cc) => !words[cc.id]);
 
   const contentW = Math.min(width, 760) - space.m * 2;
@@ -39,6 +45,7 @@ export default function Explore() {
   const tileW = (contentW - (cols - 1) * 10) / cols;
 
   const addAll = () => {
+    if (!requireMax('bulk')) return;
     const st = useApp.getState();
     missing.forEach((cc) => st.saveWord(cc.id, '', 'set'));
     haptic.success();
@@ -51,9 +58,10 @@ export default function Explore() {
         {(['all', ...TOPICS] as const).map((tp) => {
           const on = topic === tp;
           return (
-            <Pressable key={tp} onPress={() => { haptic.light(); setTopic(tp); }} style={[styles.chip, { backgroundColor: on ? c.ink : c.surface, borderColor: c.divider }]}>
+            <Pressable key={tp} onPress={() => { haptic.light(); if (tp !== 'all' && !topicOpen(tp, max)) { requireMax('topics'); return; } setTopic(tp); }} style={[styles.chip, { backgroundColor: on ? c.ink : c.surface, borderColor: c.divider }]}>
               {tp !== 'all' && <Image source={{ uri: emojiUrl(TOPIC_EMOJI[tp][1]) }} style={{ width: 20, height: 20 }} />}
               <Txt v="captionMedium" color={on ? c.background : c.text}>{tp === 'all' ? t('explore.all') : t(`explore.topics.${tp}`)}</Txt>
+              {tp !== 'all' && !topicOpen(tp, max) ? <MaxBadge size={18} /> : null}
             </Pressable>
           );
         })}
@@ -61,7 +69,7 @@ export default function Explore() {
       {topic !== 'all' && !q && (
         <Animated.View entering={FadeIn} style={{ marginBottom: 12 }}>
           {missing.length ? (
-            <Button title={t('explore.addAll', { n: missing.length })} icon={<Plus size={18} color={c.onAccent} />} onPress={addAll} />
+            <Button title={t('explore.addAll', { n: missing.length }) + (max ? '' : ' · Max')} icon={<Plus size={18} color={c.onAccent} />} onPress={addAll} />
           ) : (
             <View style={[styles.done, { backgroundColor: c.successSoft }]}><Check size={16} color={c.success} /><Txt v="captionMedium">{t('explore.allAdded')}</Txt></View>
           )}
@@ -93,6 +101,7 @@ export default function Explore() {
         numColumns={cols}
         keyExtractor={(cc) => cc.id}
         ListHeaderComponent={header}
+        ListFooterComponent={lockedCount && !q ? <View style={{ marginTop: 6 }}><MaxLockCard reason="topics" title={t('max.topicsLocked', { n: lockedCount })} sub={t('max.moreLockedSub')} /></View> : undefined}
         ListEmptyComponent={<Txt v="callout" color={c.textSecondary} center style={{ marginTop: 40 }}>{t('explore.empty')}</Txt>}
         columnWrapperStyle={{ gap: 10 }}
         contentContainerStyle={{ padding: space.m, paddingBottom: insets.bottom + 40, gap: 10, maxWidth: 760, width: '100%', alignSelf: 'center' }}

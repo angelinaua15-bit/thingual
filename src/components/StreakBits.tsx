@@ -14,6 +14,7 @@ import { useT } from '../i18n';
 import { useApp } from '../store/useApp';
 import { FLAMES, FlameId, visibleStreak, doneToday } from '../lib/streak';
 import { shareStreak } from '../lib/shareStreak';
+import { MaxPill } from './MaxLock';
 import { haptic } from '../lib/feedback';
 
 /** The picture people share: gradient, flame, big number. Also captured as PNG on native. */
@@ -57,7 +58,8 @@ export function StreakPills() {
   const n = visibleStreak(st);
   const done = doneToday(st);
   return (
-    <View style={{ flexDirection: 'row', gap: 8 }}>
+    <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+      <MaxPill compact />
       <PressableScale onPress={() => router.push('/streak')} style={[styles.pill, { backgroundColor: c.surface, borderColor: c.divider }]} accessibilityLabel="streak">
         <Flame size={16} active={done} animate={false} />
         <Txt v="captionMedium" style={{ fontVariant: ['tabular-nums'] }}>{n}</Txt>

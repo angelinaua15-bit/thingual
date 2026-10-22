@@ -63,7 +63,7 @@ export default function Learn() {
     <Screen>
       <ScrollView contentContainerStyle={{ paddingHorizontal: space.m, paddingBottom: TAB_BAR_HEIGHT + 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: space.s }}>
-          <Txt v="display" style={{ flex: 1 }}>{t('learn.title')}</Txt>
+          <Txt v="display" numberOfLines={1} adjustsFontSizeToFit style={{ flex: 1, marginRight: 8 }}>{t('learn.title')}</Txt>
           <StreakPills />
         </View>
 

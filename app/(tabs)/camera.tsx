@@ -1,3 +1,5 @@
+import { LIMITS, canAddLanguage } from '../../src/lib/premium';
+import { MaxPill } from '../../src/components/MaxLock';
 import React, { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
@@ -80,6 +82,12 @@ export default function CameraScreen() {
     if (uniq.length === 1) return showPeek({ concept: uniq[0], photo, alternatives: [], confidence: 1 });
     const r = await recognize({ base64 });
     if (r.concept) return showPeek({ concept: r.concept, photo, alternatives: r.alternatives, confidence: r.confidence });
+    if (r.source === 'limit') {
+      toast(t('max.aiLimit', { n: LIMITS.aiScansPerDay }), 'default');
+      setPickerFor(photo);
+      setTimeout(() => router.push({ pathname: '/premium', params: { reason: 'ai' } }), 400);
+      return;
+    }
     toast(t('camera.nothingFound'), 'default');
     setPickerFor(photo);
   };
@@ -195,6 +203,7 @@ export default function CameraScreen() {
           <ChevronDown size={14} color="#fff" />
         </Pressable>
         <View style={{ flex: 1 }} />
+        <MaxPill dark />
         {status === 'loading' && camAvailable && (
           <View style={styles.pill}>
             <ActivityIndicator size="small" color="#fff" />
@@ -297,7 +306,7 @@ function LanguageSheet({ visible, onClose }: { visible: boolean; onClose: () => 
         {LANGUAGES.filter((l) => l.code !== s.native).map((l) => {
           const active = l.code === s.active;
           return (
-            <Pressable key={l.code} onPress={() => { addTarget(l.code); haptic.light(); onClose(); }} style={[styles.langRow, { backgroundColor: active ? c.text : c.surfaceAlt }]}>
+            <Pressable key={l.code} onPress={() => { onClose(); if (!canAddLanguage(l.code)) return; addTarget(l.code); haptic.light(); }} style={[styles.langRow, { backgroundColor: active ? c.text : c.surfaceAlt }]}>
               <Txt v="bodyMedium" color={active ? c.background : c.text} style={{ flex: 1 }}>{l.native}</Txt>
               <Txt style={{ fontFamily: fonts.serif, fontSize: 18, color: active ? c.background : c.textSecondary }}>{fullWord('window', l.code)}</Txt>
             </Pressable>

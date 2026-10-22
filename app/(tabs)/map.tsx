@@ -1,4 +1,6 @@
 import { haptic } from '../../src/lib/feedback';
+import { useIsMax, requireMax } from '../../src/lib/premium';
+import { MaxBadge } from '../../src/components/MaxLock';
 import type { MapKind } from '../../src/components/mapHtml';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
@@ -67,7 +69,8 @@ export default function MapTab() {
 
   const locked = layer === 'drop' && !dropPosted;
   const friendSet = useMemo(() => new Set(following.data ?? []), [following.data]);
-  const mapStyle = s.mapStyle ?? 'color';
+  const maxOn = useIsMax();
+  const mapStyle = s.mapStyle === 'satellite' && !maxOn ? 'color' : s.mapStyle ?? 'color';
   const [me, setMe] = useState<[number, number] | null>(null);
   const [locating, setLocating] = useState(false);
   const points = useMemo(
@@ -122,12 +125,13 @@ export default function MapTab() {
           {/* basemap style */}
           <View style={[styles.styles, { backgroundColor: c.surface, bottom: TAB_BAR_HEIGHT + 152 }]}>
             {(['color', 'satellite', 'minimal'] as const).map((st) => (
-              <Pressable key={st} onPress={() => { haptic.light(); useApp.getState().updateSettings({ mapStyle: st }); }} accessibilityLabel={t(`map.styles.${st}`)}
+              <Pressable key={st} onPress={() => { haptic.light(); if (st === 'satellite' && !requireMax('satellite')) return; useApp.getState().updateSettings({ mapStyle: st }); }} accessibilityLabel={t(`map.styles.${st}`)}
                 style={[styles.styleBtn, { borderColor: mapStyle === st ? c.accent : 'transparent' }]}>
                 <View style={[styles.styleSwatch, { backgroundColor: st === 'color' ? '#9FD3A8' : st === 'satellite' ? '#1F4E5A' : '#D9D9D6' }]}>
                   <View style={{ position: 'absolute', left: 4, top: 6, width: 14, height: 10, borderRadius: 5, backgroundColor: st === 'color' ? '#F4E3A1' : st === 'satellite' ? '#3E7B4F' : '#EFEFEC' }} />
                   <View style={{ position: 'absolute', right: 3, bottom: 4, width: 12, height: 12, borderRadius: 6, backgroundColor: st === 'color' ? '#7FB5E6' : st === 'satellite' ? '#0E2B3A' : '#C4C4C0' }} />
                 </View>
+                {st === 'satellite' && !maxOn ? <View style={{ position: 'absolute', top: -4, right: -4 }}><MaxBadge size={16} /></View> : null}
               </Pressable>
             ))}
           </View>

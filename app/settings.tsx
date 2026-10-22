@@ -4,6 +4,7 @@ import { shareFile } from '../src/lib/share';
 import React, { useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, Share, TextInput, View } from 'react-native';
 import { goBack } from '../src/lib/nav';
+import { canAddLanguage } from '../src/lib/premium';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
@@ -192,6 +193,7 @@ export default function SettingsScreen() {
                     setLangSheet(null);
                   } else if (sel && s.targets.length > 1) st.removeTarget(l.code);
                   else if (l.code !== s.native) {
+                    if (!canAddLanguage(l.code)) { setLangSheet(null); return; }
                     st.addTarget(l.code as LangCode);
                   }
                 }}

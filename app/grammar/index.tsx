@@ -12,6 +12,8 @@ import { useApp } from '../../src/store/useApp';
 import { ENGLISH_GRAMMAR } from '../../src/data/grammar/english';
 import { emojiUrl } from '../../src/data/emoji';
 import { goBack } from '../../src/lib/nav';
+import { useIsMax, requireMax, FREE_GRAMMAR_LEVELS } from '../../src/lib/premium';
+import { MaxBadge } from '../../src/components/MaxLock';
 
 export default function GrammarList() {
   const { c } = useTheme();
@@ -19,6 +21,7 @@ export default function GrammarList() {
   const insets = useSafeAreaInsets();
   const ui = useApp((s) => s.settings.uiLang);
   const done = useApp((s) => s.grammar);
+  const max = useIsMax();
   const levels = ['A1', 'A2', 'B1', 'B2'].filter((l) => ENGLISH_GRAMMAR.some((g) => g.level === l));
   const completed = ENGLISH_GRAMMAR.filter((g) => (done[g.id] ?? 0) >= 60).length;
   return (
@@ -37,13 +40,13 @@ export default function GrammarList() {
                 const score = done[g.id];
                 return (
                   <Animated.View key={g.id} entering={FadeInDown.delay(Math.min(i, 8) * 35)}>
-                    <Pressable onPress={() => router.push({ pathname: '/grammar/[id]', params: { id: g.id } })} style={[styles.row, { backgroundColor: c.surface, borderColor: c.divider }]}>
+                    <Pressable onPress={() => (max || FREE_GRAMMAR_LEVELS.includes(g.level) ? router.push({ pathname: '/grammar/[id]', params: { id: g.id } }) : requireMax('grammar'))} style={[styles.row, { backgroundColor: c.surface, borderColor: c.divider }]}>
                       <View style={[styles.ic, { backgroundColor: c.surfaceAlt }]}><Image source={{ uri: emojiUrl(g.emoji) }} style={{ width: 28, height: 28 }} /></View>
                       <View style={{ flex: 1 }}>
                         <Txt v="bodyMedium">{ui === 'uk' ? g.title.uk : g.title.en}</Txt>
                         <Txt v="caption" color={c.textSecondary} numberOfLines={1}>{ui === 'uk' ? g.title.en : g.examples[0]?.en}</Txt>
                       </View>
-                      {score != null ? (
+                      {!max && !FREE_GRAMMAR_LEVELS.includes(g.level) ? <MaxBadge size={22} /> : score != null ? (
                         <View style={[styles.score, { backgroundColor: score >= 60 ? c.successSoft : c.surfaceAlt }]}>
                           {score >= 60 ? <Check size={13} color={c.success} /> : null}
                           <Txt v="caption" color={score >= 60 ? c.success : c.textSecondary}>{score}%</Txt>

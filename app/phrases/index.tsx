@@ -14,6 +14,8 @@ import { LANGUAGES } from '../../src/data/languages';
 import { emojiUrl } from '../../src/data/emoji';
 import { isDue } from '../../src/lib/srs';
 import { goBack } from '../../src/lib/nav';
+import { useIsMax, requireMax, FREE_SITUATIONS } from '../../src/lib/premium';
+import { MaxBadge } from '../../src/components/MaxLock';
 
 /** Hub: phrasebook by situation + English phrasal verbs, collocations and idioms. */
 export default function PhrasesHub() {
@@ -22,6 +24,7 @@ export default function PhrasesHub() {
   const insets = useSafeAreaInsets();
   const exprs = useApp((x) => x.exprs);
   const saved = Object.keys(exprs).length;
+  const max = useIsMax();
   const due = Object.values(exprs).filter((e) => isDue(e.card)).length;
 
   return (
@@ -72,7 +75,8 @@ export default function PhrasesHub() {
         <View style={styles.grid}>
           {SITUATIONS.map((sit, i) => (
             <Animated.View key={sit} entering={FadeInDown.delay(Math.min(i, 8) * 40)} style={{ width: '31.5%', flexGrow: 1 }}>
-              <PressableScale onPress={() => router.push({ pathname: '/phrases/[kind]', params: { kind: 'phrase', group: sit } })} style={[styles.sit, { backgroundColor: c.surface, borderColor: c.divider }]}>
+              <PressableScale onPress={() => (max || FREE_SITUATIONS.includes(sit) ? router.push({ pathname: '/phrases/[kind]', params: { kind: 'phrase', group: sit } }) : requireMax('phrases'))} style={[styles.sit, { backgroundColor: c.surface, borderColor: c.divider }]}>
+                {!max && !FREE_SITUATIONS.includes(sit) ? <View style={{ position: 'absolute', top: 8, right: 8 }}><MaxBadge /></View> : null}
                 <Image source={{ uri: emojiUrl(SITUATION_EMOJI[sit]) }} style={{ width: 38, height: 38 }} />
                 <Txt v="captionMedium" center numberOfLines={2}>{t(`phr.situations.${sit}`)}</Txt>
                 <Txt v="caption" color={c.textTertiary}>{exprsOfKind('phrase').filter((e) => e.group === sit).length}</Txt>

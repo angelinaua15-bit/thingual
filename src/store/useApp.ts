@@ -8,6 +8,7 @@ import { dateKey, nicknameFor } from '../data/social';
 import { conceptById, Place } from '../data/concepts';
 import { needsPersist, persistPhoto } from '../lib/photoStore';
 import { questsFor, CHEST_REWARD, type QuestField } from '../lib/quests';
+import { LIMITS } from '../lib/limits';
 import { addDays, DAILY_SPARKS, dayDiff, FLAMES, FlameId, MAX_FREEZES, MILESTONES, PRICES, REPAIR_WINDOW, Reward } from '../lib/streak';
 
 export type Level = 'beginner' | 'intermediate' | 'advanced';
@@ -82,6 +83,12 @@ type State = {
   quests: { day: string; claimed: string[] } & Partial<Record<QuestField, number>>;
   /** sparks earned this ISO week (weekly league) */
   weekXp: { week: string; xp: number };
+  /** Thingual Max active until (ms); trial or purchase */
+  maxUntil?: number;
+  trialUsed?: boolean;
+  /** month (YYYY-MM) when Max last refilled streak freezes */
+  maxFreezeMonth?: string;
+  usage: { day: string; ai: number; chat: number };
   /** grammar lesson id → best score (0–100) */
   grammar: Record<string, number>;
   drops: Record<string, string>; // dateKey -> post id of my Daily Drop
@@ -121,6 +128,7 @@ type Actions = {
   questBump: (field: QuestField, n?: number) => void;
   claimQuest: (id: string) => number;
   finishGrammar: (id: string, score: number) => void;
+  startTrial: () => boolean;
   resetAll: () => void;
 };
 
@@ -197,6 +205,7 @@ const initialState = (): State => {
     quests: { day: '', claimed: [] },
     weekXp: { week: weekKey(), xp: 0 },
     grammar: {},
+    usage: { day: '', ai: 0, chat: 0 },
     drops: {},
     achievements: [],
     familyMode: { enabled: false },
@@ -230,7 +239,7 @@ export const useApp = create<State & Actions>()(
       addTarget: (l) =>
         set((s) => {
           if (s.settings.targets.includes(l)) return { settings: { ...s.settings, active: l } };
-          return { settings: { ...s.settings, targets: [...s.settings.targets, l].slice(0, 5), active: l } };
+          return { settings: { ...s.settings, targets: [...s.settings.targets, l].slice(0, LIMITS.maxLanguages), active: l } };
         }),
 
       removeTarget: (l) =>
@@ -300,7 +309,8 @@ export const useApp = create<State & Actions>()(
           if (i >= 0) history[i] = { day, reviewed: history[i].reviewed + reviewed, correct: history[i].correct + correct, minutes: history[i].minutes + minutes };
           else history.push({ day, reviewed, correct, minutes });
           // one spark per correct answer, up to 20 per session
-          return { history: history.slice(-120), sparks: s.sparks + Math.min(correct, 20), weekXp: addXp(s.weekXp, Math.min(correct, 20)) };
+          const earned = Math.min(correct, 20) * (s.maxUntil && s.maxUntil > Date.now() ? 2 : 1);
+          return { history: history.slice(-120), sparks: s.sparks + earned, weekXp: addXp(s.weekXp, earned) };
         });
         if (reviewed > 0) { get().markActive(); get().questBump('reviews', reviewed); }
       },
@@ -339,6 +349,12 @@ export const useApp = create<State & Actions>()(
       unlock: (id) => set((s) => (s.achievements.includes(id) ? {} : { achievements: [...s.achievements, id] })),
       /** Settle missed days: spend freezes automatically, or lose the streak (repairable for a while). */
       checkStreak: () => {
+        const s0 = get();
+        // Max: streak freezes are topped up every month
+        const month = dateKey().slice(0, 7);
+        if (s0.maxUntil && s0.maxUntil > Date.now() && s0.maxFreezeMonth !== month) {
+          set({ maxFreezeMonth: month, freezes: Math.max(s0.freezes, Math.min(MAX_FREEZES + LIMITS.maxFreezesMonthly, s0.freezes + LIMITS.maxFreezesMonthly)) });
+        }
         const s = get();
         const st = s.learnStreak;
         const today = dateKey();
@@ -364,12 +380,13 @@ export const useApp = create<State & Actions>()(
         const st = s.learnStreak;
         if (st.last === today) return;
         const count = (st.last && dayDiff(st.last, today) === 1 ? st.count : 0) + 1;
-        let sparks = s.sparks + DAILY_SPARKS;
+        const mult = s.maxUntil && s.maxUntil > Date.now() ? 2 : 1;
+        let sparks = s.sparks + DAILY_SPARKS * mult;
         let freezes = s.freezes;
         let flames = s.flames;
         const claimed = [...s.claimed];
         const m = MILESTONES.find((x) => x.days === count && !claimed.includes(x.days));
-        let celebrate: Celebration = { kind: 'daily', count, sparks: DAILY_SPARKS, at: Date.now() };
+        let celebrate: Celebration = { kind: 'daily', count, sparks: DAILY_SPARKS * mult, at: Date.now() };
         if (m) {
           claimed.push(m.days);
           sparks += m.reward.sparks ?? 0;
@@ -441,6 +458,13 @@ export const useApp = create<State & Actions>()(
         if (fresh.length) set((s) => ({ exprs: { ...s.exprs, ...Object.fromEntries(fresh.map((id) => [id, { card: newCard(), addedAt: Date.now() }])) } }));
         return fresh.length;
       },
+      startTrial: () => {
+        const s = get();
+        if (s.trialUsed) return false;
+        set({ trialUsed: true, maxUntil: Date.now() + LIMITS.trialDays * 86400000 });
+        get().checkStreak();
+        return true;
+      },
       finishGrammar: (id, score) => {
         set((s) => ({ grammar: { ...s.grammar, [id]: Math.max(s.grammar[id] ?? 0, score) } }));
         get().questBump('grammar');
@@ -465,6 +489,7 @@ export const useApp = create<State & Actions>()(
           if (!q || (s.quests[q.field] ?? 0) < q.goal) return 0;
           reward = q.reward;
         }
+        if (s.maxUntil && s.maxUntil > Date.now()) reward *= 2;
         set({ sparks: s.sparks + reward, weekXp: addXp(s.weekXp, reward), quests: { ...s.quests, claimed: [...s.quests.claimed, id] } });
         return reward;
       },

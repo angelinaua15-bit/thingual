@@ -14,6 +14,8 @@ import { chatTurn, SCENARIOS, type ChatMsg } from '../src/lib/tutor';
 import { listenOnce, speechRecognitionAvailable } from '../src/lib/speech';
 import { speak, haptic } from '../src/lib/feedback';
 import { goBack } from '../src/lib/nav';
+import { takeQuota, requireMax, quotaLeft, LIMITS } from '../src/lib/premium';
+import { useIsMax } from '../src/lib/premium';
 
 const LEVEL = { beginner: 'A1-A2', intermediate: 'B1', advanced: 'B2' } as const;
 
@@ -31,6 +33,7 @@ export default function Tutor() {
   const [listening, setListening] = useState(false);
   const [showTr, setShowTr] = useState<Record<number, boolean>>({});
   const list = useRef<FlatList<ChatMsg>>(null);
+  const max = useIsMax();
 
   const ask = async (history: ChatMsg[], sc = scenario) => {
     if (!sc) return;
@@ -62,6 +65,7 @@ export default function Tutor() {
   const send = () => {
     const v = text.trim();
     if (!v || busy) return;
+    if (!takeQuota('chat')) { requireMax('chat'); return; }
     const history: ChatMsg[] = [...msgs, { role: 'user', content: v }];
     setMsgs(history);
     setText('');
@@ -109,7 +113,7 @@ export default function Tutor() {
         <Image source={{ uri: emojiUrl(scenario.emoji) }} style={{ width: 28, height: 28 }} />
         <View style={{ flex: 1 }}>
           <Txt v="bodyMedium">{t(`tutor.sc.${scenario.id}`)}</Txt>
-          <Txt v="caption" color={c.textSecondary}>{languageName(s.active, s.uiLang)} · {LEVEL[s.level]}</Txt>
+          <Txt v="caption" color={c.textSecondary}>{languageName(s.active, s.uiLang)} · {LEVEL[s.level]}{max ? '' : ` · ${t('max.chatLeft', { n: Math.max(0, quotaLeft('chat')) })}`}</Txt>
         </View>
       </View>
       <FlatList
