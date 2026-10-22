@@ -2,7 +2,9 @@
 export const LIMITS = {
   aiScansPerDay: 10, // server recognition (on-device detection in the browser is unlimited)
   chatPerDay: 5, // AI conversation messages
-  wordAiPerDay: 5, // AI help (association, transcription) for words in My vocabulary
+  wordAiPerDay: 5,
+  freeBooksPerLang: 2, // audiobooks open in Free for each language (the easiest ones)
+  freeBookChapters: 2, // and a taste of every other book // AI help (association, transcription) for words in My vocabulary
   freeLanguages: 2,
   maxLanguages: 10,
   freeExprPerKind: 30, // phrasal verbs / collocations / idioms open in Free

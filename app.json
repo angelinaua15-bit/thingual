@@ -98,6 +98,14 @@
           "icon": "./assets/android-icon-monochrome.png",
           "color": "#FF6B35"
         }
+      ],
+      [
+        "expo-audio",
+        {
+          "enableBackgroundPlayback": true,
+          "recordAudioAndroid": false,
+          "microphonePermission": false
+        }
       ]
     ],
     "experiments": {

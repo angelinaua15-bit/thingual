@@ -67,3 +67,6 @@ export { default as Circle } from 'lucide-react-native/icons/circle';
 export { default as CircleCheck } from 'lucide-react-native/icons/circle-check';
 export { default as NotebookPen } from 'lucide-react-native/icons/notebook-pen';
 export { default as WandSparkles } from 'lucide-react-native/icons/wand-sparkles';
+export { default as Play } from 'lucide-react-native/icons/play';
+export { default as Pause } from 'lucide-react-native/icons/pause';
+export { default as RotateCw } from 'lucide-react-native/icons/rotate-cw';

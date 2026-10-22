@@ -93,6 +93,8 @@ type State = {
   notebook: Record<string, NoteWord>;
   /** deleted notebook ids → time (so sync doesn't bring them back) */
   noteTomb: Record<string, number>;
+  /** audiobooks: where the learner stopped in each book */
+  books: Record<string, BookProgress>;
   /** last time synced progress changed on this device (ms) */
   localChangedAt?: number;
   /** grammar lesson id → best score (0–100) */
@@ -136,6 +138,7 @@ type Actions = {
   finishGrammar: (id: string, score: number) => void;
   startTrial: () => boolean;
   addNote: (w: NoteInput) => string;
+  saveBookProgress: (id: string, p: Partial<BookProgress>) => void;
   updateNote: (id: string, patch: Partial<NoteInput & { done: boolean }>) => void;
   removeNote: (id: string) => void;
   toggleNoteDone: (id: string) => void;
@@ -157,6 +160,7 @@ export type NoteInput = {
   emoji?: string;
   note?: string;
 };
+export type BookProgress = { chapter: number; position: number; done: number[]; updatedAt: number };
 export type NoteWord = NoteInput & { id: string; done: boolean; createdAt: number; updatedAt: number; card: StoredCard };
 
 const weekKey = (d = new Date()) => {
@@ -235,6 +239,7 @@ const initialState = (): State => {
     usage: { day: '', ai: 0, chat: 0 },
     notebook: {},
     noteTomb: {},
+    books: {},
     drops: {},
     achievements: [],
     familyMode: { enabled: false },
@@ -524,6 +529,11 @@ export const useApp = create<State & Actions>()(
         set({ sparks: s.sparks + reward, weekXp: addXp(s.weekXp, reward), quests: { ...s.quests, claimed: [...s.quests.claimed, id] } });
         return reward;
       },
+      saveBookProgress: (id, p) =>
+        set((s) => {
+          const prev = s.books[id] ?? { chapter: 0, position: 0, done: [], updatedAt: 0 };
+          return { books: { ...s.books, [id]: { ...prev, ...p, updatedAt: Date.now() } } };
+        }),
       addNote: (w) => {
         const id = `n-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
         const now = Date.now();

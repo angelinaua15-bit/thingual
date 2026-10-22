@@ -139,10 +139,11 @@ export const en = {
     week: 'This week',
     exercises: 'Practice',
     ex: {
-      recall: 'Photo → word', listen: 'Listen → photo', choose: 'Word → photo', type: 'Type the word',
+      books: 'Audiobooks', recall: 'Photo → word', listen: 'Listen → photo', choose: 'Word → photo', type: 'Type the word',
       speak: 'Say the word', sentence: 'Build the sentence', article: 'Article & gender', find: 'Find it nearby',
     },
     exSub: {
+      books: 'Real books at your level', 
       find: 'We name a word — you have 60 seconds to find and photograph it.',
       handsFree: 'Audio review in your headphones while you walk.',
     },
@@ -272,6 +273,7 @@ export const en = {
     perks: {
       ai: ['Unlimited AI recognition', 'Free: {ai} scans a day'],
       notebook: ['Unlimited AI in My vocabulary', 'Free: {word} AI fills a day'],
+      books: ['Every audiobook', 'Free: {books} books per language + first chapters'],
       chat: ['Unlimited AI conversation partner', 'Free: {chat} messages a day'],
       phrases: ['The whole phrasebook — 12 situations', 'Plus every phrasal verb, collocation and idiom'],
       grammar: ['Grammar A1 → B2', 'Free: A1 lessons only'],
@@ -283,8 +285,8 @@ export const en = {
     },
     compare: 'Free vs Max',
     free: 'Free',
-    rows: { notebook: 'AI in My vocabulary', words: 'Camera, dictionary, reviews', drop: 'Daily Drop, map and community', ai: 'AI scans', chat: 'AI conversation', phrases: 'Phrasebook situations', english: 'Phrasal verbs, idioms…', grammar: 'Grammar', topics: 'Word topics', bulk: 'Add a whole topic', langs: 'Languages at once', freeze: 'Streak freezes', sparks: 'Sparks', map: 'Satellite map' },
-    cells: { wordFree: '{word} / day', aiFree: '{ai} / day', chatFree: '{chat} / day', unlimited: 'Unlimited', phrasesFree: '3 of 12', englishFree: 'First {n}', all: 'All', grammarFree: 'A1', grammarMax: 'A1–B2', topicsFree: '8 of 17', freezeFree: 'For sparks', freezeMax: '+2 / month', sparksMax: '×2', langsFree: '2', langsMax: '10' },
+    rows: { books: 'Audiobooks', notebook: 'AI in My vocabulary', words: 'Camera, dictionary, reviews', drop: 'Daily Drop, map and community', ai: 'AI scans', chat: 'AI conversation', phrases: 'Phrasebook situations', english: 'Phrasal verbs, idioms…', grammar: 'Grammar', topics: 'Word topics', bulk: 'Add a whole topic', langs: 'Languages at once', freeze: 'Streak freezes', sparks: 'Sparks', map: 'Satellite map' },
+    cells: { booksFree: '{n} per language', wordFree: '{word} / day', aiFree: '{ai} / day', chatFree: '{chat} / day', unlimited: 'Unlimited', phrasesFree: '3 of 12', englishFree: 'First {n}', all: 'All', grammarFree: 'A1', grammarMax: 'A1–B2', topicsFree: '8 of 17', freezeFree: 'For sparks', freezeMax: '+2 / month', sparksMax: '×2', langsFree: '2', langsMax: '10' },
     plans: 'Plans',
     monthly: 'Monthly', yearly: 'Yearly', family: 'Family · up to 6',
     perMonth: '/ month', perYear: '/ year', save: '−{n}%', popular: 'Best value',
@@ -517,7 +519,7 @@ export const en = {
     trial: 'Try Max free for 7 days', trialSub: 'No card, no payment. Everything unlocks right now.',
     trialStarted: 'Max is on for 7 days 🎉', activeUntil: 'Max is active until {date}', trialUsed: 'Your free week is used — paid plans open with the store release.',
     reasons: {
-      word: 'Today’s free AI fills are used up', ai: 'Today’s free AI scans are used up', chat: 'Today’s free messages are used up', phrases: 'This situation is in Max', english: 'The full list is in Max',
+      books: 'The full audiobook library is in Max', word: 'Today’s free AI fills are used up', ai: 'Today’s free AI scans are used up', chat: 'Today’s free messages are used up', phrases: 'This situation is in Max', english: 'The full list is in Max',
       grammar: 'A2–B2 grammar is in Max', topics: 'This topic is in Max', bulk: 'Adding a whole topic is a Max feature', languages: 'Free lets you learn 2 languages at once',
       satellite: 'The satellite map is in Max', flame: 'This flame is for Max',
     },
@@ -539,6 +541,17 @@ export const en = {
     listen: 'Listen', slow: 'Slow', remember: 'Do you remember the word?', showAnswer: 'Show answer', again: 'Forgot', good: 'Remembered',
     practiceDone: 'Nice work!', practiceDoneSub: '{n} words reviewed', needWord: 'Write the word first', hint: 'Hint',
     added_on: 'Added {date}', cancel: 'Cancel',
+  },
+  books: {
+    title: 'Audiobooks', tagline: 'Listen to real books at your level', sub: 'Stories and classics read by native speakers — from fairy tales (A2) to great novels (C1). Listen on the way, at home, before sleep.',
+    bannerTitle: 'Audiobooks', bannerSub: 'Real books read by native speakers · A2–C1', bannerCta: 'Listen',
+    continue: 'Continue listening', allLevels: 'All', chapters: '{n} chapters', min: '{n} min', hours: '{h} h {m} min',
+    locked: 'Max', freeTaste: 'First {n} chapters free', listen: 'Listen', resume: 'Continue', speed: 'Speed',
+    loading: 'Loading chapters…', loadError: 'Couldn’t load the book — check your connection.', retry: 'Try again', empty: 'No audiobooks in this language yet — try another language.',
+    about: 'About the book', credit: 'Public-domain recordings by LibriVox volunteers, hosted on the Internet Archive.',
+    levels: { A2: 'Beginner', B1: 'Intermediate', B2: 'Upper-intermediate', C1: 'Advanced' },
+    progress: '{n} of {total} chapters', nowPlaying: 'Now playing', inLang: 'Books in', unlock: 'All books with Max', unlockSub: 'Free: {n} books per language and the first chapters of every other one',
+    chapterN: 'Chapter {n}',
   },
   limits: { left: '{n} left today' },
 };

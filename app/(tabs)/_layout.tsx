@@ -8,6 +8,7 @@ import { BookOpen, Camera, Globe2, GraduationCap, User } from '../../src/compone
 import { useTheme, fonts } from '../../src/theme/tokens';
 import { useT } from '../../src/i18n';
 import { Txt } from '../../src/components/ui';
+import { MiniPlayer } from '../../src/components/BookBits';
 import { haptic } from '../../src/lib/feedback';
 
 const ICONS: Record<string, typeof Globe2> = { map: Globe2, dictionary: BookOpen, camera: Camera, learn: GraduationCap, profile: User };
@@ -27,6 +28,7 @@ function TabBar({ state, navigateToTab }: BottomTabBarProps) {
         <View style={[StyleSheet.absoluteFill, { backgroundColor: onCamera ? 'rgba(0,0,0,0.55)' : isDark ? 'rgba(11,33,41,0.94)' : 'rgba(250,250,248,0.94)' }]} />
       )}
       {!onCamera && <View style={[styles.hairline, { backgroundColor: c.divider }]} />}
+      {!onCamera && <MiniPlayer />}
       <View style={styles.row}>
         {state.routes.map((route, i) => {
           const focused = state.index === i;

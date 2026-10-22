@@ -34,7 +34,7 @@ test('new visitor lands in onboarding, even from a deep link', async ({ page }) 
   expect(errs).toEqual([]);
 });
 
-for (const path of ['/learn', '/dictionary', '/explore', '/phrases', '/phrases/phrasal', '/grammar', '/grammar/to-be', '/tutor', '/streak', '/shop', '/premium', '/league', '/settings', '/word/strawberry', '/review', '/phrase-review', '/notebook', '/notebook/edit', '/notebook/n-test', '/notebook/practice']) {
+for (const path of ['/learn', '/dictionary', '/explore', '/phrases', '/phrases/phrasal', '/grammar', '/grammar/to-be', '/tutor', '/streak', '/shop', '/premium', '/league', '/settings', '/word/strawberry', '/review', '/phrase-review', '/notebook', '/notebook/edit', '/notebook/n-test', '/notebook/practice', '/books']) {
   test(`renders ${path} without crashing`, async ({ page }) => {
     const errs = errors(page);
     await page.goto('/');

@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useApp } from '../store/useApp';
 import { dateKey } from '../data/social';
 import type { Topic } from '../data/concepts';
+import { bookById, booksFor } from '../data/audiobooks';
 import { LIMITS } from './limits';
 export { LIMITS };
 
@@ -32,7 +33,7 @@ export const useIsMax = () => {
 };
 export const isMax = () => isMaxState(useApp.getState());
 
-export type MaxReason = 'ai' | 'chat' | 'word' | 'phrases' | 'english' | 'grammar' | 'topics' | 'bulk' | 'languages' | 'satellite' | 'flame';
+export type MaxReason = 'ai' | 'chat' | 'word' | 'books' | 'phrases' | 'english' | 'grammar' | 'topics' | 'bulk' | 'languages' | 'satellite' | 'flame';
 
 /** Opens the Max page explaining what is locked. Returns true when the feature can be used. */
 export function requireMax(reason: MaxReason) {
@@ -70,3 +71,12 @@ export function canAddLanguage(code: string) {
   return requireMax('languages');
 }
 export const topicOpen = (topic: Topic, max: boolean) => max || FREE_TOPICS.includes(topic);
+
+/** Audiobooks: the easiest books of each language are open in Free, plus the first chapters of every other book. */
+export function bookOpen(id: string, max: boolean) {
+  if (max) return true;
+  const b = bookById(id);
+  if (!b) return false;
+  return booksFor(b.lang).slice(0, LIMITS.freeBooksPerLang).some((x) => x.id === id);
+}
+export const chapterOpen = (id: string, chapter: number, max: boolean) => bookOpen(id, max) || chapter < LIMITS.freeBookChapters;

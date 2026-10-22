@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
-import { ArrowRight, Ear, Headphones, Image as ImageIcon, Keyboard, Mic, Puzzle, Search, Type as TypeIcon, Layers } from '../../src/components/icons';
+import { ArrowRight, Headphones, Image as ImageIcon, Keyboard, Mic, Puzzle, Search, Type as TypeIcon, Layers } from '../../src/components/icons';
 import { Screen, Txt, Button, PressableScale, ProgressBar, PlusBadge } from '../../src/components/ui';
 import { Photo, photoForWord } from '../../src/components/Photo';
 import { Sheet } from '../../src/components/Overlay';
@@ -23,10 +23,11 @@ import { Flame } from '../../src/components/Flame';
 import { StreakPills } from '../../src/components/StreakBits';
 import { MaxBanner } from '../../src/components/MaxBanner';
 import { NotebookCard } from '../../src/components/NoteBits';
+import { AudiobooksBanner } from '../../src/components/BookBits';
 import { doneToday, visibleStreak } from '../../src/lib/streak';
 
 const EX = [
-  { id: 'recall', icon: Layers }, { id: 'listen', icon: Ear }, { id: 'choose', icon: ImageIcon }, { id: 'type', icon: Keyboard },
+  { id: 'recall', icon: Layers }, { id: 'books', icon: Headphones }, { id: 'choose', icon: ImageIcon }, { id: 'type', icon: Keyboard },
   { id: 'speak', icon: Mic }, { id: 'sentence', icon: Puzzle }, { id: 'article', icon: TypeIcon }, { id: 'find', icon: Search },
 ] as const;
 
@@ -67,6 +68,11 @@ export default function Learn() {
           <Txt v="display">{t('learn.title')}</Txt>
           <StreakPills />
         </View>
+
+        {/* audiobooks — photo banner at the top */}
+        <Animated.View entering={FadeInDown.delay(30)} style={{ marginTop: space.m }}>
+          <AudiobooksBanner />
+        </Animated.View>
 
         {/* streaks */}
         <View style={{ flexDirection: 'row', gap: 10, marginTop: space.m }}>
@@ -193,12 +199,12 @@ export default function Learn() {
             return (
               <Animated.View key={e.id} entering={FadeInRight.delay(300 + i * 40)} style={{ width: '48.5%' }}>
                 <PressableScale
-                  onPress={() => (disabled ? undefined : e.id === 'find' ? router.push('/find') : router.push({ pathname: '/review', params: { mode: e.id } }))}
-                  style={[styles.ex, { backgroundColor: e.id === 'find' ? c.dropSoft : c.surface, borderColor: c.divider, opacity: disabled ? 0.4 : 1 }]}
+                  onPress={() => (disabled ? undefined : e.id === 'find' ? router.push('/find') : e.id === 'books' ? router.push('/books') : router.push({ pathname: '/review', params: { mode: e.id } }))}
+                  style={[styles.ex, { backgroundColor: e.id === 'find' ? c.dropSoft : e.id === 'books' ? c.accentSoft : c.surface, borderColor: c.divider, opacity: disabled ? 0.4 : 1 }]}
                 >
-                  <Icon size={20} color={e.id === 'find' ? c.drop : c.text} />
+                  <Icon size={20} color={e.id === 'find' ? c.drop : e.id === 'books' ? c.accent : c.text} />
                   <Txt v="bodyMedium" style={{ marginTop: 10 }}>{t(`learn.ex.${e.id}`)}</Txt>
-                  {e.id === 'find' && <Txt v="caption" color={c.textSecondary} style={{ marginTop: 4 }}>{t('learn.exSub.find')}</Txt>}
+                  {(e.id === 'find' || e.id === 'books') && <Txt v="caption" color={c.textSecondary} style={{ marginTop: 4 }}>{t(`learn.exSub.${e.id}`)}</Txt>}
                 </PressableScale>
               </Animated.View>
             );

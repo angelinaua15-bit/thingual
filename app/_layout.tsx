@@ -19,6 +19,7 @@ import { initSync } from '../src/lib/sync';
 import { initLeague } from '../src/lib/league';
 import { initErrorLog, logError } from '../src/lib/errorLog';
 import { Txt, Button } from '../src/components/ui';
+import { BookAudio } from '../src/lib/player';
 import { LogoMark } from '../src/components/Logo';
 
 initSync();
@@ -83,6 +84,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <StatusBar style={isDark ? 'light' : 'dark'} />
+        <BookAudio />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.background }, animation: 'slide_from_right' }}>
           <Stack.Screen name="index" options={{ animation: 'none' }} />
           <Stack.Screen name="onboarding" options={{ animation: 'fade', gestureEnabled: false }} />

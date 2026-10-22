@@ -12,7 +12,7 @@ import type { StoredCard } from './srs';
 type S = ReturnType<typeof useApp.getState>;
 const KEYS = [
   'onboarded', 'goal', 'quizScore', 'settings', 'words', 'collections', 'history', 'learnStreak', 'dropStreak', 'bestStreak',
-  'activeDays', 'frozenDays', 'sparks', 'freezes', 'claimed', 'flames', 'flame', 'achievements', 'exprs', 'drops', 'quests', 'weekXp', 'grammar', 'maxUntil', 'trialUsed', 'maxFreezeMonth', 'maxWaitlist', 'lostStreak', 'notebook', 'noteTomb',
+  'activeDays', 'frozenDays', 'sparks', 'freezes', 'claimed', 'flames', 'flame', 'achievements', 'exprs', 'drops', 'quests', 'weekXp', 'grammar', 'maxUntil', 'trialUsed', 'maxFreezeMonth', 'maxWaitlist', 'lostStreak', 'notebook', 'noteTomb', 'books',
 ] as const;
 type Snapshot = Partial<Pick<S, (typeof KEYS)[number]>> & { profile?: Partial<S['profile']> };
 
@@ -93,6 +93,14 @@ function merge(local: S, remote: Snapshot, remoteNewer: boolean): Partial<S> {
     flame: newer('flame') ?? local.flame,
     quests: mergeQuests(local.quests, remote.quests),
     ...mergeNotebook(local, remote),
+    books: Object.fromEntries(
+      [...new Set([...Object.keys(local.books), ...Object.keys(remote.books ?? {})])].map((id) => {
+        const a = local.books[id];
+        const b = remote.books?.[id];
+        const newer = !a ? b! : !b ? a : a.updatedAt >= b.updatedAt ? a : b;
+        return [id, { ...newer, done: union(a?.done, b?.done) }];
+      }),
+    ),
     weekXp: (remote.weekXp && remote.weekXp.week === local.weekXp.week && remote.weekXp.xp > local.weekXp.xp) ? remote.weekXp : local.weekXp,
     grammar: Object.fromEntries(Object.entries({ ...(remote.grammar ?? {}), ...local.grammar }).map(([k, v]) => [k, Math.max(v, remote.grammar?.[k] ?? 0)])),
     maxWaitlist: local.maxWaitlist ?? remote.maxWaitlist,
