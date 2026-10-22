@@ -1,6 +1,8 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
+import { Image } from 'expo-image';
+import { emojiUrl } from '../src/data/emoji';
 import Animated, { FadeIn, FadeInDown, SlideInRight, ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Check, Mic, Volume2, X } from '../src/components/icons';
@@ -18,6 +20,19 @@ import { speak, haptic } from '../src/lib/feedback';
 import { goBack } from '../src/lib/nav';
 
 /** Flashcards for saved phrases and expressions: meaning → recall → reveal → rate (FSRS). */
+const SKIP = new Set(['someone', 'something', 'sb', 'sth', "one's", 'the', 'a', 'an', 'your', 'my', 'it']);
+const esc = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/** Blanks the expression inside its example ("When are you ____ ____?"); null if it can't be found reliably. */
+function clozeHint(example: string, expr: string): string | null {
+  let out = example;
+  let hits = 0;
+  expr.toLowerCase().replace(/[^a-z' ]/g, ' ').split(/\s+/).filter((w) => w && !SKIP.has(w)).forEach((w) => {
+    const re = w.length <= 3 ? new RegExp(`\\b${esc(w)}\\b`, 'gi') : new RegExp(`\\b${esc(w.slice(0, Math.max(3, w.length - 2)))}\\w*`, 'gi');
+    out = out.replace(re, () => { hits++; return '____'; });
+  });
+  return hits ? out : null;
+}
+
 export default function PhraseReview() {
   const { c } = useTheme();
   const { t } = useT();
@@ -68,10 +83,14 @@ export default function PhraseReview() {
   if (!queue.length || done) {
     return (
       <View style={{ flex: 1, backgroundColor: c.background, paddingTop: insets.top, alignItems: 'center', justifyContent: 'center', padding: space.l }}>
-        <Animated.View entering={ZoomIn.springify()} style={[styles.doneIc, { backgroundColor: c.successSoft }]}><Check size={34} color={c.success} /></Animated.View>
+        {done ? (
+          <Animated.View entering={ZoomIn.springify()} style={[styles.doneIc, { backgroundColor: c.successSoft }]}><Check size={34} color={c.success} /></Animated.View>
+        ) : (
+          <Animated.View entering={ZoomIn.springify()} style={[styles.doneIc, { backgroundColor: c.surfaceAlt }]}><Image source={{ uri: emojiUrl('💬') }} style={{ width: 44, height: 44 }} /></Animated.View>
+        )}
         <Txt v="headline" center style={{ marginTop: 16 }}>{done ? t('phr.done') : t('phr.nothingSaved')}</Txt>
         {done && <Txt v="callout" color={c.textSecondary} center style={{ marginTop: 6 }}>{t('phr.doneSub', { n: queue.length })}</Txt>}
-        <Button title={t('common.done')} onPress={() => goBack('/phrases')} style={{ marginTop: 24, minWidth: 220 }} />
+        <Button title={done ? t('common.done') : t('phr.title')} onPress={() => (done ? goBack('/phrases') : router.replace('/phrases'))} style={{ marginTop: 24, minWidth: 220 }} />
       </View>
     );
   }
@@ -102,8 +121,8 @@ export default function PhraseReview() {
           </>
         )}
         {mode === 'build' && !shown ? <BuildIt key={idx} tokens={tokens} onDone={() => { setShown(true); speak(target.text, code); }} /> : null}
-        {e.kind !== 'phrase' && e.exEn && !shown ? (
-          <Txt v="callout" color={c.textTertiary} style={{ marginTop: 12, fontStyle: 'italic' }}>{e.exEn.replace(new RegExp(e.en.split(' ')[0], 'i'), '____')}</Txt>
+        {e.kind !== 'phrase' && e.exEn && !shown && clozeHint(e.exEn, e.en) ? (
+          <Txt v="callout" color={c.textTertiary} style={{ marginTop: 12, fontStyle: 'italic' }}>{clozeHint(e.exEn, e.en)}</Txt>
         ) : null}
         {shown ? (
           <Animated.View entering={FadeInDown.springify()} style={[styles.answer, { backgroundColor: c.surface, borderColor: c.divider }]}>

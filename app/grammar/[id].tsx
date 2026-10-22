@@ -129,7 +129,9 @@ function Exercise({ ex, uk, onAnswered, onNext }: { ex: GrammarExercise; uk: boo
   const [typed, setTyped] = useState('');
   const [result, setResult] = useState<null | boolean>(null);
   const answer = ex.type === 'choice' ? ex.options[ex.answer] : ex.answer;
-  const submit = (ok: boolean) => { setResult(ok); onAnswered(ok); speak(ex.q.replace('___', answer), 'en'); };
+  const submit = (ok: boolean) => {
+    if (result !== null) return; // Enter pressed twice on web
+    setResult(ok); onAnswered(ok); speak(ex.q.replace('___', answer), 'en'); };
 
   return (
     <View style={{ flex: 1 }}>

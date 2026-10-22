@@ -89,6 +89,8 @@ type State = {
   /** month (YYYY-MM) when Max last refilled streak freezes */
   maxFreezeMonth?: string;
   usage: { day: string; ai: number; chat: number };
+  /** last time synced progress changed on this device (ms) */
+  localChangedAt?: number;
   /** grammar lesson id → best score (0–100) */
   grammar: Record<string, number>;
   drops: Record<string, string>; // dateKey -> post id of my Daily Drop
@@ -144,7 +146,8 @@ const weekKey = (d = new Date()) => {
 /** Sparks earned also count toward this week’s league score. */
 const addXp = (w: { week: string; xp: number }, n: number) => { const wk = weekKey(); return { week: wk, xp: (w.week === wk ? w.xp : 0) + n }; };
 
-const yesterdayKey = () => dateKey(new Date(Date.now() - 86400000));
+// calendar arithmetic, not 24 h: DST days are 23 or 25 hours long
+const yesterdayKey = () => addDays(dateKey(), -1);
 
 const detectLang = (): LangCode => {
   const code = getLocales()[0]?.languageCode ?? 'en';
@@ -350,6 +353,7 @@ export const useApp = create<State & Actions>()(
       /** Settle missed days: spend freezes automatically, or lose the streak (repairable for a while). */
       checkStreak: () => {
         const s0 = get();
+        if (s0.flame === 'gold' && !s0.flames.includes('gold') && !(s0.maxUntil && s0.maxUntil > Date.now())) set({ flame: 'classic' });
         // Max: streak freezes are topped up every month
         const month = dateKey().slice(0, 7);
         if (s0.maxUntil && s0.maxUntil > Date.now() && s0.maxFreezeMonth !== month) {
@@ -440,7 +444,8 @@ export const useApp = create<State & Actions>()(
         return 'ok';
       },
 
-      setFlame: (f) => set((s) => (s.flames.includes(f) ? { flame: f } : {})),
+      // the gold flame comes with Max
+      setFlame: (f) => set((s) => (s.flames.includes(f) || (f === 'gold' && !!s.maxUntil && s.maxUntil > Date.now()) ? { flame: f } : {})),
       clearCelebrate: () => set({ celebrate: null }),
       setMaxWaitlist: (p) => set({ maxWaitlist: p }),
       toggleExpr: (id) => {
@@ -498,7 +503,8 @@ export const useApp = create<State & Actions>()(
         set((s) => (s.exprs[id] ? { exprs: { ...s.exprs, [id]: { ...s.exprs[id], card: srsReview(s.exprs[id].card, a) } } } : {}));
       },
 
-      resetAll: () => set({ ...initialState(), hydrated: true }),
+      // Max entitlement (maxUntil, trialUsed) belongs to the account and survives a reset
+      resetAll: () => set({ ...initialState(), hydrated: true, lostStreak: undefined, goal: undefined, quizScore: undefined, maxFreezeMonth: undefined, maxWaitlist: undefined, localChangedAt: Date.now() }),
     }),
     {
       name: 'thingual-v1',

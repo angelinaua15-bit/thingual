@@ -54,3 +54,19 @@ test('review session can be answered', async ({ page }) => {
   await page.getByText('Добре').click();
   await expect(page.getByText('Сесію завершено')).toBeVisible();
 });
+
+test('sign-in is reachable from onboarding on a new device', async ({ page }) => {
+  const errs = errors(page);
+  await page.goto('/signin');
+  await page.waitForTimeout(1500);
+  await expect(page).toHaveURL(/signin/);
+  expect(errs).toEqual([]);
+});
+
+test('free user hitting a locked grammar level sees Max', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate((s) => localStorage.setItem('thingual-v1', s), seed());
+  await page.goto('/grammar');
+  await page.getByText('Present Continuous', { exact: false }).first().click();
+  await expect(page).toHaveURL(/premium\?reason=grammar/);
+});

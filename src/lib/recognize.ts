@@ -1,7 +1,7 @@
 import { CONCEPTS } from '../data/concepts';
 import { supabase } from './supabase';
 import { ensureSession } from './api';
-import { takeQuota } from './premium';
+import { hasQuota, spendQuota } from './premium';
 
 export type Recognition = {
   concept: string | null;
@@ -29,7 +29,7 @@ export const backendConnected = () => available;
 export async function recognize(input: { base64?: string }): Promise<Recognition> {
   if (available && input.base64) {
     // Free: a daily number of AI scans; Max: unlimited
-    if (!takeQuota('ai')) return { concept: null, confidence: 0, alternatives: [], source: 'limit' };
+    if (!hasQuota('ai')) return { concept: null, confidence: 0, alternatives: [], source: 'limit' };
     try {
       await ensureSession();
       const { data, error } = await supabase.functions.invoke('recognize', {
@@ -38,6 +38,7 @@ export async function recognize(input: { base64?: string }): Promise<Recognition
       if (!error && data) {
         const d = data as { concept: string | null; confidence?: number; alternatives?: string[]; error?: string };
         if (d.error === 'no_key') available = false;
+        if (!d.error) spendQuota('ai');
         return { concept: d.concept ?? null, confidence: d.confidence ?? 0, alternatives: d.alternatives ?? [], source: d.error ? 'none' : 'server' };
       }
     } catch {

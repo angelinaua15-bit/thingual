@@ -30,6 +30,15 @@ function snapshot(s: S): Snapshot {
 const reviewedAt = (c?: StoredCard) => (c?.last_review ? new Date(c.last_review).getTime() : 0) + (c?.reps ?? 0);
 const union = <T,>(a: T[] = [], b: T[] = []) => [...new Set([...a, ...b])];
 
+// same day → union of claimed quests and the higher counters (so a quest can't be claimed twice); else the later day
+function mergeQuests(a: S['quests'], b?: S['quests']): S['quests'] {
+  if (!b) return a;
+  if (a.day !== b.day) return a.day > b.day ? a : b;
+  const out: Record<string, unknown> = { ...b, ...a, claimed: union(a.claimed, b.claimed) };
+  Object.keys(b).forEach((k) => { if (typeof (b as Record<string, unknown>)[k] === 'number') out[k] = Math.max(Number((a as Record<string, unknown>)[k] ?? 0), Number((b as Record<string, unknown>)[k])); });
+  return out as S['quests'];
+}
+
 function merge(local: S, remote: Snapshot, remoteNewer: boolean): Partial<S> {
   const newer = <K extends keyof Snapshot>(k: K) => ((remoteNewer ? remote[k] : undefined) ?? (local as unknown as Snapshot)[k]);
   const words = { ...local.words };
@@ -70,7 +79,7 @@ function merge(local: S, remote: Snapshot, remoteNewer: boolean): Partial<S> {
     sparks: remoteNewer ? remote.sparks ?? local.sparks : local.sparks,
     freezes: remoteNewer ? remote.freezes ?? local.freezes : local.freezes,
     flame: newer('flame') ?? local.flame,
-    quests: newer('quests') ?? local.quests,
+    quests: mergeQuests(local.quests, remote.quests),
     weekXp: (remote.weekXp && remote.weekXp.week === local.weekXp.week && remote.weekXp.xp > local.weekXp.xp) ? remote.weekXp : local.weekXp,
     grammar: Object.fromEntries(Object.entries({ ...(remote.grammar ?? {}), ...local.grammar }).map(([k, v]) => [k, Math.max(v, remote.grammar?.[k] ?? 0)])),
     maxWaitlist: local.maxWaitlist ?? remote.maxWaitlist,
@@ -81,7 +90,7 @@ function merge(local: S, remote: Snapshot, remoteNewer: boolean): Partial<S> {
   };
 }
 
-let changedAt = 0;
+const changedAt = () => useApp.getState().localChangedAt ?? 0;
 let pushTimer: ReturnType<typeof setTimeout> | null = null;
 let applying = false;
 let enabled = false;
@@ -90,7 +99,7 @@ async function push() {
   const { data } = await supabase.auth.getSession();
   if (!data.session?.user) return;
   const s = useApp.getState();
-  await supabase.from('user_state').upsert({ user_id: data.session.user.id, data: snapshot(s), updated_at: new Date(changedAt || Date.now()).toISOString() });
+  await supabase.from('user_state').upsert({ user_id: data.session.user.id, data: snapshot(s), updated_at: new Date(changedAt() || Date.now()).toISOString() });
 }
 
 /** Pull the account's saved progress and merge it into this device. */
@@ -104,10 +113,9 @@ export async function pullState(): Promise<boolean> {
   if (data?.data) {
     const remoteAt = new Date(data.updated_at).getTime();
     applying = true;
-    useApp.setState(merge(useApp.getState(), data.data as Snapshot, remoteAt > changedAt));
+    useApp.setState({ ...merge(useApp.getState(), data.data as Snapshot, remoteAt > changedAt()), localChangedAt: Math.max(changedAt(), remoteAt) });
     applying = false;
   }
-  changedAt = Date.now();
   push().catch(() => {});
   return !!data?.data;
 }
@@ -124,9 +132,11 @@ export function initSync() {
   useApp.subscribe((s) => {
     const p = prev;
     prev = s;
-    if (applying || !enabled) return;
+    // only real edits on this device count — not loading from storage or applying a pull
+    if (applying || !s.hydrated || !p.hydrated) return;
     if (!KEYS.some((k) => (s as unknown as Record<string, unknown>)[k] !== (p as unknown as Record<string, unknown>)[k])) return;
-    changedAt = Date.now();
+    useApp.setState({ localChangedAt: Date.now() });
+    if (!enabled) return;
     if (pushTimer) clearTimeout(pushTimer);
     pushTimer = setTimeout(() => push().catch(() => {}), 4000);
   });

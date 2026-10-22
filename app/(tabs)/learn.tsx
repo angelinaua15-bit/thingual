@@ -62,8 +62,8 @@ export default function Learn() {
   return (
     <Screen>
       <ScrollView contentContainerStyle={{ paddingHorizontal: space.m, paddingBottom: TAB_BAR_HEIGHT + 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: space.s }}>
-          <Txt v="display" numberOfLines={1} adjustsFontSizeToFit style={{ flex: 1, marginRight: 8 }}>{t('learn.title')}</Txt>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', columnGap: 8, rowGap: 6, marginTop: space.s }}>
+          <Txt v="display">{t('learn.title')}</Txt>
           <StreakPills />
         </View>
 
@@ -79,8 +79,8 @@ export default function Learn() {
             </PressableScale>
           </Animated.View>
           <Animated.View entering={FadeInDown.delay(120)} style={[styles.stat, { backgroundColor: c.dropSoft, borderColor: 'transparent' }]}>
-            <Txt style={{ fontFamily: fonts.serif, fontSize: 40, lineHeight: 44, color: c.drop }}>{dropStreak.count}</Txt>
-            <Txt v="caption" color={c.textSecondary}>{t('drop.streak', { n: dropStreak.count })}</Txt>
+            <Txt style={{ fontFamily: fonts.serif, fontSize: 40, lineHeight: 44, color: c.drop }}>{visibleStreak(dropStreak)}</Txt>
+            <Txt v="caption" color={c.textSecondary}>{t('drop.streak', { n: visibleStreak(dropStreak) })}</Txt>
           </Animated.View>
         </View>
 

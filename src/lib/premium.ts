@@ -1,3 +1,4 @@
+import React from 'react';
 import { router } from 'expo-router';
 import { useApp } from '../store/useApp';
 import { dateKey } from '../data/social';
@@ -15,7 +16,20 @@ export const FREE_TOPICS: Topic[] = ['food', 'fruits', 'kitchen', 'home', 'cloth
 export const FREE_GRAMMAR_LEVELS = ['A1'];
 
 export const isMaxState = (s: { maxUntil?: number }) => !!s.maxUntil && s.maxUntil > Date.now();
-export const useIsMax = () => useApp((s) => isMaxState(s));
+export const useIsMax = () => {
+  const max = useApp((s) => isMaxState(s));
+  const until = useApp((s) => s.maxUntil);
+  // re-render when a trial runs out while the app is open
+  const [, tick] = React.useState(0);
+  React.useEffect(() => {
+    if (!max || !until) return;
+    const ms = until - Date.now();
+    if (ms > 2 ** 31 - 1) return;
+    const id = setTimeout(() => tick((n) => n + 1), ms + 50);
+    return () => clearTimeout(id);
+  }, [max, until]);
+  return max;
+};
 export const isMax = () => isMaxState(useApp.getState());
 
 export type MaxReason = 'ai' | 'chat' | 'phrases' | 'english' | 'grammar' | 'topics' | 'bulk' | 'languages' | 'satellite' | 'flame';
@@ -27,23 +41,25 @@ export function requireMax(reason: MaxReason) {
   return false;
 }
 
-/** Daily counters for limited features; returns false when today's free limit is used up. */
-export function takeQuota(kind: 'ai' | 'chat'): boolean {
-  const st = useApp.getState();
-  if (isMaxState(st)) return true;
+type Kind = 'ai' | 'chat';
+/** Today's counters; tolerant of older saved shapes of `usage`. */
+function today() {
   const day = dateKey();
-  const u = st.usage.day === day ? st.usage : { day, ai: 0, chat: 0 };
-  const limit = kind === 'ai' ? LIMITS.aiScansPerDay : LIMITS.chatPerDay;
-  if (u[kind] >= limit) return false;
-  useApp.setState({ usage: { ...u, [kind]: u[kind] + 1 } });
-  return true;
+  const u = (useApp.getState().usage ?? {}) as Partial<Record<string, unknown>>;
+  if (u.day !== day) return { day, ai: 0, chat: 0 };
+  return { day, ai: Number(u.ai) || 0, chat: Number(u.chat) || 0 };
 }
-export const quotaLeft = (kind: 'ai' | 'chat') => {
-  const st = useApp.getState();
-  if (isMaxState(st)) return Infinity;
-  const u = st.usage.day === dateKey() ? st.usage : { ai: 0, chat: 0 };
-  return (kind === 'ai' ? LIMITS.aiScansPerDay : LIMITS.chatPerDay) - u[kind];
-};
+const limitOf = (kind: Kind) => (kind === 'ai' ? LIMITS.aiScansPerDay : LIMITS.chatPerDay);
+
+export const quotaLeft = (kind: Kind) => (isMax() ? Infinity : Math.max(0, limitOf(kind) - today()[kind]));
+/** Is there free quota left today? (Max: always.) */
+export const hasQuota = (kind: Kind) => quotaLeft(kind) > 0;
+/** Count one use — call only after the request succeeded, so failures don't eat the limit. */
+export function spendQuota(kind: Kind) {
+  if (isMax()) return;
+  const u = today();
+  useApp.setState({ usage: { ...u, [kind]: u[kind] + 1 } });
+}
 
 /** Free learns up to LIMITS.freeLanguages languages at once; Max up to LIMITS.maxLanguages. */
 export function canAddLanguage(code: string) {

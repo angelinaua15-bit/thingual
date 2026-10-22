@@ -14,7 +14,7 @@ import { chatTurn, SCENARIOS, type ChatMsg } from '../src/lib/tutor';
 import { listenOnce, speechRecognitionAvailable } from '../src/lib/speech';
 import { speak, haptic } from '../src/lib/feedback';
 import { goBack } from '../src/lib/nav';
-import { takeQuota, requireMax, quotaLeft, LIMITS } from '../src/lib/premium';
+import { hasQuota, spendQuota, requireMax, quotaLeft } from '../src/lib/premium';
 import { useIsMax } from '../src/lib/premium';
 
 const LEVEL = { beginner: 'A1-A2', intermediate: 'B1', advanced: 'B2' } as const;
@@ -42,6 +42,7 @@ export default function Tutor() {
     try {
       const r = await chatTurn({ messages: history, scenario: sc.prompt, target: s.active, native: s.native, level: LEVEL[s.level] });
       if (r.error) throw new Error(r.error);
+      if (history.length) spendQuota('chat');
       const next = [...history];
       if (r.correction && next.length && next[next.length - 1].role === 'user') next[next.length - 1] = { ...next[next.length - 1], correction: r.correction };
       next.push({ role: 'assistant', content: r.reply, translation: r.translation });
@@ -65,7 +66,7 @@ export default function Tutor() {
   const send = () => {
     const v = text.trim();
     if (!v || busy) return;
-    if (!takeQuota('chat')) { requireMax('chat'); return; }
+    if (!hasQuota('chat')) { requireMax('chat'); return; }
     const history: ChatMsg[] = [...msgs, { role: 'user', content: v }];
     setMsgs(history);
     setText('');

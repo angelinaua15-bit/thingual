@@ -61,7 +61,7 @@ export default function Profile() {
         <Pressable onPress={() => router.push('/people')} hitSlop={10} accessibilityLabel={t('social.findPeople')}>
           <UserPlus size={22} color={c.text} />
         </Pressable>
-        <View style={{ flex: 1, alignItems: 'center' }}><StreakPills /></View>
+        <View style={{ flex: 1, alignItems: 'center', marginHorizontal: 6 }}><StreakPills /></View>
         <Pressable onPress={toggleTheme} hitSlop={10} accessibilityLabel={t('settings.appearance')}>
           {isDark ? <Sun size={22} color={c.text} /> : <Moon size={22} color={c.text} />}
         </Pressable>

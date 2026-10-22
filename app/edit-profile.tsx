@@ -38,6 +38,8 @@ export default function EditProfile() {
   }, [me?.id]);
 
   const save = async () => {
+    // never save over the real profile with empty fields before it has loaded
+    if (!me) return setError(t('social.offline'));
     const h = normalizeHandle(handle);
     if (h.length < 3) return setError(t('social.handleRules'));
     setSaving(true);

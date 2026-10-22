@@ -14,6 +14,7 @@ import { useT } from '../src/i18n';
 import { useApp, ShopItem } from '../src/store/useApp';
 import { dateKey } from '../src/data/social';
 import { dayDiff, FLAMES, FlameId, MAX_FREEZES, PRICES, REPAIR_WINDOW } from '../src/lib/streak';
+import { useIsMax } from '../src/lib/premium';
 import { haptic } from '../src/lib/feedback';
 
 const PACKS = [{ n: 500, price: '$0.99' }, { n: 1500, price: '$2.99', tag: '+20%' }, { n: 5000, price: '$7.99', tag: '+60%' }];
@@ -27,6 +28,7 @@ export default function Shop() {
   const lost = useApp((s) => s.lostStreak);
   const flames = useApp((s) => s.flames);
   const flame = useApp((s) => s.flame);
+  const max = useIsMax();
   const buy = useApp((s) => s.buy);
   const setFlame = useApp((s) => s.setFlame);
   const repairable = !!lost && dayDiff(lost.day, dateKey()) <= REPAIR_WINDOW;
@@ -80,7 +82,7 @@ export default function Shop() {
         <Txt v="caption" color={c.textSecondary} style={{ marginBottom: 10, marginTop: -4 }}>{t('shop.flamesSub')}</Txt>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
           {(Object.keys(FLAMES) as FlameId[]).map((id, i) => {
-            const own = flames.includes(id);
+            const own = flames.includes(id) || (id === 'gold' && max);
             const on = flame === id;
             return (
               <Animated.View key={id} entering={FadeInDown.delay(120 + i * 60)} style={[styles.flameCard, { backgroundColor: c.surface, borderColor: on ? c.text : c.divider, borderWidth: on ? 2 : StyleSheet.hairlineWidth }]}>
@@ -153,14 +155,16 @@ function Item({ icon, title, sub, price, onBuy, disabled, i }: { icon: React.Rea
   const { c } = useTheme();
   const sparks = useApp((s) => s.sparks);
   return (
-    <Animated.View entering={FadeInDown.delay(60 + i * 60)} style={[styles.item, { backgroundColor: c.surface, borderColor: c.divider, opacity: disabled ? 0.6 : 1 }]}>
-      {icon}
-      <View style={{ flex: 1 }}>
-        <Txt v="bodyMedium">{title}</Txt>
-        <Txt v="caption" color={c.textSecondary}>{sub}</Txt>
-      </View>
-      <View style={{ width: 84 }}>
-        <PriceButton price={price} onPress={onBuy} afford={!disabled && sparks >= price} />
+    <Animated.View entering={FadeInDown.delay(60 + i * 60)}>
+      <View style={[styles.item, { backgroundColor: c.surface, borderColor: c.divider, opacity: disabled ? 0.6 : 1 }]}>
+        {icon}
+        <View style={{ flex: 1 }}>
+          <Txt v="bodyMedium">{title}</Txt>
+          <Txt v="caption" color={c.textSecondary}>{sub}</Txt>
+        </View>
+        <View style={{ width: 84 }}>
+          <PriceButton price={price} onPress={onBuy} afford={!disabled && sparks >= price} />
+        </View>
       </View>
     </Animated.View>
   );

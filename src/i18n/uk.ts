@@ -510,7 +510,7 @@ export const uk: Strings = {
     sc: { cafe: 'У кафе', shop: 'Покупки', directions: 'Як пройти', hotel: 'Заселення в готель', doctor: 'У лікаря', friend: 'Новий друг', interview: 'Співбесіда', free: 'Вільна розмова' },
   },
   max: {
-    crown: 'Max', active: 'MAX',
+    crown: 'Max', active: 'MAX', trialChip: '7 днів безкоштовно', 
     aiLimit: 'Безкоштовні {n} AI-сканувань на сьогодні вичерпано — обери слово сам(а) або відкрий Max без обмежень.',
     chatLeft: 'Сьогодні ще {n} повідомлень',
     moreLocked: 'Ще +{n} у Max', moreLockedSub: 'Відкрий увесь курс — 7 днів безкоштовно',

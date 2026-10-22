@@ -26,6 +26,7 @@ import { ensureCanPublish, getMyCity } from '../src/lib/publish';
 import { pickImage } from '../src/lib/pickImage';
 import { createPost, dropPosts, myDropToday } from '../src/lib/api';
 import { useLikedSet, useNet } from '../src/lib/queries';
+import { visibleStreak } from '../src/lib/streak';
 
 export default function Drop() {
   const { c } = useTheme();
@@ -207,7 +208,7 @@ function Reveal({ concept }: { concept: string }) {
             <Txt v="overline" color={c.drop}>{t('drop.title')} · {t('drop.posted')}</Txt>
             <Txt style={{ fontFamily: fonts.serif, fontSize: 40, lineHeight: 44, color: c.text, marginTop: 6 }}>{t('drop.reveal', { word: fullWord(concept, s.active) })}</Txt>
             <Txt v="callout" color={c.textSecondary} style={{ marginTop: 6 }}>{t('drop.stats', { photos: list.length, countries, langs })}</Txt>
-            <Txt v="captionMedium" color={c.drop} style={{ marginTop: 4 }}>{t('drop.streak', { n: dropStreak.count })}</Txt>
+            <Txt v="captionMedium" color={c.drop} style={{ marginTop: 4 }}>{t('drop.streak', { n: visibleStreak(dropStreak) })}</Txt>
           </Animated.View>
           <Animated.View entering={FadeIn.delay(200)} style={{ marginTop: space.m }}>
             {all.isLoading ? <ActivityIndicator color={c.textSecondary} /> : list.map((p, i) => <PostCard key={p.id} post={p} i={i} liked={liked.has(p.id)} />)}

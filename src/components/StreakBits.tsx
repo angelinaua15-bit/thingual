@@ -1,5 +1,5 @@
 import React, { forwardRef, useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import ViewShot from 'react-native-view-shot';
@@ -57,14 +57,16 @@ export function StreakPills() {
   const sparks = useApp((s) => s.sparks);
   const n = visibleStreak(st);
   const done = doneToday(st);
+  const narrow = useWindowDimensions().width < 360;
+  const pad = narrow ? { paddingHorizontal: 8 } : null;
   return (
-    <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+    <View style={{ flexDirection: 'row', gap: narrow ? 5 : 8, alignItems: 'center' }}>
       <MaxPill compact />
-      <PressableScale onPress={() => router.push('/streak')} style={[styles.pill, { backgroundColor: c.surface, borderColor: c.divider }]} accessibilityLabel="streak">
+      <PressableScale onPress={() => router.push('/streak')} style={[styles.pill, pad, { backgroundColor: c.surface, borderColor: c.divider }]} accessibilityLabel="streak">
         <Flame size={16} active={done} animate={false} />
         <Txt v="captionMedium" style={{ fontVariant: ['tabular-nums'] }}>{n}</Txt>
       </PressableScale>
-      <PressableScale onPress={() => router.push('/shop')} style={[styles.pill, { backgroundColor: c.surface, borderColor: c.divider }]} accessibilityLabel="sparks">
+      <PressableScale onPress={() => router.push('/shop')} style={[styles.pill, pad, { backgroundColor: c.surface, borderColor: c.divider }]} accessibilityLabel="sparks">
         <Sparkle size={15} color="#F59F00" fill="#F59F00" />
         <Txt v="captionMedium" style={{ fontVariant: ['tabular-nums'] }}>{sparks}</Txt>
       </PressableScale>

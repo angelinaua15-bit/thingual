@@ -508,7 +508,7 @@ export const en = {
     sc: { cafe: 'At a café', shop: 'Shopping', directions: 'Asking the way', hotel: 'Hotel check-in', doctor: 'At the doctor', friend: 'New friend', interview: 'Job interview', free: 'Free talk' },
   },
   max: {
-    crown: 'Max', active: 'MAX',
+    crown: 'Max', active: 'MAX', trialChip: '7 days free', 
     aiLimit: 'You used all {n} free AI scans today — pick the word yourself, or go Max for unlimited.',
     chatLeft: '{n} messages left today',
     moreLocked: '+{n} more in Max', moreLockedSub: 'Unlock the full course — try 7 days free',

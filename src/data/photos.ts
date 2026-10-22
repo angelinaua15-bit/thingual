@@ -213,11 +213,18 @@ export const PHOTOS: PhotoCredit[] = ROWS.map(([concept, path, author, place, la
 
 export const photosFor = (concept: string) => PHOTOS.filter((p) => p.concept === concept);
 /** Real photo when we have one, otherwise the 3D illustration of the word. */
+/** Photo URL → illustration to show if the photo can't load (offline, blocked CDN). */
+export const PHOTO_FALLBACK = new Map<string, string>();
 export const coverFor = (concept: string, w = 600) => {
   const p = PHOTOS.find((x) => x.concept === concept);
-  if (p) return unsplash(p.path, w);
   const c = conceptById(concept);
-  return c ? emojiUrl(c.emoji || TOPIC_EMOJI[c.topic][1]) : undefined;
+  const emoji = c ? emojiUrl(c.emoji || TOPIC_EMOJI[c.topic][1]) : undefined;
+  if (p) {
+    const url = unsplash(p.path, w);
+    if (emoji) PHOTO_FALLBACK.set(url, emoji);
+    return url;
+  }
+  return emoji;
 };
 
 /** Backgrounds for onboarding and empty states. */

@@ -47,7 +47,7 @@ export default function ExprList() {
       const hay = [e.en, e.uk, e.def, exprTarget(e, s.active, s.speakerGender === 'female').text, exprMeaning(e, s.native, s.speakerGender === 'female')].join(' ').toLowerCase();
       return hay.includes(query);
     });
-  }, [kind, group, q, s.active, s.native]);
+  }, [kind, group, q, s.active, s.native, s.speakerGender]);
   // Free: 3 phrasebook situations and the first 30 of each English list
   const isOpen = (e: Expr) => max || (kind === 'phrase' ? FREE_SITUATIONS.includes(e.group) : exprsOfKind(kind).indexOf(e) < LIMITS.freeExprPerKind);
   const list = useMemo(() => all.filter(isOpen), [all, max]);

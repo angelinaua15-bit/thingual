@@ -57,8 +57,8 @@ export default function PhrasesHub() {
               <PressableScale onPress={() => router.push({ pathname: '/phrases/[kind]', params: { kind: k } })} style={[styles.kind, { backgroundColor: c.surface, borderColor: c.divider }]}>
                 <View style={[styles.kindIc, { backgroundColor: c.surfaceAlt }]}><Image source={{ uri: emojiUrl(KIND_EMOJI[k]) }} style={{ width: 34, height: 34 }} /></View>
                 <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Txt v="bodyMedium">{t(`phr.kinds.${k}`)}</Txt>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', columnGap: 8, rowGap: 2 }}>
+                    <Txt v="bodyMedium" style={{ flexShrink: 1 }}>{t(`phr.kinds.${k}`)}</Txt>
                     {k !== 'phrase' && <View style={[styles.en, { backgroundColor: c.accentSoft }]}><Txt v="caption" color={c.accent} style={{ fontSize: 11 }}>{t('phr.english')}</Txt></View>}
                   </View>
                   <Txt v="caption" color={c.textSecondary}>{t(`phr.kindSub.${k}`)}</Txt>

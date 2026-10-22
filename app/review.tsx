@@ -27,7 +27,7 @@ const ARTICLES: Partial<Record<LangCode, string[]>> = {
   fr: ['le', 'la', 'l’', 'les'],
   es: ['el', 'la', 'los', 'las'],
   pt: ['o', 'a', 'os', 'as'],
-  it: ['il', 'la', 'lo', 'l’', 'gli', 'le'],
+  it: ['il', 'la', 'lo', 'l’', 'i', 'gli', 'le'],
 };
 
 const shuffle = <T,>(a: T[]) => [...a].sort(() => Math.random() - 0.5);
@@ -287,7 +287,7 @@ function TypeIt({ id, onAnswer }: { id: string; onAnswer: (a: Answer) => void })
         <TextInput
           value={val}
           onChangeText={setVal}
-          onSubmitEditing={result === null ? check : undefined}
+          onSubmitEditing={result === null && val.trim() ? check : undefined}
           placeholder={t('learn.typePlaceholder', { lang: languageName(target, code) })}
           placeholderTextColor={c.textTertiary}
           autoCapitalize="none"
@@ -414,7 +414,9 @@ function Article({ id, onAnswer }: { id: string; onAnswer: (a: Answer) => void }
   const { t } = useT();
   const { height } = useWindowDimensions();
   const { target, l, photo } = useWord(id);
-  const options = ARTICLES[target] ?? [];
+  // the right article is always among the options, even if the data uses a form the list lacks
+  const base = ARTICLES[target] ?? [];
+  const options = l.article && !base.includes(l.article) ? [...base, l.article] : base;
   const [picked, setPicked] = useState<string | null>(null);
   const ok = picked === l.article;
   return (

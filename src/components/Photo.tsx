@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
 import { useTheme, radius, fonts } from '../theme/tokens';
 import { Txt, PressableScale } from './ui';
-import { coverFor } from '../data/photos';
+import { coverFor, PHOTO_FALLBACK } from '../data/photos';
 import { fullWord, labelOf } from '../data/concepts';
 import { LangCode } from '../data/languages';
 import { useResolvedPhoto } from '../lib/photoStore';
@@ -15,7 +15,10 @@ const BLUR = 'L6Bg#2?=Q:w}y9yBtLMxRCofsCWB';
 
 export function Photo({ uri, style, contentFit = 'cover', transition = 300 }: { uri?: string; style?: StyleProp<ImageStyle>; contentFit?: 'cover' | 'contain'; transition?: number }) {
   const { c, isDark } = useTheme();
-  const src = useResolvedPhoto(uri);
+  const resolved = useResolvedPhoto(uri);
+  const [failed, setFailed] = React.useState<string | null>(null);
+  const broken = !!resolved && failed === resolved;
+  const src = broken ? PHOTO_FALLBACK.get(resolved!) : resolved;
   if (isEmojiUrl(src)) {
     // 3D illustration on a soft gradient — used for words that don't have a real photo yet
     return (
@@ -29,6 +32,7 @@ export function Photo({ uri, style, contentFit = 'cover', transition = 300 }: { 
     <Image
       source={src ? { uri: src } : undefined}
       placeholder={{ blurhash: BLUR }}
+      onError={() => resolved && setFailed(resolved)}
       style={[{ backgroundColor: c.surfaceAlt }, style]}
       contentFit={contentFit}
       transition={transition}

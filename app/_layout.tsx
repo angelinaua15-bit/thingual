@@ -63,7 +63,7 @@ export default function RootLayout() {
   const pathname = usePathname();
   useEffect(() => {
     // a shared /post or /user link opened by someone new → onboarding first
-    if (ready && !onboarded && pathname !== '/' && !pathname.startsWith('/onboarding')) router.replace('/onboarding');
+    if (ready && !onboarded && pathname !== '/' && !['/onboarding', '/signin', '/legal'].some((p) => pathname.startsWith(p))) router.replace('/onboarding');
   }, [ready, onboarded, pathname]);
   useNotificationSchedule();
 
