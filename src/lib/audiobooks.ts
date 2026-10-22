@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import type { Book } from '../data/audiobooks';
+import { CHAPTERS } from '../data/audiobookChapters';
 
 export type Chapter = { n: number; title: string; url: string; seconds: number };
 
@@ -24,6 +25,10 @@ async function loadFiles(id: string): Promise<unknown> {
 
 /** Chapter list straight from the Internet Archive (LibriVox recordings are public domain). */
 export async function fetchChapters(book: Book): Promise<Chapter[]> {
+  // bundled chapter lists first: no network round-trip, no CORS surprises
+  const known = CHAPTERS[book.id];
+  if (known?.length)
+    return known.map(([file, title, seconds], i) => ({ n: i, title, seconds, url: `https://archive.org/download/${book.id}/${encodeURIComponent(file)}` }));
   const data = (await loadFiles(book.id)) as { result?: { name: string; format?: string; title?: string; length?: string; track?: string }[] };
   const files = (data.result ?? []).filter((f) => f.name.toLowerCase().endsWith('.mp3'));
   const preferred = files.filter((f) => f.format === book.mp3Format);
