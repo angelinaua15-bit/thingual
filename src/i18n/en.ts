@@ -195,6 +195,7 @@ export const en = {
     weekRecap: 'My week in words',
   },
   map: {
+    styles: { color: 'Colour', satellite: 'Satellite', minimal: 'Minimal' },
     title: 'World',
     layers: { drop: 'Today’s Drop', any: 'Any word', near: 'Near you', friends: 'Friends' },
     feedTabs: { friends: 'Friends', world: 'World', collections: 'Collections' },

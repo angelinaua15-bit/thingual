@@ -197,6 +197,7 @@ export const uk: Strings = {
     weekRecap: 'Мій тиждень у словах',
   },
   map: {
+    styles: { color: 'Кольорова', satellite: 'Супутник', minimal: 'Мінімал' },
     title: 'Світ',
     layers: { drop: 'Drop сьогодні', any: 'Будь-яке слово', near: 'Поруч', friends: 'Друзі' },
     feedTabs: { friends: 'Друзі', world: 'Світ', collections: 'Колекції' },

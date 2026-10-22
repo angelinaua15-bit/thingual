@@ -1,3 +1,5 @@
+import { haptic } from '../../src/lib/feedback';
+import type { MapKind } from '../../src/components/mapHtml';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -64,13 +66,18 @@ export default function MapTab() {
   });
 
   const locked = layer === 'drop' && !dropPosted;
+  const friendSet = useMemo(() => new Set(following.data ?? []), [following.data]);
+  const mapStyle = s.mapStyle ?? 'color';
+  const [me, setMe] = useState<[number, number] | null>(null);
+  const [locating, setLocating] = useState(false);
   const points = useMemo(
     () => (locked ? [] : (posts.data ?? []).map((p) => ({
       id: p.id, lat: p.lat!, lng: p.lng!, photo: p.photo_url!, highlight: p.author_id === uid,
+      kind: (p.author_id === uid ? 'mine' : p.is_drop ? 'drop' : layer === 'following' || friendSet.has(p.author_id) ? 'friend' : p.concept_id ? 'word' : 'post') as MapKind,
       label: p.concept_id ? labelOf(p.concept_id, (p.lang ?? 'en') as LangCode)?.word ?? p.author.handle : p.author.handle,
       sub: p.concept_id ? p.lang ?? '' : '',
     }))),
-    [posts.data, locked, uid],
+    [posts.data, locked, uid, layer, friendSet],
   );
   const byId = useMemo(() => new Map((posts.data ?? []).map((p) => [p.id, p])), [posts.data]);
   const centerTuple = useMemo<[number, number] | undefined>(() => (center ? [center.lat, center.lng] : undefined), [center]);
@@ -90,6 +97,8 @@ export default function MapTab() {
             wordsMode={words}
             center={centerTuple}
             zoom={center ? 10 : undefined}
+            mapStyle={mapStyle}
+            me={me}
             onSelect={(id) => setSelected(byId.get(id) ?? null)}
             onBlank={() => setSelected(null)}
           />
@@ -105,13 +114,23 @@ export default function MapTab() {
             </Animated.View>
           )}
           {!locked && posts.isSuccess && points.length === 0 && (
-            <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.center, { padding: 32 }]}>
-              <View style={[styles.card, { backgroundColor: c.surface }]}>
-                <Txt v="headline" center>{t('map.empty')}</Txt>
-                <Txt v="callout" color={c.textSecondary} center style={{ marginTop: 6 }}>{t('map.emptySub')}</Txt>
-              </View>
-            </View>
+            <Animated.View entering={FadeIn} pointerEvents="none" style={[styles.emptyPill, { backgroundColor: c.surface, bottom: TAB_BAR_HEIGHT + 28 }]}>
+              <Txt v="captionMedium">{t('map.empty')}</Txt>
+              <Txt v="caption" color={c.textSecondary}>{t('map.emptySub')}</Txt>
+            </Animated.View>
           )}
+          {/* basemap style */}
+          <View style={[styles.styles, { backgroundColor: c.surface, bottom: TAB_BAR_HEIGHT + 152 }]}>
+            {(['color', 'satellite', 'minimal'] as const).map((st) => (
+              <Pressable key={st} onPress={() => { haptic.light(); useApp.getState().updateSettings({ mapStyle: st }); }} accessibilityLabel={t(`map.styles.${st}`)}
+                style={[styles.styleBtn, { borderColor: mapStyle === st ? c.accent : 'transparent' }]}>
+                <View style={[styles.styleSwatch, { backgroundColor: st === 'color' ? '#9FD3A8' : st === 'satellite' ? '#1F4E5A' : '#D9D9D6' }]}>
+                  <View style={{ position: 'absolute', left: 4, top: 6, width: 14, height: 10, borderRadius: 5, backgroundColor: st === 'color' ? '#F4E3A1' : st === 'satellite' ? '#3E7B4F' : '#EFEFEC' }} />
+                  <View style={{ position: 'absolute', right: 3, bottom: 4, width: 12, height: 12, borderRadius: 6, backgroundColor: st === 'color' ? '#7FB5E6' : st === 'satellite' ? '#0E2B3A' : '#C4C4C0' }} />
+                </View>
+              </Pressable>
+            ))}
+          </View>
           {(posts.isLoading || status === 'idle') && <ActivityIndicator style={{ position: 'absolute', alignSelf: 'center', top: '50%' }} color={c.textSecondary} />}
           {status === 'offline' && (
             <View style={[StyleSheet.absoluteFill, styles.center]} pointerEvents="none">
@@ -119,11 +138,16 @@ export default function MapTab() {
             </View>
           )}
           <Pressable
-            onPress={async () => { const me = await getMyCity(); if (me) setCenter({ lat: me.lat, lng: me.lng }); }}
+            onPress={async () => {
+              setLocating(true);
+              const r = await getMyCity();
+              setLocating(false);
+              if (r) setMe([r.lat, r.lng]);
+            }}
             style={[styles.locate, { backgroundColor: c.surface, bottom: TAB_BAR_HEIGHT + 104 }]}
             accessibilityLabel="locate"
           >
-            <LocateFixed size={18} color={c.text} />
+            {locating ? <ActivityIndicator size="small" color={c.text} /> : <LocateFixed size={18} color={me ? '#3B82F6' : c.text} />}
           </Pressable>
           {selected && <Preview post={selected} onClose={() => setSelected(null)} />}
         </View>
@@ -278,6 +302,10 @@ const styles = StyleSheet.create({
   suggest: { marginTop: 6, borderRadius: radius.m, borderWidth: StyleSheet.hairlineWidth, overflow: 'hidden' },
   sugRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 12, paddingVertical: 8 },
   iconBtn: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  emptyPill: { position: 'absolute', alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 18, alignItems: 'center', boxShadow: '0 6px 18px rgba(0,0,0,.18)', maxWidth: '86%' },
+  styles: { position: 'absolute', right: 10, padding: 4, borderRadius: 14, gap: 4, boxShadow: '0 6px 18px rgba(0,0,0,.18)' },
+  styleBtn: { borderRadius: 10, borderWidth: 2, padding: 1 },
+  styleSwatch: { width: 30, height: 30, borderRadius: 8, overflow: 'hidden' },
   locate: { position: 'absolute', right: 10, width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 8, elevation: 4 },
   preview: { position: 'absolute', left: 16, right: 16, alignItems: 'center' },
   previewCard: { flexDirection: 'row', gap: 12, padding: 10, borderRadius: radius.l, width: '100%', maxWidth: 520, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 18, elevation: 8 },

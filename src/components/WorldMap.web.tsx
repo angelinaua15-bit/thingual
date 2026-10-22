@@ -4,17 +4,17 @@ import { buildMapHtml, safePoints } from './mapHtml';
 import { useTheme } from '../theme/tokens';
 import type { WorldMapProps } from './WorldMap';
 
-export function WorldMap({ points, wordsMode = false, onSelect, onBlank, style, center, zoom }: WorldMapProps) {
+export function WorldMap({ points, wordsMode = false, onSelect, onBlank, style, center, zoom, mapStyle = 'color', me }: WorldMapProps) {
   const { isDark } = useTheme();
   const ref = useRef<HTMLIFrameElement | null>(null);
   const ready = useRef(false);
-  const latest = useRef({ points, center, zoom });
-  latest.current = { points, center, zoom };
+  const latest = useRef({ points, center, zoom, mapStyle, me });
+  latest.current = { points, center, zoom, mapStyle, me };
   // The page is built once per theme/mode; points and centre are pushed in afterwards, so a data
   // refresh doesn't reset where the user has panned and zoomed.
   const html = useMemo(() => {
     ready.current = false;
-    return buildMapHtml(latest.current.points, { dark: isDark, wordsMode, center: latest.current.center, zoom: latest.current.zoom });
+    return buildMapHtml(latest.current.points, { dark: isDark, wordsMode, center: latest.current.center, zoom: latest.current.zoom, style: latest.current.mapStyle });
   }, [isDark, wordsMode]);
 
   const post = (m: unknown) => ref.current?.contentWindow?.postMessage(JSON.stringify(m), '*');
@@ -25,6 +25,12 @@ export function WorldMap({ points, wordsMode = false, onSelect, onBlank, style, 
   useEffect(() => {
     if (ready.current && center) post({ type: 'view', center, zoom });
   }, [center?.[0], center?.[1], zoom]);
+  useEffect(() => {
+    if (ready.current) post({ type: 'style', style: mapStyle });
+  }, [mapStyle]);
+  useEffect(() => {
+    if (ready.current && me) post({ type: 'me', center: me });
+  }, [me?.[0], me?.[1]]);
 
   useEffect(() => {
     const h = (e: MessageEvent) => {
@@ -34,6 +40,7 @@ export function WorldMap({ points, wordsMode = false, onSelect, onBlank, style, 
         if (m.type === 'ready') {
           ready.current = true;
           post({ type: 'points', pts: safePoints(latest.current.points) });
+          if (latest.current.me) post({ type: 'me', center: latest.current.me });
         }
         if (m.type === 'select') onSelect?.(m.id);
         if (m.type === 'blank') onBlank?.();

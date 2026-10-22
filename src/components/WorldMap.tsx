@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { StyleProp, View, ViewStyle } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { buildMapHtml, MapPoint } from './mapHtml';
+import { buildMapHtml, MapPoint, MapStyle } from './mapHtml';
 import { useTheme } from '../theme/tokens';
 
 export type WorldMapProps = {
@@ -12,11 +12,14 @@ export type WorldMapProps = {
   style?: StyleProp<ViewStyle>;
   center?: [number, number];
   zoom?: number;
+  mapStyle?: MapStyle;
+  /** my approximate position: shown as a pulsing dot */
+  me?: [number, number] | null;
 };
 
-export function WorldMap({ points, wordsMode = false, onSelect, onBlank, style, center, zoom }: WorldMapProps) {
+export function WorldMap({ points, wordsMode = false, onSelect, onBlank, style, center, zoom, mapStyle = 'color', me }: WorldMapProps) {
   const { isDark } = useTheme();
-  const html = useMemo(() => buildMapHtml(points, { dark: isDark, wordsMode, center, zoom }), [points, isDark, wordsMode, center, zoom]);
+  const html = useMemo(() => buildMapHtml(points, { dark: isDark, wordsMode, center: me ?? center, zoom: me ? 9 : zoom, style: mapStyle }), [points, isDark, wordsMode, center, zoom, mapStyle, me]);
   return (
     <View style={[{ flex: 1, overflow: 'hidden' }, style]}>
       <WebView

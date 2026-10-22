@@ -46,6 +46,7 @@ export type Settings = {
   haptics: boolean;
   reduceMotion: boolean;
   weeklyFriendsSummary: boolean;
+  mapStyle?: 'color' | 'satellite' | 'minimal';
 };
 
 type State = {
