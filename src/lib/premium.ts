@@ -32,7 +32,7 @@ export const useIsMax = () => {
 };
 export const isMax = () => isMaxState(useApp.getState());
 
-export type MaxReason = 'ai' | 'chat' | 'phrases' | 'english' | 'grammar' | 'topics' | 'bulk' | 'languages' | 'satellite' | 'flame';
+export type MaxReason = 'ai' | 'chat' | 'word' | 'phrases' | 'english' | 'grammar' | 'topics' | 'bulk' | 'languages' | 'satellite' | 'flame';
 
 /** Opens the Max page explaining what is locked. Returns true when the feature can be used. */
 export function requireMax(reason: MaxReason) {
@@ -41,15 +41,15 @@ export function requireMax(reason: MaxReason) {
   return false;
 }
 
-type Kind = 'ai' | 'chat';
+type Kind = 'ai' | 'chat' | 'word';
 /** Today's counters; tolerant of older saved shapes of `usage`. */
 function today() {
   const day = dateKey();
   const u = (useApp.getState().usage ?? {}) as Partial<Record<string, unknown>>;
-  if (u.day !== day) return { day, ai: 0, chat: 0 };
-  return { day, ai: Number(u.ai) || 0, chat: Number(u.chat) || 0 };
+  if (u.day !== day) return { day, ai: 0, chat: 0, word: 0 };
+  return { day, ai: Number(u.ai) || 0, chat: Number(u.chat) || 0, word: Number(u.word) || 0 };
 }
-const limitOf = (kind: Kind) => (kind === 'ai' ? LIMITS.aiScansPerDay : LIMITS.chatPerDay);
+const limitOf = (kind: Kind) => (kind === 'ai' ? LIMITS.aiScansPerDay : kind === 'chat' ? LIMITS.chatPerDay : LIMITS.wordAiPerDay);
 
 export const quotaLeft = (kind: Kind) => (isMax() ? Infinity : Math.max(0, limitOf(kind) - today()[kind]));
 /** Is there free quota left today? (Max: always.) */

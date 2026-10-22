@@ -22,6 +22,7 @@ import { lang } from '../../src/data/languages';
 import { Flame } from '../../src/components/Flame';
 import { StreakPills } from '../../src/components/StreakBits';
 import { MaxBanner } from '../../src/components/MaxBanner';
+import { NotebookCard } from '../../src/components/NoteBits';
 import { doneToday, visibleStreak } from '../../src/lib/streak';
 
 const EX = [
@@ -125,6 +126,11 @@ export default function Learn() {
         </Animated.View>
 
         <InstallBanner />
+
+        {/* my vocabulary */}
+        <Animated.View entering={FadeInDown.delay(190)}>
+          <NotebookCard style={{ marginTop: 12 }} />
+        </Animated.View>
 
         {/* phrases & expressions */}
         <Animated.View entering={FadeInDown.delay(210)}>

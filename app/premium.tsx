@@ -5,7 +5,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown, LinearTransition } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BookOpen, Camera, Check, ChevronDown, Crown, Languages, Lock, MessageCircle, Snowflake, Sparkle, X } from '../src/components/icons';
+import { BookOpen, Camera, Check, ChevronDown, Crown, Languages, Lock, MessageCircle, Snowflake, Sparkle, X, NotebookPen } from '../src/components/icons';
 import { Txt, Button } from '../src/components/ui';
 import { Flame } from '../src/components/Flame';
 import { toast } from '../src/components/Overlay';
@@ -26,7 +26,7 @@ const GOLD = '#FFD66B';
 
 export default function Premium() {
   const { c } = useTheme();
-  const { t, ta } = useT();
+  const { t, ta, code } = useT();
   const insets = useSafeAreaInsets();
   const waitlist = useApp((s) => s.maxWaitlist);
   const setWaitlist = useApp((s) => s.setMaxWaitlist);
@@ -37,8 +37,8 @@ export default function Premium() {
   const max = useIsMax();
   const maxUntil = useApp((s) => s.maxUntil);
   const trialUsed = useApp((s) => s.trialUsed);
-  const fill = (x: string) => x.replace('{ai}', String(LIMITS.aiScansPerDay)).replace('{chat}', String(LIMITS.chatPerDay));
-  const until = maxUntil ? new Date(maxUntil).toLocaleDateString(undefined, { day: 'numeric', month: 'long' }) : '';
+  const fill = (x: string) => x.replace('{ai}', String(LIMITS.aiScansPerDay)).replace('{chat}', String(LIMITS.chatPerDay)).replace('{word}', String(LIMITS.wordAiPerDay));
+  const until = maxUntil ? new Date(maxUntil).toLocaleDateString(code, { day: 'numeric', month: 'long' }) : '';
   const trial = () => {
     if (useApp.getState().startTrial()) {
       haptic.success();
@@ -50,6 +50,7 @@ export default function Premium() {
   const perks = [
     { k: 'ai', icon: <Camera size={20} color={GOLD} /> },
     { k: 'chat', icon: <MessageCircle size={20} color="#A7F3D0" /> },
+    { k: 'notebook', icon: <NotebookPen size={20} color="#FDBA74" /> },
     { k: 'phrases', icon: <BookOpen size={20} color="#FCA5A5" /> },
     { k: 'grammar', icon: <Check size={20} color="#86EFAC" /> },
     { k: 'topics', icon: <Sparkle size={20} color="#FDE68A" /> },
@@ -77,6 +78,7 @@ export default function Premium() {
     ['words', '✓', '✓'], ['drop', '✓', '✓'],
     ['ai', t('premium.cells.aiFree', { ai: LIMITS.aiScansPerDay }), U],
     ['chat', t('premium.cells.chatFree', { chat: LIMITS.chatPerDay }), U],
+    ['notebook', t('premium.cells.wordFree', { word: LIMITS.wordAiPerDay }), U],
     ['phrases', t('premium.cells.phrasesFree'), t('premium.cells.all')],
     ['english', t('premium.cells.englishFree', { n: LIMITS.freeExprPerKind }), t('premium.cells.all')],
     ['grammar', t('premium.cells.grammarFree'), t('premium.cells.grammarMax')],

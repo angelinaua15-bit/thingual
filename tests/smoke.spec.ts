@@ -14,6 +14,7 @@ const seed = () => {
       words, collections: [], history: [], learnStreak: { count: 6, last: day(1) }, dropStreak: { count: 0 }, freezesUsedWeek: { week: '', used: 0 },
       bestStreak: 6, activeDays: [day(1)], frozenDays: [], sparks: 260, freezes: 1, claimed: [3], flames: ['classic'], flame: 'classic',
       drops: {}, achievements: [], familyMode: { enabled: false }, exprs: { 'ph:cafe-menu': { card, addedAt: now } }, quests: { day: '', claimed: [] }, weekXp: { week: '', xp: 0 }, grammar: {},
+      notebook: { 'n-test': { id: 'n-test', word: 'la libertad', lang: 'es', translation: 'свобода', ipa: '/li.βeɾˈtað/', pos: 'іменник', association: 'Ліберте! — кричать на свободі.', example: 'Amo la libertad.', exampleTr: 'Я люблю свободу.', emoji: '🕊️', done: false, createdAt: now, updatedAt: now, card } }, noteTomb: {},
     },
     version: 3,
   });
@@ -33,7 +34,7 @@ test('new visitor lands in onboarding, even from a deep link', async ({ page }) 
   expect(errs).toEqual([]);
 });
 
-for (const path of ['/learn', '/dictionary', '/explore', '/phrases', '/phrases/phrasal', '/grammar', '/grammar/to-be', '/tutor', '/streak', '/shop', '/premium', '/league', '/settings', '/word/strawberry', '/review', '/phrase-review']) {
+for (const path of ['/learn', '/dictionary', '/explore', '/phrases', '/phrases/phrasal', '/grammar', '/grammar/to-be', '/tutor', '/streak', '/shop', '/premium', '/league', '/settings', '/word/strawberry', '/review', '/phrase-review', '/notebook', '/notebook/edit', '/notebook/n-test', '/notebook/practice']) {
   test(`renders ${path} without crashing`, async ({ page }) => {
     const errs = errors(page);
     await page.goto('/');
@@ -69,4 +70,25 @@ test('free user hitting a locked grammar level sees Max', async ({ page }) => {
   await page.goto('/grammar');
   await page.getByText('Present Continuous', { exact: false }).first().click();
   await expect(page).toHaveURL(/premium\?reason=grammar/);
+});
+
+test('My vocabulary: add a word and mark it learned', async ({ page }) => {
+  const errs = errors(page);
+  await page.goto('/');
+  await page.evaluate((s) => localStorage.setItem('thingual-v1', s), seed());
+  await page.goto('/notebook/edit');
+  await page.getByPlaceholder('свобода, la libertad…').fill('la esperanza');
+  await page.getByPlaceholder('Що означає').fill('надія');
+  await page.getByText('Зберегти', { exact: true }).last().click();
+  await expect(page).toHaveURL(/notebook\/n-/);
+  await expect(page.getByText('la esperanza')).toBeVisible();
+  // the first word of the day may complete a streak milestone → close the celebration
+  const next = page.getByText('Далі', { exact: true });
+  await next.click({ timeout: 3000 }).catch(() => {});
+  await page.getByText('Позначити вивченим').click();
+  await expect(page.getByText('Повернути у вивчення')).toBeVisible();
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('thingual-v1')!).state.notebook);
+  const added = Object.values(stored as Record<string, { word: string; done: boolean }>).find((w) => w.word === 'la esperanza');
+  expect(added?.done).toBe(true);
+  expect(errs).toEqual([]);
 });

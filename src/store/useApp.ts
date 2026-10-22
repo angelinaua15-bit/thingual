@@ -88,7 +88,11 @@ type State = {
   trialUsed?: boolean;
   /** month (YYYY-MM) when Max last refilled streak freezes */
   maxFreezeMonth?: string;
-  usage: { day: string; ai: number; chat: number };
+  usage: { day: string; ai: number; chat: number; word?: number };
+  /** My vocabulary: words the learner wrote themselves (abstract words, verbs…) */
+  notebook: Record<string, NoteWord>;
+  /** deleted notebook ids → time (so sync doesn't bring them back) */
+  noteTomb: Record<string, number>;
   /** last time synced progress changed on this device (ms) */
   localChangedAt?: number;
   /** grammar lesson id → best score (0–100) */
@@ -131,9 +135,29 @@ type Actions = {
   claimQuest: (id: string) => number;
   finishGrammar: (id: string, score: number) => void;
   startTrial: () => boolean;
+  addNote: (w: NoteInput) => string;
+  updateNote: (id: string, patch: Partial<NoteInput & { done: boolean }>) => void;
+  removeNote: (id: string) => void;
+  toggleNoteDone: (id: string) => void;
+  answerNote: (id: string, a: Answer) => void;
   resetAll: () => void;
 };
 
+
+export type NoteInput = {
+  word: string;
+  lang: LangCode;
+  translation: string;
+  ipa?: string;
+  roman?: string | null;
+  pos?: string;
+  association?: string;
+  example?: string;
+  exampleTr?: string;
+  emoji?: string;
+  note?: string;
+};
+export type NoteWord = NoteInput & { id: string; done: boolean; createdAt: number; updatedAt: number; card: StoredCard };
 
 const weekKey = (d = new Date()) => {
   const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -209,6 +233,8 @@ const initialState = (): State => {
     weekXp: { week: weekKey(), xp: 0 },
     grammar: {},
     usage: { day: '', ai: 0, chat: 0 },
+    notebook: {},
+    noteTomb: {},
     drops: {},
     achievements: [],
     familyMode: { enabled: false },
@@ -498,6 +524,29 @@ export const useApp = create<State & Actions>()(
         set({ sparks: s.sparks + reward, weekXp: addXp(s.weekXp, reward), quests: { ...s.quests, claimed: [...s.quests.claimed, id] } });
         return reward;
       },
+      addNote: (w) => {
+        const id = `n-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+        const now = Date.now();
+        set((s) => ({ notebook: { ...s.notebook, [id]: { ...w, id, done: false, createdAt: now, updatedAt: now, card: newCard() } } }));
+        get().questBump('words');
+        get().markActive();
+        return id;
+      },
+      updateNote: (id, patch) =>
+        set((s) => (s.notebook[id] ? { notebook: { ...s.notebook, [id]: { ...s.notebook[id], ...patch, updatedAt: Date.now() } } } : {})),
+      removeNote: (id) =>
+        set((s) => {
+          const notebook = { ...s.notebook };
+          delete notebook[id];
+          return { notebook, noteTomb: { ...s.noteTomb, [id]: Date.now() } };
+        }),
+      toggleNoteDone: (id) =>
+        set((s) => (s.notebook[id] ? { notebook: { ...s.notebook, [id]: { ...s.notebook[id], done: !s.notebook[id].done, updatedAt: Date.now() } } } : {})),
+      answerNote: (id, a) => {
+        get().questBump('reviews');
+        set((s) => (s.notebook[id] ? { notebook: { ...s.notebook, [id]: { ...s.notebook[id], card: srsReview(s.notebook[id].card, a), updatedAt: Date.now() } } } : {}));
+      },
+
       answerExpr: (id, a) => {
         get().questBump('phrases');
         set((s) => (s.exprs[id] ? { exprs: { ...s.exprs, [id]: { ...s.exprs[id], card: srsReview(s.exprs[id].card, a) } } } : {}));

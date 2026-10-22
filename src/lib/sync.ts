@@ -12,7 +12,7 @@ import type { StoredCard } from './srs';
 type S = ReturnType<typeof useApp.getState>;
 const KEYS = [
   'onboarded', 'goal', 'quizScore', 'settings', 'words', 'collections', 'history', 'learnStreak', 'dropStreak', 'bestStreak',
-  'activeDays', 'frozenDays', 'sparks', 'freezes', 'claimed', 'flames', 'flame', 'achievements', 'exprs', 'drops', 'quests', 'weekXp', 'grammar', 'maxUntil', 'trialUsed', 'maxFreezeMonth', 'maxWaitlist', 'lostStreak',
+  'activeDays', 'frozenDays', 'sparks', 'freezes', 'claimed', 'flames', 'flame', 'achievements', 'exprs', 'drops', 'quests', 'weekXp', 'grammar', 'maxUntil', 'trialUsed', 'maxFreezeMonth', 'maxWaitlist', 'lostStreak', 'notebook', 'noteTomb',
 ] as const;
 type Snapshot = Partial<Pick<S, (typeof KEYS)[number]>> & { profile?: Partial<S['profile']> };
 
@@ -37,6 +37,18 @@ function mergeQuests(a: S['quests'], b?: S['quests']): S['quests'] {
   const out: Record<string, unknown> = { ...b, ...a, claimed: union(a.claimed, b.claimed) };
   Object.keys(b).forEach((k) => { if (typeof (b as Record<string, unknown>)[k] === 'number') out[k] = Math.max(Number((a as Record<string, unknown>)[k] ?? 0), Number((b as Record<string, unknown>)[k])); });
   return out as S['quests'];
+}
+
+// My vocabulary: per word the later edit wins; deletions (tombstones) win over older edits
+function mergeNotebook(local: S, remote: Snapshot) {
+  const noteTomb = { ...(remote.noteTomb ?? {}), ...local.noteTomb };
+  Object.entries(remote.noteTomb ?? {}).forEach(([id, t]) => { noteTomb[id] = Math.max(t, local.noteTomb[id] ?? 0); });
+  const notebook = { ...local.notebook };
+  Object.values(remote.notebook ?? {}).forEach((w) => {
+    if (!notebook[w.id] || w.updatedAt > notebook[w.id].updatedAt) notebook[w.id] = w;
+  });
+  Object.keys(notebook).forEach((id) => { if (noteTomb[id] && noteTomb[id] >= notebook[id].updatedAt) delete notebook[id]; });
+  return { notebook, noteTomb };
 }
 
 function merge(local: S, remote: Snapshot, remoteNewer: boolean): Partial<S> {
@@ -80,6 +92,7 @@ function merge(local: S, remote: Snapshot, remoteNewer: boolean): Partial<S> {
     freezes: remoteNewer ? remote.freezes ?? local.freezes : local.freezes,
     flame: newer('flame') ?? local.flame,
     quests: mergeQuests(local.quests, remote.quests),
+    ...mergeNotebook(local, remote),
     weekXp: (remote.weekXp && remote.weekXp.week === local.weekXp.week && remote.weekXp.xp > local.weekXp.xp) ? remote.weekXp : local.weekXp,
     grammar: Object.fromEntries(Object.entries({ ...(remote.grammar ?? {}), ...local.grammar }).map(([k, v]) => [k, Math.max(v, remote.grammar?.[k] ?? 0)])),
     maxWaitlist: local.maxWaitlist ?? remote.maxWaitlist,

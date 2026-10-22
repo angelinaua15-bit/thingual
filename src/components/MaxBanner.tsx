@@ -14,12 +14,12 @@ const soon = { backgroundColor: GOLD, paddingHorizontal: 8, paddingVertical: 2, 
 
 /** Compact entry point used on Profile, Learn, Settings and Shop. */
 export function MaxBanner({ style }: { style?: object }) {
-  const { t } = useT();
+  const { t, code } = useT();
   const max = useIsMax();
   const trialUsed = useApp((s) => s.trialUsed);
   const until = useApp((s) => s.maxUntil);
   const chip = max ? t('max.active') : trialUsed ? t('premium.soon') : t('max.trialChip');
-  const sub = max && until ? t('max.activeUntil', { date: new Date(until).toLocaleDateString(undefined, { day: 'numeric', month: 'long' }) }) : t('premium.banner');
+  const sub = max && until ? t('max.activeUntil', { date: new Date(until).toLocaleDateString(code, { day: 'numeric', month: 'long' }) }) : t('premium.banner');
   return (
     <Pressable onPress={() => router.push('/premium')} style={[{ borderRadius: radius.l, overflow: 'hidden' }, style]}>
       <LinearGradient colors={['#1F1B3A', '#4B2F86']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16 }}>

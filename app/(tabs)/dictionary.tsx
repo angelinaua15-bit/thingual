@@ -18,6 +18,7 @@ import { coverFor, SCENES } from '../../src/data/photos';
 import { mastery, formatInterval, isDue } from '../../src/lib/srs';
 import { haptic } from '../../src/lib/feedback';
 import { useIsMax, requireMax, topicOpen } from '../../src/lib/premium';
+import { NotebookCard } from '../../src/components/NoteBits';
 import { MaxBadge, MaxPill } from '../../src/components/MaxLock';
 
 type View_ = 'grid' | 'list' | 'places';
@@ -85,6 +86,7 @@ export default function Dictionary() {
               {s.targets.map((l) => <Chip key={l} label={languageName(l, s.uiLang)} selected={l === target} onPress={() => setActive(l)} />)}
             </ScrollView>
           )}
+          <NotebookCard style={{ marginTop: 14 }} />
         </View>
 
         <View style={{ backgroundColor: c.background, paddingTop: 12, paddingBottom: 8 }}>
