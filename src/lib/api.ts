@@ -257,11 +257,34 @@ export async function myDropToday(day: string): Promise<PostRow | null> {
   return data as PostRow | null;
 }
 
+export class PhotoRejected extends Error {
+  constructor(public reason: string) { super('photo_rejected'); }
+}
+
+/** AI check before a photo becomes public (function `moderate`). Fails open if the check itself is unavailable. */
+export async function moderatePhoto(uri: string) {
+  const { toBase64 } = await import('./pickImage');
+  const image = await toBase64(await resolvePhoto(uri), 640);
+  if (!image) return;
+  const { data, error } = await supabase.functions.invoke('moderate', { body: { image } });
+  if (!error && data && data.allowed === false) throw new PhotoRejected(String(data.reason ?? ''));
+}
+
+/** Errors on people’s devices land in `client_errors` so they can be fixed. */
+export async function reportError(message: string, stack?: string) {
+  await supabase.from('client_errors').insert({
+    message: message.slice(0, 2000), stack: stack?.slice(0, 8000) ?? null,
+    url: typeof location !== 'undefined' ? location.href.slice(0, 500) : null,
+    ua: typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 400) : null,
+  });
+}
+
 export async function createPost(p: {
   body?: string; photoUri?: string | null; concept_id?: string | null; lang?: string | null; parent_id?: string | null;
   place?: string | null; lat?: number | null; lng?: number | null; is_drop?: boolean; drop_day?: string | null; late_minutes?: number | null;
 }): Promise<PostRow> {
   const id = await ensureSession();
+  if (p.photoUri && !p.photoUri.startsWith('https://')) await moderatePhoto(p.photoUri);
   const photo_url = p.photoUri ? (p.photoUri.startsWith('https://') ? p.photoUri : await uploadImage('posts', p.photoUri)) : null;
   const { data, error } = await supabase
     .from('posts')

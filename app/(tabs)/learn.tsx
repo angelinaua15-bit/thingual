@@ -1,3 +1,4 @@
+import { QuestsCard } from '../../src/components/QuestsCard';
 import { InstallBanner } from '../../src/components/InstallBanner';
 import { Image } from 'expo-image';
 import { emojiUrl } from '../../src/data/emoji';
@@ -82,6 +83,8 @@ export default function Learn() {
             <Txt v="caption" color={c.textSecondary}>{t('drop.streak', { n: dropStreak.count })}</Txt>
           </Animated.View>
         </View>
+
+        <QuestsCard />
 
         {/* today */}
         <Animated.View entering={FadeInDown.delay(180)} style={[styles.today, { backgroundColor: c.ink }]}>

@@ -16,8 +16,27 @@ import { qc, useBootstrap } from '../src/lib/queries';
 import { useNotificationSchedule } from '../src/lib/notifications';
 import { StreakCelebration } from '../src/components/StreakBits';
 import { initSync } from '../src/lib/sync';
+import { initLeague } from '../src/lib/league';
+import { initErrorLog, logError } from '../src/lib/errorLog';
+import { Txt, Button } from '../src/components/ui';
+import { LogoMark } from '../src/components/Logo';
 
 initSync();
+initErrorLog();
+initLeague();
+
+/** Friendly screen instead of a blank page if a screen crashes; the error is reported. */
+export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
+  useEffect(() => { logError(error.message, error.stack); }, [error]);
+  return (
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, backgroundColor: '#0B2129', gap: 14 }}>
+      <LogoMark size={64} />
+      <Txt v="headline" color="#fff" center>Oops — something went wrong / Щось пішло не так</Txt>
+      <Txt v="caption" color="rgba(255,255,255,.6)" center>{error.message}</Txt>
+      <Button title="↻" variant="inverse" onPress={() => retry()} style={{ minWidth: 160 }} />
+    </View>
+  );
+}
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 

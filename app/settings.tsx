@@ -148,6 +148,8 @@ export default function SettingsScreen() {
         <Group title={t('settings.privacy')} footer={t('settings.privacyNote')}>
           <ListRow title={t('settings.family')} subtitle={t('settings.familySub')} right={<Toggle value={st.familyMode.enabled} onChange={(v) => setFamilyOpen(v ? 'set' : 'unlock')} />} />
           <ListRow title={t('settings.export')} onPress={exportData} />
+          <ListRow title={t('legal.privacy')} onPress={() => router.push({ pathname: '/legal/[doc]', params: { doc: 'privacy' } })} />
+          <ListRow title={t('legal.terms')} onPress={() => router.push({ pathname: '/legal/[doc]', params: { doc: 'terms' } })} />
           <ListRow title={t('settings.deleteAccount')} danger onPress={confirmDelete} />
         </Group>
 

@@ -1,3 +1,4 @@
+import { PhotoRejected } from '../src/lib/api';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { goBack } from '../src/lib/nav';
@@ -69,8 +70,8 @@ export default function Compose() {
       haptic.success();
       toast(t('social.posted'));
       goBack();
-    } catch {
-      toast(t('social.offline'), 'default');
+    } catch (e) {
+      toast(e instanceof PhotoRejected ? t('safety.rejected') : t('social.offline'), 'default');
     } finally {
       setPosting(false);
     }

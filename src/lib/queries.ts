@@ -36,6 +36,7 @@ export async function connect() {
     qc.setQueryData(['me'], me);
     useNet.getState().set({ status: 'ok', uid });
     await pullState().catch(() => {});
+    import('./league').then((m) => m.syncLeagueNow());
     qc.invalidateQueries();
     syncStreak();
   } catch {

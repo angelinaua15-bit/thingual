@@ -7,6 +7,7 @@ import { newCard, review as srsReview, StoredCard, Answer } from '../lib/srs';
 import { dateKey, nicknameFor } from '../data/social';
 import { conceptById, Place } from '../data/concepts';
 import { needsPersist, persistPhoto } from '../lib/photoStore';
+import { questsFor, CHEST_REWARD, type QuestField } from '../lib/quests';
 import { addDays, DAILY_SPARKS, dayDiff, FLAMES, FlameId, MAX_FREEZES, MILESTONES, PRICES, REPAIR_WINDOW, Reward } from '../lib/streak';
 
 export type Level = 'beginner' | 'intermediate' | 'advanced';
@@ -78,7 +79,9 @@ type State = {
   /** saved phrases, phrasal verbs, collocations and idioms (spaced repetition) */
   exprs: Record<string, { card: StoredCard; addedAt: number }>;
   /** daily quests progress: day → counters + claimed quest ids */
-  quests: { day: string; words: number; reviews: number; phrases: number; photos: number; claimed: string[] };
+  quests: { day: string; claimed: string[] } & Partial<Record<QuestField, number>>;
+  /** sparks earned this ISO week (weekly league) */
+  weekXp: { week: string; xp: number };
   drops: Record<string, string>; // dateKey -> post id of my Daily Drop
   achievements: string[];
   familyMode: { enabled: boolean; pin?: string; childName?: string };
@@ -113,6 +116,8 @@ type Actions = {
   toggleExpr: (id: string) => boolean;
   saveExprs: (ids: string[]) => number;
   answerExpr: (id: string, a: Answer) => void;
+  questBump: (field: QuestField, n?: number) => void;
+  claimQuest: (id: string) => number;
   resetAll: () => void;
 };
 
@@ -124,6 +129,9 @@ const weekKey = (d = new Date()) => {
   const y = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
   return `${t.getUTCFullYear()}-W${Math.ceil(((t.getTime() - y.getTime()) / 86400000 + 1) / 7)}`;
 };
+
+/** Sparks earned also count toward this week’s league score. */
+const addXp = (w: { week: string; xp: number }, n: number) => { const wk = weekKey(); return { week: wk, xp: (w.week === wk ? w.xp : 0) + n }; };
 
 const yesterdayKey = () => dateKey(new Date(Date.now() - 86400000));
 
@@ -183,7 +191,8 @@ const initialState = (): State => {
     flame: 'classic',
     celebrate: null,
     exprs: {},
-    quests: { day: '', words: 0, reviews: 0, phrases: 0, photos: 0, claimed: [] },
+    quests: { day: '', claimed: [] },
+    weekXp: { week: weekKey(), xp: 0 },
     drops: {},
     achievements: [],
     familyMode: { enabled: false },
@@ -253,6 +262,8 @@ export const useApp = create<State & Actions>()(
         }));
         keepPhoto(photo);
         if (source !== 'quiz') get().markActive();
+        if (source !== 'quiz' && source !== 'set') get().questBump('words');
+        if (photo && (source === 'camera' || source === 'gallery' || source === 'find')) get().questBump('photos');
         const n = Object.keys(get().words).length;
         if (n >= 1) get().unlock('first-word');
         if (n >= 25) get().unlock('25-words');
@@ -285,9 +296,9 @@ export const useApp = create<State & Actions>()(
           if (i >= 0) history[i] = { day, reviewed: history[i].reviewed + reviewed, correct: history[i].correct + correct, minutes: history[i].minutes + minutes };
           else history.push({ day, reviewed, correct, minutes });
           // one spark per correct answer, up to 20 per session
-          return { history: history.slice(-120), sparks: s.sparks + Math.min(correct, 20) };
+          return { history: history.slice(-120), sparks: s.sparks + Math.min(correct, 20), weekXp: addXp(s.weekXp, Math.min(correct, 20)) };
         });
-        if (reviewed > 0) get().markActive();
+        if (reviewed > 0) { get().markActive(); get().questBump('reviews', reviewed); }
       },
 
       createCollection: (name, conceptIds = []) => {
@@ -313,6 +324,7 @@ export const useApp = create<State & Actions>()(
         const streak = bumpStreak(s.dropStreak);
         set({ dropStreak: streak, drops: { ...s.drops, [dateKey()]: postId } });
         get().markActive();
+        get().questBump('drops');
         get().unlock('first-post');
         if (streak.count >= 30) get().unlock('drop-30');
       },
@@ -368,7 +380,7 @@ export const useApp = create<State & Actions>()(
           learnStreak: { count, last: today },
           bestStreak: Math.max(s.bestStreak, count),
           activeDays: [...s.activeDays.filter((d) => d !== today), today].slice(-400),
-          sparks, freezes, flames, claimed, celebrate, achievements,
+          sparks, freezes, flames, claimed, celebrate, achievements, weekXp: addXp(s.weekXp, sparks - s.sparks),
         });
       },
 
@@ -425,8 +437,33 @@ export const useApp = create<State & Actions>()(
         if (fresh.length) set((s) => ({ exprs: { ...s.exprs, ...Object.fromEntries(fresh.map((id) => [id, { card: newCard(), addedAt: Date.now() }])) } }));
         return fresh.length;
       },
-      answerExpr: (id, a) =>
-        set((s) => (s.exprs[id] ? { exprs: { ...s.exprs, [id]: { ...s.exprs[id], card: srsReview(s.exprs[id].card, a) } } } : {})),
+      questBump: (field, n = 1) =>
+        set((s) => {
+          const day = dateKey();
+          const q = s.quests.day === day ? s.quests : { day, claimed: [] };
+          return { quests: { ...q, [field]: (q[field] ?? 0) + n } };
+        }),
+      claimQuest: (id) => {
+        const s = get();
+        const day = dateKey();
+        if (s.quests.day !== day || s.quests.claimed.includes(id)) return 0;
+        const list = questsFor(day);
+        let reward = 0;
+        if (id === 'chest') {
+          if (!list.every((q) => s.quests.claimed.includes(q.id))) return 0;
+          reward = CHEST_REWARD;
+        } else {
+          const q = list.find((x) => x.id === id);
+          if (!q || (s.quests[q.field] ?? 0) < q.goal) return 0;
+          reward = q.reward;
+        }
+        set({ sparks: s.sparks + reward, weekXp: addXp(s.weekXp, reward), quests: { ...s.quests, claimed: [...s.quests.claimed, id] } });
+        return reward;
+      },
+      answerExpr: (id, a) => {
+        get().questBump('phrases');
+        set((s) => (s.exprs[id] ? { exprs: { ...s.exprs, [id]: { ...s.exprs[id], card: srsReview(s.exprs[id].card, a) } } } : {}));
+      },
 
       resetAll: () => set({ ...initialState(), hydrated: true }),
     }),
