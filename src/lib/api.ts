@@ -360,6 +360,12 @@ export async function signInWithEmail(email: string) {
   if (error) throw error;
 }
 
+/** Sign in with the 6-digit code from the same email (works inside the iOS / Android app too). */
+export async function verifyEmailCode(email: string, token: string) {
+  const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+  if (error) throw error;
+}
+
 /** Forget the cached session id (after a sign-in on this device switched accounts). */
 export function resetSession(uid?: string) {
   sessionPromise = uid ? Promise.resolve(uid) : null;

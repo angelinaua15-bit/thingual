@@ -8,21 +8,22 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "description": "Learn languages from the things around you \u2014 and see how the whole world says them.",
+    "description": "Learn languages from the things around you: point your camera, learn the word in 16 languages, practise phrases and share photos on a world map.",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#04131C"
     },
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "app.thingual",
       "infoPlist": {
         "NSCameraUsageDescription": "Thingual uses the camera to recognise objects and show their names in the language you learn.",
         "NSPhotoLibraryUsageDescription": "Choose a photo to learn the words in it.",
         "NSLocationWhenInUseUsageDescription": "Your posts show only your city, never the exact place.",
-        "NSMicrophoneUsageDescription": "Used to check your pronunciation.",
-        "NSSpeechRecognitionUsageDescription": "Used to check your pronunciation."
+        "NSMicrophoneUsageDescription": "Thingual listens when you practise pronunciation or talk to the AI partner.",
+        "NSSpeechRecognitionUsageDescription": "Speech recognition checks your pronunciation and turns your voice into text in conversation practice.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -79,6 +80,23 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "Your posts show only your city, never the exact place."
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Thingual listens when you practise pronunciation or talk to the AI partner.",
+          "speechRecognitionPermission": "Speech recognition checks your pronunciation and turns your voice into text in conversation practice.",
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox"
+          ]
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/android-icon-monochrome.png",
+          "color": "#FF6B35"
         }
       ]
     ],

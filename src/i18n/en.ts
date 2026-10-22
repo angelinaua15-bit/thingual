@@ -432,6 +432,7 @@ export const en = {
     openCta: 'Open phrases',
   },
   sync: {
+    orCode: 'Or enter the code from the email', verify: 'Sign in', badCode: 'Wrong or expired code',
     on: 'Progress syncs with your account',
     linkSub: 'Add your email to keep words, streak and sparks safe and continue on any device.',
     changeEmail: 'Change email',
