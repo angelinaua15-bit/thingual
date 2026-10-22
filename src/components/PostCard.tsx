@@ -15,6 +15,7 @@ import { fullWord, labelOf } from '../data/concepts';
 import { LangCode, lang as langInfo } from '../data/languages';
 import { haptic, speak, timeAgo, formatLate } from '../lib/feedback';
 import { block, deletePost, report, setLike, type PostRow } from '../lib/api';
+import { POST_TOPICS } from '../lib/api';
 import { useNet } from '../lib/queries';
 
 /** Threads-style post: avatar column, text, photo, word tag, actions. */
@@ -79,8 +80,13 @@ export function PostCard({ post, liked = false, i = 0, threadLine, big, onDelete
         </View>
 
         <Pressable onPress={open}>
-          {(post.is_drop || post.place) && (
+          {(post.is_drop || post.place || post.topic) && (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+              {post.topic && !post.is_drop ? (
+                <View style={[styles.dropTag, { backgroundColor: c.accentSoft }]}>
+                  <Txt v="captionMedium" color={c.accent} style={{ fontSize: 10 }}>{POST_TOPICS.find((x) => x.id === post.topic)?.emoji} {t(`share.topics.${post.topic}`)}</Txt>
+                </View>
+              ) : null}
               {post.is_drop && (
                 <View style={[styles.dropTag, { backgroundColor: c.drop }]}>
                   <Txt v="captionMedium" color="#fff" style={{ fontSize: 10 }}>DROP</Txt>

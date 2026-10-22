@@ -213,7 +213,13 @@ function ChoosePhoto({ id, listen, onAnswer }: { id: string; listen: boolean; on
   const { t } = useT();
   const { width } = useWindowDimensions();
   const { target, l } = useWord(id);
-  const options = useMemo(() => shuffle([id, ...shuffle(CONCEPTS.filter((x) => x.id !== id)).slice(0, 3).map((x) => x.id)]), [id]);
+  // distractors from the same topic first (a feeling among feelings), then anything
+  const options = useMemo(() => {
+    const topic = conceptById(id)?.topic;
+    const same = shuffle(CONCEPTS.filter((x) => x.id !== id && x.topic === topic));
+    const rest = shuffle(CONCEPTS.filter((x) => x.id !== id && x.topic !== topic));
+    return shuffle([id, ...[...same, ...rest].slice(0, 3).map((x) => x.id)]);
+  }, [id]);
   const [picked, setPicked] = useState<string | null>(null);
   useEffect(() => {
     if (listen) setTimeout(() => speak(l.word, target), 350);

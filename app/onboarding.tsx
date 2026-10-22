@@ -21,6 +21,8 @@ import { translate, translateArr, languageName } from '../src/i18n';
 import { LANGUAGES, LangCode, UI_LANGUAGES } from '../src/data/languages';
 import { CONCEPTS, fullWord, labelOf } from '../src/data/concepts';
 import { PHOTOS, SCENES, unsplash, photosFor } from '../src/data/photos';
+import { CEFR_ORDER, bucketOf, cefrFromQuiz } from '../src/lib/level';
+import type { CEFR } from '../src/data/words/types';
 import { haptic, speak } from '../src/lib/feedback';
 
 type Step = 'welcome' | 'native' | 'target' | 'goal' | 'quizIntro' | 'quiz' | 'result' | 'camera' | 'profile' | 'ready';
@@ -49,11 +51,13 @@ export default function Onboarding() {
   };
 
   const score = answers.filter(Boolean).length;
-  const level: Level = score >= 5 ? 'advanced' : score >= 3 ? 'intermediate' : 'beginner';
+  const [cefrPick, setCefrPick] = useState<CEFR | null>(null);
+  const cefr: CEFR = cefrPick ?? cefrFromQuiz(score, QUIZ_CONCEPTS.length);
+  const level: Level = bucketOf(cefr);
 
   const finish = () => {
     const missed = QUIZ_CONCEPTS.filter((_, i) => !answers[i]);
-    store.completeOnboarding({ goal, level, native, target, quizScore: score, quizWords: missed });
+    store.completeOnboarding({ goal, level, cefr, native, target, quizScore: score, quizWords: missed });
     router.replace('/(tabs)/camera');
   };
 
@@ -102,7 +106,7 @@ export default function Onboarding() {
               onDone={(a) => { setAnswers(a); go('result'); }}
             />
           )}
-          {step === 'result' && <Result t={t} score={score} level={level} missed={QUIZ_CONCEPTS.filter((_, i) => !answers[i])} target={target} onNext={() => go('camera')} />}
+          {step === 'result' && <Result t={t} score={score} cefr={cefr} onPick={setCefrPick} missed={QUIZ_CONCEPTS.filter((_, i) => !answers[i])} target={target} onNext={() => go('camera')} />}
           {step === 'camera' && <CameraStep t={t} target={target} native={native} onNext={() => go('profile')} />}
           {step === 'profile' && <ProfileStep t={t} onNext={() => go('ready')} />}
           {step === 'ready' && <Ready t={t} onDone={finish} />}
@@ -463,7 +467,7 @@ function Quiz({ t, ta, target, ui, onDone }: { t: (k: string, v?: Record<string,
 /* ------------------------------------------------------------------ */
 /* Result                                                               */
 /* ------------------------------------------------------------------ */
-function Result({ t, score, level, missed, target, onNext }: { t: (k: string, v?: Record<string, string | number>) => string; score: number; level: Level; missed: string[]; target: LangCode; onNext: () => void }) {
+function Result({ t, score, cefr, onPick, missed, target, onNext }: { t: (k: string, v?: Record<string, string | number>) => string; score: number; cefr: CEFR; onPick: (l: CEFR) => void; missed: string[]; target: LangCode; onNext: () => void }) {
   const { c } = useTheme();
   const [shown, setShown] = useState(0);
   useEffect(() => {
@@ -483,7 +487,17 @@ function Result({ t, score, level, missed, target, onNext }: { t: (k: string, v?
           <Txt style={{ fontFamily: fonts.serif, fontSize: 96, lineHeight: 100, color: c.text }}>{shown}<Txt style={{ fontFamily: fonts.serif, fontSize: 48, color: c.textTertiary }}>/{QUIZ_CONCEPTS.length}</Txt></Txt>
           <Txt v="callout" color={c.textSecondary} style={{ marginTop: 8 }}>{t('onboarding.resultSub')}</Txt>
           <Animated.View entering={ZoomIn.delay(score * 220 + 200).springify()} style={{ marginTop: 10, backgroundColor: c.accentSoft, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999 }}>
-            <Txt v="bodyMedium" color={c.accent}>{t(`levels.${level}`)}</Txt>
+            <Txt v="bodyMedium" color={c.accent}>{cefr} · {t(`cefr.${cefr}`)}</Txt>
+          </Animated.View>
+          <Animated.View entering={FadeInDown.delay(score * 220 + 400)} style={{ marginTop: 18, alignItems: 'center' }}>
+            <Txt v="caption" color={c.textSecondary} center>{t('onboarding.levelPick')}</Txt>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6, marginTop: 8 }}>
+              {CEFR_ORDER.map((l) => (
+                <Pressable key={l} onPress={() => { haptic.light(); onPick(l); }} style={{ minWidth: 48, height: 36, paddingHorizontal: 10, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: l === cefr ? c.text : c.surfaceAlt }}>
+                  <Txt v="captionMedium" color={l === cefr ? c.background : c.text}>{l}</Txt>
+                </Pressable>
+              ))}
+            </View>
           </Animated.View>
         </Animated.View>
         {missed.length > 0 && (

@@ -22,7 +22,7 @@ export default function GrammarList() {
   const ui = useApp((s) => s.settings.uiLang);
   const done = useApp((s) => s.grammar);
   const max = useIsMax();
-  const levels = ['A1', 'A2', 'B1', 'B2'].filter((l) => ENGLISH_GRAMMAR.some((g) => g.level === l));
+  const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].filter((l) => ENGLISH_GRAMMAR.some((g) => g.level === l));
   const completed = ENGLISH_GRAMMAR.filter((g) => (done[g.id] ?? 0) >= 60).length;
   return (
     <View style={{ flex: 1, backgroundColor: c.background, paddingTop: insets.top }}>

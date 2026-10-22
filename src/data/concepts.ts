@@ -1,5 +1,9 @@
 import { LangCode } from './languages';
 import { WORDS } from './words';
+import type { CEFR } from './words/types';
+import { LEVELS } from './levels';
+export type { CEFR };
+export const CEFR_LEVELS: CEFR[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
 /**
  * Concept-based dictionary: every object is one concept, with labels in every language.
@@ -12,19 +16,30 @@ export type Place = 'kitchen' | 'home' | 'street' | 'personal';
 export type PartOfSpeech = 'noun';
 export type Topic =
   | 'food' | 'fruits' | 'kitchen' | 'home' | 'tools' | 'clothes' | 'body' | 'health' | 'animals' | 'nature'
-  | 'transport' | 'city' | 'travel' | 'school' | 'tech' | 'sports' | 'music';
-export const TOPICS: Topic[] = ['food', 'fruits', 'kitchen', 'home', 'clothes', 'animals', 'nature', 'city', 'transport', 'travel', 'school', 'tech', 'sports', 'music', 'tools', 'body', 'health'];
+  | 'transport' | 'city' | 'travel' | 'school' | 'tech' | 'sports' | 'music'
+  | 'people' | 'jobs' | 'time' | 'colors' | 'qualities' | 'actions' | 'feelings' | 'work' | 'society' | 'ideas';
+/** everyday first, abstract and advanced last */
+export const TOPICS: Topic[] = [
+  'people', 'food', 'fruits', 'home', 'kitchen', 'clothes', 'colors', 'time', 'actions', 'qualities', 'animals', 'nature', 'city',
+  'transport', 'travel', 'feelings', 'jobs', 'school', 'tech', 'sports', 'music', 'tools', 'body', 'health', 'work', 'society', 'ideas',
+];
+/** topics of physical things (sent to photo recognition) */
+export const PHYSICAL_TOPICS: Topic[] = ['food', 'fruits', 'kitchen', 'home', 'clothes', 'animals', 'nature', 'city', 'transport', 'travel', 'school', 'tech', 'sports', 'music', 'tools', 'body', 'health'];
 /** Icon per topic (same format as BASE_META so scripts/copy-emoji.js picks them up). */
 export const TOPIC_EMOJI: Record<Topic, [Topic, string]> = {
   food: ['food', '🍔'], fruits: ['fruits', '🍓'], kitchen: ['kitchen', '🍳'], home: ['home', '🏠'], tools: ['tools', '🔨'],
   clothes: ['clothes', '👕'], body: ['body', '✋'], health: ['health', '💊'], animals: ['animals', '🦊'], nature: ['nature', '🌿'],
   transport: ['transport', '🚆'], city: ['city', '🏙️'], travel: ['travel', '✈️'], school: ['school', '✏️'], tech: ['tech', '🎧'],
   sports: ['sports', '🏀'], music: ['music', '🎸'],
+  people: ['people', '👨‍👩‍👧'], jobs: ['jobs', '🧑‍⚕️'], time: ['time', '📅'], colors: ['colors', '🎨'], qualities: ['qualities', '⚖️'],
+  actions: ['actions', '🏃'], feelings: ['feelings', '😊'], work: ['work', '💼'], society: ['society', '🏛️'], ideas: ['ideas', '💡'],
 };
 const TOPIC_PLACE: Record<Topic, Place> = {
   food: 'kitchen', fruits: 'kitchen', kitchen: 'kitchen', home: 'home', tools: 'home', health: 'home',
   clothes: 'personal', body: 'personal', school: 'personal', tech: 'personal', sports: 'personal', music: 'personal', travel: 'personal',
   animals: 'street', nature: 'street', transport: 'street', city: 'street',
+  people: 'personal', jobs: 'personal', time: 'personal', colors: 'personal', qualities: 'personal', actions: 'personal',
+  feelings: 'personal', work: 'personal', society: 'street', ideas: 'personal',
 };
 /** Topics and emoji for the original hand-picked concepts (they also have real photos). */
 const BASE_META: Record<string, [Topic, string]> = {
@@ -52,6 +67,8 @@ export type Concept = {
   labels: Record<LangCode, Label>;
   examples: Partial<Record<'en' | 'uk' | 'es' | 'de' | 'fr', string>>;
   related: string[]; // other concept ids
+  /** CEFR level at which learners usually meet the word */
+  level: CEFR;
 };
 
 type Raw = [id: string, place: Place, ipa: string, labels: string, ex: string, related: string];
@@ -312,15 +329,16 @@ const parseLabels = (s: string): Record<LangCode, Label> => {
 const BASE: Concept[] = RAW.map(([id, place, ipa, labels, ex, related]) => {
   const [en, uk, es, de, fr] = ex.split('|');
   const [topic, emoji] = BASE_META[id] ?? (['home', ''] as [Topic, string]);
-  return { id, place, topic, emoji, ipa, labels: parseLabels(labels), examples: { en, uk, es, de, fr }, related: related.split(',').filter(Boolean) };
+  return { id, place, topic, emoji, ipa, labels: parseLabels(labels), examples: { en, uk, es, de, fr }, related: related.split(',').filter(Boolean), level: LEVELS[id] ?? 'A1' };
 });
 
 const baseIds = new Set(BASE.map((c) => c.id));
-const EXTRA: Concept[] = WORDS.filter(([id]) => !baseIds.has(id)).map(([id, topic, emoji, ipa, labels, ex, related]) => {
+const EXTRA: Concept[] = WORDS.filter(([id]) => !baseIds.has(id)).map(([id, topic, emoji, ipa, labels, ex, related, level]) => {
   const [en, uk, es, de, fr] = ex.split('|');
   return {
     id, topic: topic as Topic, place: TOPIC_PLACE[topic as Topic] ?? 'home', emoji, ipa,
     labels: parseLabels(labels), examples: { en, uk, es, de, fr }, related: related.split(',').filter(Boolean),
+    level: level ?? LEVELS[id] ?? 'B1',
   };
 });
 

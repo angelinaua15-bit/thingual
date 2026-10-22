@@ -11,11 +11,11 @@ import { toast } from '../src/components/Overlay';
 import { useTheme, fonts, radius, space } from '../src/theme/tokens';
 import { useT } from '../src/i18n';
 import { useApp } from '../src/store/useApp';
-import { CONCEPTS, TOPICS, TOPIC_EMOJI, fullWord, labelOf, type Topic } from '../src/data/concepts';
+import { CONCEPTS, CEFR_LEVELS, TOPICS, TOPIC_EMOJI, fullWord, labelOf, type CEFR, type Topic } from '../src/data/concepts';
 import { emojiUrl } from '../src/data/emoji';
 import { goBack } from '../src/lib/nav';
 import { haptic } from '../src/lib/feedback';
-import { useIsMax, requireMax, topicOpen } from '../src/lib/premium';
+import { FREE_TOPICS, useIsMax, requireMax, topicOpen } from '../src/lib/premium';
 import { MaxBadge, MaxLockCard } from '../src/components/MaxLock';
 
 /** Catalogue of every word in the app, by topic. */
@@ -29,14 +29,15 @@ export default function Explore() {
   const words = useApp((x) => x.words);
   const [topic, setTopic] = useState<Topic | 'all'>((params.topic as Topic) ?? 'all');
   const [q, setQ] = useState('');
+  const [lvl, setLvl] = useState<CEFR | 'all'>('all');
   const max = useIsMax();
   const [topic0] = useState(topic);
   React.useEffect(() => { if (topic0 !== 'all' && !topicOpen(topic0, max)) { setTopic('all'); requireMax('topics'); } }, []);
 
   const list = useMemo(() => {
     const query = q.trim().toLowerCase();
-    return CONCEPTS.filter((cc) => topicOpen(cc.topic, max) && (topic === 'all' || cc.topic === topic) && (!query || Object.values(cc.labels).some((l) => l.word?.toLowerCase().includes(query) || l.roman?.toLowerCase().includes(query))));
-  }, [topic, q, max]);
+    return CONCEPTS.filter((cc) => topicOpen(cc.topic, max) && (topic === 'all' || cc.topic === topic) && (lvl === 'all' || cc.level === lvl) && (!query || Object.values(cc.labels).some((l) => l.word?.toLowerCase().includes(query) || l.roman?.toLowerCase().includes(query))));
+  }, [topic, q, max, lvl]);
   const lockedCount = max ? 0 : CONCEPTS.filter((cc) => !topicOpen(cc.topic, false)).length;
   const missing = list.filter((cc) => !words[cc.id]);
 
@@ -62,6 +63,16 @@ export default function Explore() {
               {tp !== 'all' && <Image source={{ uri: emojiUrl(TOPIC_EMOJI[tp][1]) }} style={{ width: 20, height: 20 }} />}
               <Txt v="captionMedium" color={on ? c.background : c.text}>{tp === 'all' ? t('explore.all') : t(`explore.topics.${tp}`)}</Txt>
               {tp !== 'all' && !topicOpen(tp, max) ? <MaxBadge size={18} /> : null}
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingBottom: 12 }}>
+        {(['all', ...CEFR_LEVELS] as const).map((l) => {
+          const on = lvl === l;
+          return (
+            <Pressable key={l} onPress={() => { haptic.light(); setLvl(l); }} style={[styles.lvl, { backgroundColor: on ? c.text : c.surfaceAlt }]}>
+              <Txt v="captionMedium" color={on ? c.background : c.text}>{l === 'all' ? t('explore.allLevels') : l}</Txt>
             </Pressable>
           );
         })}
@@ -101,7 +112,7 @@ export default function Explore() {
         numColumns={cols}
         keyExtractor={(cc) => cc.id}
         ListHeaderComponent={header}
-        ListFooterComponent={lockedCount && !q ? <View style={{ marginTop: 6 }}><MaxLockCard reason="topics" title={t('max.topicsLocked', { n: lockedCount })} sub={t('max.moreLockedSub')} /></View> : undefined}
+        ListFooterComponent={lockedCount && !q ? <View style={{ marginTop: 6 }}><MaxLockCard reason="topics" title={t('max.topicsLocked', { n: lockedCount, k: TOPICS.length - FREE_TOPICS.length })} sub={t('max.moreLockedSub')} /></View> : undefined}
         ListEmptyComponent={<Txt v="callout" color={c.textSecondary} center style={{ marginTop: 40 }}>{t('explore.empty')}</Txt>}
         columnWrapperStyle={{ gap: 10 }}
         contentContainerStyle={{ padding: space.m, paddingBottom: insets.bottom + 40, gap: 10, maxWidth: 760, width: '100%', alignSelf: 'center' }}
@@ -113,6 +124,7 @@ export default function Explore() {
             <Animated.View entering={index < 16 ? FadeInDown.delay(index * 25) : undefined} style={{ width: tileW }}>
               <Pressable onPress={() => router.push({ pathname: '/word/[id]', params: { id: item.id } })} style={[styles.tile, { backgroundColor: c.surface, borderColor: c.divider }]}>
                 <Photo uri={photoForWord(item.id, words[item.id]?.photo, 400)} style={{ width: '100%', aspectRatio: 1 }} />
+                <View style={[styles.lvlBadge, { backgroundColor: c.surface }]}><Txt v="caption" style={{ fontSize: 10, fontFamily: fonts.semibold }}>{item.level}</Txt></View>
                 <View style={{ padding: 10 }}>
                   <Txt style={{ fontFamily: fonts.serif, fontSize: 20, lineHeight: 24, color: c.text }} numberOfLines={1}>{fullWord(item.id, s.active)}</Txt>
                   <Txt v="caption" color={c.textSecondary} numberOfLines={1}>{labelOf(item.id, s.native)?.word}</Txt>
@@ -134,6 +146,8 @@ export default function Explore() {
 }
 
 const styles = StyleSheet.create({
+  lvl: { height: 30, minWidth: 40, paddingHorizontal: 10, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+  lvlBadge: { position: 'absolute', left: 8, top: 8, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 8 },
   bar: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, height: 60 },
   search: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: radius.m, paddingHorizontal: 12 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 38, paddingHorizontal: 12, borderRadius: 999, borderWidth: StyleSheet.hairlineWidth },

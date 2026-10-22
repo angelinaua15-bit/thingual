@@ -4,7 +4,7 @@ export type GrammarExercise =
 
 export type GrammarLesson = {
   id: string;
-  level: 'A1' | 'A2' | 'B1' | 'B2';
+  level: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
   emoji: string;
   title: { uk: string; en: string };
   /** short explanation paragraphs (Ukrainian / English) */

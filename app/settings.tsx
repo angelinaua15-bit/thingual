@@ -4,6 +4,7 @@ import { shareFile } from '../src/lib/share';
 import React, { useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, Share, TextInput, View } from 'react-native';
 import { goBack } from '../src/lib/nav';
+import { CEFR_ORDER, bucketOf, cefrOf } from '../src/lib/level';
 import { canAddLanguage } from '../src/lib/premium';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,7 +16,6 @@ import { useTheme, fonts, radius, space } from '../src/theme/tokens';
 import { useT, languageName } from '../src/i18n';
 import { useApp, Level } from '../src/store/useApp';
 import { LANGUAGES, LangCode, UI_LANGUAGES } from '../src/data/languages';
-import { backendConnected } from '../src/lib/recognize';
 import { MaxBanner } from '../src/components/MaxBanner';
 import { deleteMyData, linkEmail, myEmail } from '../src/lib/api';
 import { qc, useNet } from '../src/lib/queries';
@@ -77,11 +77,11 @@ export default function SettingsScreen() {
           </View>
           <View style={{ padding: 16, gap: 10 }}>
             <Txt v="captionMedium" color={c.textSecondary}>{t('settings.level')}</Txt>
-            <Segmented<Level>
-              value={s.level}
-              onChange={(v) => st.updateSettings({ level: v })}
-              options={(['beginner', 'intermediate', 'advanced'] as Level[]).map((l) => ({ value: l, label: t(`levels.${l}`) }))}
-            />
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              {CEFR_ORDER.map((l) => (
+                <Chip key={l} label={`${l} · ${t(`cefr.${l}`)}`} selected={cefrOf(s) === l} onPress={() => st.updateSettings({ cefr: l, level: bucketOf(l) })} />
+              ))}
+            </View>
           </View>
           <View style={{ padding: 16, gap: 10 }}>
             <Txt v="captionMedium" color={c.textSecondary}>{t('settings.dailyGoal')}</Txt>
@@ -169,7 +169,6 @@ export default function SettingsScreen() {
         </Group>
 
         <Group title={t('settings.about')}>
-          <ListRow title={t('settings.backend')} value={backendConnected() ? t('settings.backendOn') : t('settings.backendOff')} />
           <ListRow title={t('settings.version', { v: Constants.expoConfig?.version ?? '1.0.0' })} subtitle={t('settings.photos')} />
         </Group>
       </ScrollView>

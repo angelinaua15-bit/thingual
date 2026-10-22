@@ -13,11 +13,11 @@ import { emojiUrl } from '../src/data/emoji';
 import { chatTurn, SCENARIOS, type ChatMsg } from '../src/lib/tutor';
 import { listenOnce, speechRecognitionAvailable } from '../src/lib/speech';
 import { speak, haptic } from '../src/lib/feedback';
+import { cefrOf } from '../src/lib/level';
 import { goBack } from '../src/lib/nav';
 import { hasQuota, spendQuota, requireMax, quotaLeft } from '../src/lib/premium';
 import { useIsMax } from '../src/lib/premium';
 
-const LEVEL = { beginner: 'A1-A2', intermediate: 'B1', advanced: 'B2' } as const;
 
 /** AI conversation partner: role-play real situations in the language you learn, with gentle corrections. */
 export default function Tutor() {
@@ -40,7 +40,7 @@ export default function Tutor() {
     setBusy(true);
     setError(null);
     try {
-      const r = await chatTurn({ messages: history, scenario: sc.prompt, target: s.active, native: s.native, level: LEVEL[s.level] });
+      const r = await chatTurn({ messages: history, scenario: sc.prompt, target: s.active, native: s.native, level: cefrOf(s) });
       if (r.error) throw new Error(r.error);
       if (history.length) spendQuota('chat');
       const next = [...history];
@@ -114,7 +114,7 @@ export default function Tutor() {
         <Image source={{ uri: emojiUrl(scenario.emoji) }} style={{ width: 28, height: 28 }} />
         <View style={{ flex: 1 }}>
           <Txt v="bodyMedium">{t(`tutor.sc.${scenario.id}`)}</Txt>
-          <Txt v="caption" color={c.textSecondary}>{languageName(s.active, s.uiLang)} · {LEVEL[s.level]}{max ? '' : ` · ${t('max.chatLeft', { n: Math.max(0, quotaLeft('chat')) })}`}</Txt>
+          <Txt v="caption" color={c.textSecondary}>{languageName(s.active, s.uiLang)} · {cefrOf(s)}{max ? '' : ` · ${t('max.chatLeft', { n: Math.max(0, quotaLeft('chat')) })}`}</Txt>
         </View>
       </View>
       <FlatList

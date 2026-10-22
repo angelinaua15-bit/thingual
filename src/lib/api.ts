@@ -21,10 +21,16 @@ export type Profile = {
   created_at: string;
 };
 
+export type PostTopic = 'travel' | 'fact' | 'word' | 'question';
+export const POST_TOPICS: { id: PostTopic; emoji: string }[] = [
+  { id: 'travel', emoji: '✈️' }, { id: 'fact', emoji: '💡' }, { id: 'word', emoji: '📸' }, { id: 'question', emoji: '🗣️' },
+];
+
 export type PostRow = {
   id: string;
   author_id: string;
   parent_id: string | null;
+  topic?: PostTopic | null;
   body: string;
   photo_url: string | null;
   concept_id: string | null;
@@ -190,8 +196,9 @@ export async function report(postId: string, reason = '') {
 /* ---------------- posts ---------------- */
 const PAGE = 20;
 
-export async function feed(kind: 'for_you' | 'following', before?: string): Promise<PostRow[]> {
+export async function feed(kind: 'for_you' | 'following', before?: string, topic?: PostTopic): Promise<PostRow[]> {
   let req = supabase.from('posts').select(POST_SELECT).is('parent_id', null).order('created_at', { ascending: false }).limit(PAGE);
+  if (topic) req = req.eq('topic', topic);
   if (before) req = req.lt('created_at', before);
   if (kind === 'following') {
     const ids = await followingIds();
@@ -282,6 +289,7 @@ export async function reportError(message: string, stack?: string) {
 export async function createPost(p: {
   body?: string; photoUri?: string | null; concept_id?: string | null; lang?: string | null; parent_id?: string | null;
   place?: string | null; lat?: number | null; lng?: number | null; is_drop?: boolean; drop_day?: string | null; late_minutes?: number | null;
+  topic?: PostTopic | null;
 }): Promise<PostRow> {
   const id = await ensureSession();
   if (p.photoUri && !p.photoUri.startsWith('https://')) await moderatePhoto(p.photoUri);
@@ -292,6 +300,7 @@ export async function createPost(p: {
       author_id: id, body: (p.body ?? '').trim().slice(0, 500), photo_url, concept_id: p.concept_id ?? null, lang: p.lang ?? null,
       parent_id: p.parent_id ?? null, place: p.place ?? null, lat: p.lat ?? null, lng: p.lng ?? null,
       is_drop: !!p.is_drop, drop_day: p.drop_day ?? null, late_minutes: p.late_minutes ?? null,
+      ...(p.topic ? { topic: p.topic } : {}),
     })
     .select(POST_SELECT)
     .single();

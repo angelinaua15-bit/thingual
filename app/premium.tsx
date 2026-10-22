@@ -14,7 +14,8 @@ import { useT } from '../src/i18n';
 import { useApp } from '../src/store/useApp';
 import { joinPremiumWaitlist } from '../src/lib/api';
 import { haptic } from '../src/lib/feedback';
-import { LIMITS, useIsMax, type MaxReason } from '../src/lib/premium';
+import { FREE_TOPICS, LIMITS, useIsMax, type MaxReason } from '../src/lib/premium';
+import { TOPICS } from '../src/data/concepts';
 
 type Plan = 'monthly' | 'yearly' | 'family';
 const PLANS: { id: Plan; price: string; per: 'perMonth' | 'perYear'; save?: number; monthly?: string }[] = [
@@ -37,7 +38,7 @@ export default function Premium() {
   const max = useIsMax();
   const maxUntil = useApp((s) => s.maxUntil);
   const trialUsed = useApp((s) => s.trialUsed);
-  const fill = (x: string) => x.replace('{ai}', String(LIMITS.aiScansPerDay)).replace('{chat}', String(LIMITS.chatPerDay)).replace('{word}', String(LIMITS.wordAiPerDay)).replace('{books}', String(LIMITS.freeBooksPerLang));
+  const fill = (x: string) => x.replace('{ai}', String(LIMITS.aiScansPerDay)).replace('{chat}', String(LIMITS.chatPerDay)).replace('{word}', String(LIMITS.wordAiPerDay)).replace('{books}', String(LIMITS.freeBooksPerLang)).replace('{total}', String(TOPICS.length)).replace('{free}', String(FREE_TOPICS.length));
   const until = maxUntil ? new Date(maxUntil).toLocaleDateString(code, { day: 'numeric', month: 'long' }) : '';
   const trial = () => {
     if (useApp.getState().startTrial()) {
@@ -84,7 +85,7 @@ export default function Premium() {
     ['phrases', t('premium.cells.phrasesFree'), t('premium.cells.all')],
     ['english', t('premium.cells.englishFree', { n: LIMITS.freeExprPerKind }), t('premium.cells.all')],
     ['grammar', t('premium.cells.grammarFree'), t('premium.cells.grammarMax')],
-    ['topics', t('premium.cells.topicsFree'), t('premium.cells.all')],
+    ['topics', t('premium.cells.topicsFree', { free: FREE_TOPICS.length, total: TOPICS.length }), t('premium.cells.all')],
     ['bulk', '—', '✓'],
     ['langs', t('premium.cells.langsFree'), t('premium.cells.langsMax')],
     ['freeze', t('premium.cells.freezeFree'), t('premium.cells.freezeMax')],

@@ -13,7 +13,7 @@ export { LIMITS };
  */
 
 export const FREE_SITUATIONS = ['basics', 'cafe', 'directions'];
-export const FREE_TOPICS: Topic[] = ['food', 'fruits', 'kitchen', 'home', 'clothes', 'animals', 'nature', 'city'];
+export const FREE_TOPICS: Topic[] = ['people', 'food', 'fruits', 'kitchen', 'home', 'clothes', 'colors', 'time', 'actions', 'qualities', 'animals', 'nature', 'city'];
 export const FREE_GRAMMAR_LEVELS = ['A1'];
 
 export const isMaxState = (s: { maxUntil?: number }) => !!s.maxUntil && s.maxUntil > Date.now();

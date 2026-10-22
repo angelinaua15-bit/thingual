@@ -20,13 +20,14 @@ import { useDraft } from '../src/lib/draft';
 import { pickImage } from '../src/lib/pickImage';
 import { ensureCanPublish, getMyCity } from '../src/lib/publish';
 import { fullWord } from '../src/data/concepts';
+import { POST_TOPICS, type PostTopic } from '../src/lib/api';
 import { haptic } from '../src/lib/feedback';
 
 const MAX = 500;
 
 /** Threads-style composer: text, optional photo, word tag and city. Also used for replies. */
 export default function Compose() {
-  const { parent } = useLocalSearchParams<{ parent?: string }>();
+  const { parent, topic: topicParam } = useLocalSearchParams<{ parent?: string; topic?: PostTopic }>();
   const { c } = useTheme();
   const { t } = useT();
   const insets = useSafeAreaInsets();
@@ -35,6 +36,7 @@ export default function Compose() {
   const s = useApp((x) => x.settings);
   const draft = useDraft();
   const [body, setBody] = useState('');
+  const [topic, setTopic] = useState<PostTopic | null>(topicParam && POST_TOPICS.some((x) => x.id === topicParam) ? topicParam : null);
   const [photo, setPhoto] = useState<string | undefined>(draft.photo);
   const [concept, setConcept] = useState<string | undefined>(draft.concept);
   const [city, setCity] = useState<{ place: string; lat: number; lng: number } | null>(null);
@@ -62,7 +64,7 @@ export default function Compose() {
     try {
       const post = await createPost({
         body, photoUri: photo, concept_id: concept ?? null, lang: concept ? s.active : null, parent_id: parent ?? null,
-        place: city?.place ?? null, lat: city?.lat ?? null, lng: city?.lng ?? null,
+        place: city?.place ?? null, lat: city?.lat ?? null, lng: city?.lng ?? null, topic: parent ? null : topic,
       });
       if (concept && photo) useApp.getState().saveWord(concept, post.photo_url ?? photo, 'camera');
       useApp.getState().unlock('first-post');
@@ -98,6 +100,18 @@ export default function Compose() {
             </View>
           </View>
         )}
+        {!parent && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 14 }}>
+            {POST_TOPICS.map((x) => {
+              const on = topic === x.id;
+              return (
+                <Pressable key={x.id} onPress={() => { haptic.light(); setTopic(on ? null : x.id); }} style={[styles.topic, { backgroundColor: on ? c.text : c.surfaceAlt }]}>
+                  <Txt v="captionMedium" color={on ? c.background : c.text}>{x.emoji} {t(`share.topics.${x.id}`)}</Txt>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        )}
         <View style={{ flexDirection: 'row', gap: 12 }}>
           <Avatar seed={me?.id ?? 'me'} size={40} label={me?.name || me?.handle} uri={me?.avatar_url} />
           <View style={{ flex: 1 }}>
@@ -105,7 +119,7 @@ export default function Compose() {
             <TextInput
               value={body}
               onChangeText={(v) => setBody(v.slice(0, MAX))}
-              placeholder={parent && parentPost.data ? t('social.replyPlaceholder', { name: parentPost.data.author.handle }) : t('social.composePlaceholder')}
+              placeholder={parent && parentPost.data ? t('social.replyPlaceholder', { name: parentPost.data.author.handle }) : (topic ? t(`share.prompts.${topic}`) : t('social.composePlaceholder'))}
               placeholderTextColor={c.textTertiary}
               multiline
               autoFocus
@@ -164,6 +178,7 @@ export default function Compose() {
 }
 
 const styles = StyleSheet.create({
+  topic: { height: 34, paddingHorizontal: 12, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
   bar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, height: 52, maxWidth: 640, width: '100%', alignSelf: 'center' },
   photo: { marginTop: 10, borderRadius: radius.m, overflow: 'hidden', width: '100%', aspectRatio: 1, maxWidth: 420 },
   remove: { position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center' },

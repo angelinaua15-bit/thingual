@@ -13,7 +13,7 @@ import { toast } from '../../src/components/Overlay';
 import { useTheme, fonts, radius, space, TAB_BAR_HEIGHT } from '../../src/theme/tokens';
 import { useT, languageName } from '../../src/i18n';
 import { useApp, SavedWord } from '../../src/store/useApp';
-import { conceptById, fullWord, labelOf, PLACES, CONCEPTS, TOPICS, TOPIC_EMOJI, conceptsInTopic } from '../../src/data/concepts';
+import { conceptById, fullWord, labelOf, CONCEPTS, TOPICS, TOPIC_EMOJI, conceptsInTopic } from '../../src/data/concepts';
 import { coverFor, SCENES } from '../../src/data/photos';
 import { mastery, formatInterval, isDue } from '../../src/lib/srs';
 import { haptic } from '../../src/lib/feedback';
@@ -21,7 +21,7 @@ import { useIsMax, requireMax, topicOpen } from '../../src/lib/premium';
 import { NotebookCard } from '../../src/components/NoteBits';
 import { MaxBadge, MaxPill } from '../../src/components/MaxLock';
 
-type View_ = 'grid' | 'list' | 'places';
+type View_ = 'grid' | 'list';
 type Filter = 'all' | 'new' | 'hard' | 'learned' | 'drop' | `col:${string}`;
 
 export default function Dictionary() {
@@ -98,7 +98,7 @@ export default function Dictionary() {
             <Segmented
               value={view}
               onChange={setView}
-              options={[{ value: 'grid', label: t('dictionary.views.grid') }, { value: 'list', label: t('dictionary.views.list') }, { value: 'places', label: t('dictionary.views.places') }]}
+              options={[{ value: 'grid', label: t('dictionary.views.grid') }, { value: 'list', label: t('dictionary.views.list') }]}
             />
           </View>
         </View>
@@ -131,29 +131,9 @@ export default function Dictionary() {
                 </Animated.View>
               ))}
             </View>
-          ) : view === 'list' ? (
+          ) : (
             <View style={{ paddingHorizontal: space.m, paddingTop: 8 }}>
               {list.map((w, i) => <WordRow key={w.conceptId} w={w} i={i} />)}
-            </View>
-          ) : (
-            <View style={{ paddingTop: 8 }}>
-              {PLACES.map((p) => {
-                const items = list.filter((w) => w.place === p);
-                if (!items.length) return null;
-                return (
-                  <View key={p} style={{ marginBottom: space.l }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingHorizontal: space.m, marginBottom: 10 }}>
-                      <Txt v="headline">{t(`places.${p}`)}</Txt>
-                      <Txt v="caption" color={c.textSecondary}>{items.length}</Txt>
-                    </View>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingHorizontal: space.m }}>
-                      {items.map((w) => (
-                        <WordTile key={w.conceptId} conceptId={w.conceptId} lang={target} photo={w.photo} size={130} level={mastery(w.card)} onPress={() => router.push({ pathname: '/word/[id]', params: { id: w.conceptId } })} />
-                      ))}
-                    </ScrollView>
-                  </View>
-                );
-              })}
             </View>
           )}
 

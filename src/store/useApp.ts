@@ -9,6 +9,7 @@ import { conceptById, Place } from '../data/concepts';
 import { needsPersist, persistPhoto } from '../lib/photoStore';
 import { questsFor, CHEST_REWARD, type QuestField } from '../lib/quests';
 import { LIMITS } from '../lib/limits';
+import type { CEFR } from '../data/words/types';
 import { addDays, DAILY_SPARKS, dayDiff, FLAMES, FlameId, MAX_FREEZES, MILESTONES, PRICES, REPAIR_WINDOW, Reward } from '../lib/streak';
 
 export type Level = 'beginner' | 'intermediate' | 'advanced';
@@ -40,6 +41,8 @@ export type Settings = {
   targets: LangCode[];
   active: LangCode;
   level: Level;
+  /** CEFR level A1–C2 (the source of truth; `level` is kept in sync for older code) */
+  cefr?: CEFR;
   dailyMinutes: 3 | 5 | 10 | 15;
   voice: 'female' | 'male';
   slowVoice: boolean;
@@ -106,7 +109,7 @@ type State = {
 
 type Actions = {
   setHydrated: () => void;
-  completeOnboarding: (p: { goal?: Goal; level: Level; native: LangCode; target: LangCode; quizScore: number; quizWords: string[] }) => void;
+  completeOnboarding: (p: { goal?: Goal; level: Level; cefr?: CEFR; native: LangCode; target: LangCode; quizScore: number; quizWords: string[] }) => void;
   updateSettings: (p: Partial<Settings>) => void;
   setActiveTarget: (l: LangCode) => void;
   addTarget: (l: LangCode) => void;
@@ -253,12 +256,12 @@ export const useApp = create<State & Actions>()(
 
       setHydrated: () => set({ hydrated: true }),
 
-      completeOnboarding: ({ goal, level, native, target, quizScore, quizWords }) => {
+      completeOnboarding: ({ goal, level, cefr, native, target, quizScore, quizWords }) => {
         set((s) => ({
           onboarded: true,
           goal,
           quizScore,
-          settings: { ...s.settings, level, native, uiLang: native, targets: [target], active: target },
+          settings: { ...s.settings, level, cefr, native, uiLang: native, targets: [target], active: target },
         }));
         quizWords.forEach((id) => {
           const c = conceptById(id);

@@ -1,4 +1,4 @@
-import { CONCEPTS } from '../data/concepts';
+import { CONCEPTS, PHYSICAL_TOPICS } from '../data/concepts';
 import { supabase } from './supabase';
 import { ensureSession } from './api';
 import { hasQuota, spendQuota } from './premium';
@@ -33,7 +33,7 @@ export async function recognize(input: { base64?: string }): Promise<Recognition
     try {
       await ensureSession();
       const { data, error } = await supabase.functions.invoke('recognize', {
-        body: { image: input.base64, concepts: CONCEPTS.map((c) => c.id) },
+        body: { image: input.base64, concepts: CONCEPTS.filter((c) => PHYSICAL_TOPICS.includes(c.topic)).map((c) => c.id) },
       });
       if (!error && data) {
         const d = data as { concept: string | null; confidence?: number; alternatives?: string[]; error?: string };

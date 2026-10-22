@@ -1,6 +1,7 @@
 import type { GrammarLesson } from './types';
+import { ADVANCED_GRAMMAR } from './advanced';
 
-export const ENGLISH_GRAMMAR: GrammarLesson[] = [
+const BASE: GrammarLesson[] = [
   // ───────────────────────────── A1 ─────────────────────────────
   {
     id: 'to-be',
@@ -1056,3 +1057,7 @@ export const ENGLISH_GRAMMAR: GrammarLesson[] = [
     ],
   },
 ];
+
+const ORDER = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+/** All lessons A1 → C2, in level order (stable within a level). */
+export const ENGLISH_GRAMMAR: GrammarLesson[] = [...BASE, ...ADVANCED_GRAMMAR].sort((a, b) => ORDER.indexOf(a.level) - ORDER.indexOf(b.level));

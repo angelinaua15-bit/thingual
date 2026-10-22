@@ -14,10 +14,10 @@ import { useApp, type NoteInput } from '../../src/store/useApp';
 import { enrichWord } from '../../src/lib/notebook';
 import { quotaLeft, requireMax, useIsMax } from '../../src/lib/premium';
 import { speak, haptic } from '../../src/lib/feedback';
+import { cefrOf } from '../../src/lib/level';
 import { goBack } from '../../src/lib/nav';
 import type { LangCode } from '../../src/data/languages';
 
-const LEVEL = { beginner: 'A2', intermediate: 'B1', advanced: 'B2' } as const;
 
 /** Create or edit a word in My vocabulary. */
 export default function EditNote() {
@@ -44,7 +44,7 @@ export default function EditNote() {
     if (left <= 0) return requireMax('word');
     setBusy(true);
     setAiMsg(null);
-    const r = await enrichWord({ word: f.word.trim(), target: f.lang, native: s.native, translation: f.translation.trim() || undefined, level: LEVEL[s.level] });
+    const r = await enrichWord({ word: f.word.trim(), target: f.lang, native: s.native, translation: f.translation.trim() || undefined, level: cefrOf(s) });
     setBusy(false);
     if (!r.ok) {
       if (r.error === 'limit') return requireMax('word');

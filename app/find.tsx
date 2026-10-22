@@ -13,7 +13,7 @@ import { TimerRing, toast, monoStyle } from '../src/components/Overlay';
 import { useTheme, fonts, radius, space, BRAND } from '../src/theme/tokens';
 import { useT } from '../src/i18n';
 import { useApp } from '../src/store/useApp';
-import { CONCEPTS, fullWord, labelOf } from '../src/data/concepts';
+import { CONCEPTS, PHYSICAL_TOPICS, fullWord, labelOf } from '../src/data/concepts';
 import { recognize, backendConnected } from '../src/lib/recognize';
 import { detectUri, detectorSupported } from '../src/lib/detect';
 import { haptic, speak } from '../src/lib/feedback';
@@ -39,7 +39,7 @@ export default function Find() {
   const [shot, setShot] = useState<string | null>(null);
   const [score, setScore] = useState(0);
   const target = useMemo(() => HOME_THINGS[Math.floor(Math.random() * HOME_THINGS.length)], [round]);
-  const choices = useMemo(() => [target, ...CONCEPTS.filter((x) => x.id !== target).sort(() => Math.random() - 0.5).slice(0, 5).map((x) => x.id)].sort(() => Math.random() - 0.5), [target]);
+  const choices = useMemo(() => [target, ...CONCEPTS.filter((x) => x.id !== target && PHYSICAL_TOPICS.includes(x.topic)).sort(() => Math.random() - 0.5).slice(0, 5).map((x) => x.id)].sort(() => Math.random() - 0.5), [target]);
   const l = labelOf(target, s.active)!;
 
   useEffect(() => {

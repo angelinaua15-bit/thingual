@@ -3,7 +3,7 @@ import { useIsMax, requireMax } from '../../src/lib/premium';
 import { MaxBadge } from '../../src/components/MaxLock';
 import type { MapKind } from '../../src/components/mapHtml';
 import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
@@ -20,7 +20,7 @@ import { dropFor, dateKey } from '../../src/data/social';
 import { CONCEPTS, fullWord, labelOf } from '../../src/data/concepts';
 import { coverFor } from '../../src/data/photos';
 import { LangCode } from '../../src/data/languages';
-import { feed, followingIds, mapPosts, myDropToday, type PostRow } from '../../src/lib/api';
+import { POST_TOPICS, feed, followingIds, mapPosts, myDropToday, type PostRow, type PostTopic } from '../../src/lib/api';
 import { useLikedSet, useNet, connect } from '../../src/lib/queries';
 import { getMyCity } from '../../src/lib/publish';
 
@@ -121,6 +121,12 @@ export default function MapTab() {
               <Txt v="captionMedium">{t('map.empty')}</Txt>
               <Txt v="caption" color={c.textSecondary}>{t('map.emptySub')}</Txt>
             </Animated.View>
+          )}
+          {/* share a trip — it lands on this map */}
+          {!locked && (
+            <PressableScale onPress={() => router.push({ pathname: '/compose', params: { topic: 'travel' } })} style={[styles.tripBtn, { backgroundColor: c.ink, bottom: TAB_BAR_HEIGHT + (posts.isSuccess && points.length === 0 ? 92 : 22) }]}>
+              <Txt v="captionMedium" color={c.background}>✈️ {t('share.tripCta')}</Txt>
+            </PressableScale>
           )}
           {/* basemap style */}
           <View style={[styles.styles, { backgroundColor: c.surface, bottom: TAB_BAR_HEIGHT + 152 }]}>
@@ -250,9 +256,10 @@ function Feed() {
   const insets = useSafeAreaInsets();
   const status = useNet((x) => x.status);
   const [tab, setTab] = useState<'for_you' | 'following'>('for_you');
+  const [topic, setTopic] = useState<PostTopic | null>(null);
   const q = useInfiniteQuery({
-    queryKey: ['feed', tab],
-    queryFn: ({ pageParam }) => feed(tab, pageParam || undefined),
+    queryKey: ['feed', tab, topic],
+    queryFn: ({ pageParam }) => feed(tab, pageParam || undefined, topic ?? undefined),
     initialPageParam: '',
     getNextPageParam: (last) => (last.length >= 20 ? last[last.length - 1].created_at : undefined),
     enabled: status === 'ok',
@@ -272,9 +279,27 @@ function Feed() {
         refreshing={q.isRefetching}
         onRefresh={() => q.refetch()}
         ListHeaderComponent={
-          <View style={{ flexDirection: 'row', gap: 8, marginBottom: 4 }}>
-            <Chip label={t('social.forYou')} selected={tab === 'for_you'} onPress={() => setTab('for_you')} />
-            <Chip label={t('social.followingFeed')} selected={tab === 'following'} onPress={() => setTab('following')} />
+          <View style={{ marginBottom: 4 }}>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <Chip label={t('social.forYou')} selected={tab === 'for_you'} onPress={() => setTab('for_you')} />
+              <Chip label={t('social.followingFeed')} selected={tab === 'following'} onPress={() => setTab('following')} />
+            </View>
+            {/* invite to share a trip or something interesting */}
+            <View style={[styles.share, { backgroundColor: c.surface, borderColor: c.divider }]}>
+              <Txt v="bodyMedium">{t('share.title')}</Txt>
+              <Txt v="caption" color={c.textSecondary} style={{ marginTop: 2 }}>{t('share.sub')}</Txt>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+                {POST_TOPICS.map((x) => (
+                  <PressableScale key={x.id} onPress={() => router.push({ pathname: '/compose', params: { topic: x.id } })} style={[styles.shareBtn, { backgroundColor: c.surfaceAlt }]}>
+                    <Txt v="captionMedium">{x.emoji} {t(`share.topics.${x.id}`)}</Txt>
+                  </PressableScale>
+                ))}
+              </View>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingTop: 12 }}>
+              <Chip label={t('share.all')} selected={!topic} onPress={() => setTopic(null)} />
+              {POST_TOPICS.map((x) => <Chip key={x.id} label={`${x.emoji} ${t(`share.topics.${x.id}`)}`} selected={topic === x.id} onPress={() => setTopic(topic === x.id ? null : x.id)} />)}
+            </ScrollView>
           </View>
         }
         ListFooterComponent={q.isFetchingNextPage ? <ActivityIndicator style={{ margin: 20 }} color={c.textSecondary} /> : undefined}
@@ -298,6 +323,9 @@ function Feed() {
 }
 
 const styles = StyleSheet.create({
+  tripBtn: { position: 'absolute', alignSelf: 'center', height: 42, paddingHorizontal: 18, borderRadius: 21, justifyContent: 'center', boxShadow: '0 6px 18px rgba(0,0,0,.2)' },
+  share: { marginTop: 14, padding: 14, borderRadius: radius.l, borderWidth: StyleSheet.hairlineWidth },
+  shareBtn: { height: 34, paddingHorizontal: 12, borderRadius: 17, justifyContent: 'center' },
   top: { position: 'absolute', top: 0, left: 0, right: 0 },
   center: { alignItems: 'center', justifyContent: 'center' },
   card: { width: '100%', maxWidth: 360, padding: 24, borderRadius: radius.xl, alignItems: 'center' },
