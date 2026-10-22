@@ -1,6 +1,6 @@
 import { BrandBackground } from '../src/components/BrandBackground';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Platform, Pressable, StyleSheet, View, useWindowDimensions, Linking } from 'react-native';
 import { goBack } from '../src/lib/nav';
 import { router } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -148,7 +148,7 @@ export default function Find() {
                 </PressableScale>
               ))}
             </View>
-            <Pressable onPress={request} style={{ marginTop: 18 }}>
+            <Pressable onPress={() => (Platform.OS !== 'web' && perm && !perm.canAskAgain ? Linking.openSettings() : request())} style={{ marginTop: 18 }}>
               <Txt v="captionMedium" color="rgba(255,255,255,0.7)">{t('camera.grant')}</Txt>
             </Pressable>
           </Animated.View>

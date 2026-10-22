@@ -10,7 +10,9 @@ import { ensureSession } from './api';
  * so purchases can be tried in a development build before the app is published.
  */
 const TEST_KEY = 'test_umMYLjMCnpTVMmrINHRijjpMUKi';
-const KEY = Platform.OS === 'ios' ? process.env.EXPO_PUBLIC_RC_IOS_KEY || TEST_KEY : process.env.EXPO_PUBLIC_RC_ANDROID_KEY || TEST_KEY;
+// release builds never fall back to the Test Store
+const STORE_KEY = Platform.OS === 'ios' ? process.env.EXPO_PUBLIC_RC_IOS_KEY : process.env.EXPO_PUBLIC_RC_ANDROID_KEY;
+const KEY = STORE_KEY || (__DEV__ ? TEST_KEY : '');
 export const ENTITLEMENT = 'max';
 
 let ready = false;
@@ -28,7 +30,7 @@ function apply(info: CustomerInfo) {
 /** Mounted once at start-up. */
 export function useBilling() {
   useEffect(() => {
-    if (ready) return;
+    if (ready || !KEY) return;
     try {
       if (__DEV__) Purchases.setLogLevel(LOG_LEVEL.WARN);
       Purchases.configure({ apiKey: KEY });

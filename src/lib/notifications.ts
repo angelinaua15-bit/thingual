@@ -12,19 +12,34 @@ if (Platform.OS !== 'web') {
   });
 }
 
+/** Ask once, at a moment that makes sense (after the first finished session, or when turning a reminder on). */
+export async function askNotifications(force = false) {
+  if (Platform.OS === 'web') return false;
+  const st = useApp.getState();
+  if (st.settings.notifyAsked && !force) return false;
+  try {
+    const p = await Notifications.requestPermissionsAsync();
+    useApp.getState().updateSettings({ notifyAsked: true });
+    return p.granted;
+  } catch {
+    return false;
+  }
+}
+
 /** Local notifications on the phone: Daily Drop at its release time and the review reminder. */
 export function useNotificationSchedule() {
   const onboarded = useApp((s) => s.onboarded);
   const notify = useApp((s) => s.settings.notify);
   const active = useApp((s) => s.settings.active);
   const ui = useApp((s) => s.settings.uiLang);
+  const asked = useApp((s) => !!s.settings.notifyAsked);
 
   useEffect(() => {
     if (Platform.OS === 'web' || !onboarded) return;
     (async () => {
       try {
-        let perm = await Notifications.getPermissionsAsync();
-        if (!perm.granted && (notify.drop || notify.review)) perm = await Notifications.requestPermissionsAsync();
+        // never ask at launch: the question comes in context (askNotifications) — here we only schedule
+        const perm = await Notifications.getPermissionsAsync();
         await Notifications.cancelAllScheduledNotificationsAsync();
         if (!perm.granted) return;
         if (notify.review) {
@@ -48,5 +63,5 @@ export function useNotificationSchedule() {
         // notifications are best-effort
       }
     })();
-  }, [onboarded, notify.drop, notify.review, notify.reviewHour, active, ui]);
+  }, [onboarded, asked, notify.drop, notify.review, notify.reviewHour, active, ui]);
 }

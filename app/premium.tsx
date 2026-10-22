@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { goBack } from '../src/lib/nav';
 import { router, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,13 +18,14 @@ import { haptic } from '../src/lib/feedback';
 import { FREE_TOPICS, LIMITS, useIsMax, type MaxReason } from '../src/lib/premium';
 import { TOPICS } from '../src/data/concepts';
 
-type Plan = 'monthly' | 'yearly' | 'family';
+type Plan = 'monthly' | 'yearly';
 const PLANS: { id: Plan; price: string; per: 'perMonth' | 'perYear'; save?: number; monthly?: string }[] = [
   { id: 'yearly', price: '$34.99', per: 'perYear', save: 42, monthly: '$2.92' },
   { id: 'monthly', price: '$4.99', per: 'perMonth' },
-  { id: 'family', price: '$54.99', per: 'perYear' },
 ];
 const GOLD = '#FFD66B';
+/** iOS / Android build with the store connected (the web has no store purchases) */
+const STORE = Platform.OS !== 'web';
 
 export default function Premium() {
   const { c } = useTheme();
@@ -32,12 +33,17 @@ export default function Premium() {
   const insets = useSafeAreaInsets();
   const waitlist = useApp((s) => s.maxWaitlist);
   const setWaitlist = useApp((s) => s.setMaxWaitlist);
-  const [plan, setPlan] = useState<Plan>(waitlist ?? 'yearly');
+  const [plan, setPlan] = useState<Plan>(waitlist === 'monthly' ? 'monthly' : 'yearly');
   const [storePlans, setStorePlans] = useState<StorePlan[]>([]);
   const [storePick, setStorePick] = useState<string | null>(null);
   const [buying, setBuying] = useState(false);
+  const [plansLoading, setPlansLoading] = useState(STORE);
+  const loadPlans = () => {
+    setPlansLoading(true);
+    getPlans().then(setStorePlans).catch(() => {}).finally(() => setPlansLoading(false));
+  };
   React.useEffect(() => {
-    if (billingAvailable()) getPlans().then(setStorePlans).catch(() => {});
+    if (STORE) setTimeout(loadPlans, billingAvailable() ? 0 : 600); // the SDK is configured right after start-up
   }, []);
   const purchase = async () => {
     const p = storePlans.find((x) => x.id === (storePick ?? storePlans[0]?.id));
@@ -129,7 +135,7 @@ export default function Premium() {
             ) : null}
             <Animated.View entering={FadeInDown.springify()} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <Crown size={30} color={GOLD} />
-              <View style={styles.soon}><Txt v="caption" color="#1F1B3A" style={{ fontFamily: fonts.semibold }}>{max ? t('max.active') : t('premium.soon')}</Txt></View>
+              {max || !STORE ? <View style={styles.soon}><Txt v="caption" color="#1F1B3A" style={{ fontFamily: fonts.semibold }}>{max ? t('max.active') : t('premium.inApp')}</Txt></View> : null}
             </Animated.View>
             <Animated.View entering={FadeInDown.delay(80).springify()}>
               <Txt style={{ fontFamily: fonts.serif, fontSize: 52, lineHeight: 56, color: '#fff', marginTop: 14 }}>{t('premium.title')}</Txt>
@@ -156,7 +162,7 @@ export default function Premium() {
                   <Crown size={18} color={GOLD} />
                   <Txt v="bodyMedium" color="#fff" style={{ flex: 1 }}>{t('max.activeUntil', { date: until })}</Txt>
                 </View>
-              ) : !trialUsed ? (
+              ) : !trialUsed && !STORE ? (
                 <>
                   <Pressable onPress={trial} style={styles.trialBtn}>
                     <Crown size={18} color="#1F1B3A" />
@@ -202,6 +208,11 @@ export default function Premium() {
                 <Pressable onPress={() => router.push({ pathname: '/legal/[doc]', params: { doc: 'privacy' } })}><Txt v="caption" color={c.textSecondary} style={{ textDecorationLine: 'underline' }}>{t('legal.privacy')}</Txt></Pressable>
               </View>
             </>
+          ) : !max && STORE ? (
+            <View style={{ marginTop: space.l, alignItems: 'center', gap: 10 }}>
+              <Txt v="callout" color={c.textSecondary} center>{plansLoading ? t('premium.loading') : t('premium.loadError')}</Txt>
+              {!plansLoading && <Button title={t('books.retry')} variant="secondary" size="m" onPress={loadPlans} />}
+            </View>
           ) : !max ? (
             <>
                     <Txt v="overline" color={c.textSecondary} style={styles.section}>{t('premium.plans')}</Txt>
@@ -262,7 +273,7 @@ export default function Premium() {
 
           {/* FAQ */}
           <Txt v="overline" color={c.textSecondary} style={styles.section}>{t('premium.faq')}</Txt>
-          {[1, 2, 3].map((n) => (
+          {[1, 2].map((n) => (
             <Pressable key={n} onPress={() => setOpen(open === n ? null : n)} style={[styles.faq, { borderColor: c.divider }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <Txt v="bodyMedium" style={{ flex: 1 }}>{t(`premium.q${n}`)}</Txt>

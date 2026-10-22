@@ -1,5 +1,5 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Linking } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import type { Detection } from '../lib/cocoMap';
 
@@ -38,7 +38,9 @@ export const LiveCamera = forwardRef<LiveCameraHandle, LiveCameraProps>(function
       return pic ? { uri: pic.uri, base64: pic.base64 ?? undefined, detections: [] } : null;
     },
     request: async () => {
-      await request();
+      // after "Don't allow" the system won't ask again — open the app's settings instead
+      if (perm && !perm.granted && !perm.canAskAgain) Linking.openSettings();
+      else await request();
     },
   }));
 

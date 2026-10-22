@@ -104,7 +104,7 @@ export default function Learn() {
             <Animated.View key={x.href} entering={FadeInDown.delay(150 + i * 40)} style={{ width: '48.5%', flexGrow: 1 }}>
               <PressableScale onPress={() => router.push(x.href)} style={[styles.tile, { backgroundColor: c.surface, borderColor: c.divider }]}>
                 <Image source={{ uri: emojiUrl(x.emoji) }} style={{ width: 36, height: 36 }} />
-                <Txt v="bodyMedium" numberOfLines={1} style={{ marginTop: 10 }}>{x.title}</Txt>
+                <Txt v="bodyMedium" numberOfLines={2} style={{ marginTop: 10 }}>{x.title}</Txt>
                 <Txt v="caption" color={c.textSecondary} numberOfLines={2}>{x.sub}</Txt>
               </PressableScale>
             </Animated.View>

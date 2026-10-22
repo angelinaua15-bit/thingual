@@ -17,7 +17,6 @@ import { dayDiff, FLAMES, FlameId, MAX_FREEZES, PRICES, REPAIR_WINDOW } from '..
 import { useIsMax } from '../src/lib/premium';
 import { haptic } from '../src/lib/feedback';
 
-const PACKS = [{ n: 500, price: '$0.99' }, { n: 1500, price: '$2.99', tag: '+20%' }, { n: 5000, price: '$7.99', tag: '+60%' }];
 
 export default function Shop() {
   const { c } = useTheme();
@@ -106,36 +105,13 @@ export default function Shop() {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <Crown size={24} color="#FFD66B" />
               <Txt style={{ fontFamily: fonts.serif, fontSize: 32, lineHeight: 36, color: '#fff', flex: 1 }}>{t('shop.max_title')}</Txt>
-              <View style={styles.soon}><Txt v="caption" color="#1F1B3A" style={{ fontFamily: fonts.semibold }}>{t('shop.soon')}</Txt></View>
             </View>
             <Txt v="callout" color="rgba(255,255,255,.75)" style={{ marginTop: 4 }}>{t('shop.maxSub')}</Txt>
-            <View style={{ gap: 8, marginTop: 14 }}>
-              {ta('shop.maxPerks').map((p) => (
-                <View key={p} style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
-                  <Check size={16} color="#FFD66B" />
-                  <Txt v="callout" color="#fff">{p}</Txt>
-                </View>
-              ))}
-            </View>
             <Txt v="captionMedium" color="#FFD66B" style={{ marginTop: 14 }}>{t('premium.open')} →</Txt>
           </LinearGradient>
           </Pressable>
         </Animated.View>
 
-        {/* spark packs */}
-        <Txt v="overline" color={c.textSecondary} style={styles.section}>{t('shop.packs')}</Txt>
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          {PACKS.map((p) => (
-            <View key={p.n} style={[styles.pack, { backgroundColor: c.surface, borderColor: c.divider }]}>
-              {p.tag && <View style={[styles.tag, { backgroundColor: c.drop }]}><Txt v="caption" color="#fff" style={{ fontSize: 11 }}>{p.tag}</Txt></View>}
-              <Sparkle size={26} color="#F59F00" fill="#F59F00" />
-              <Txt style={{ fontFamily: fonts.serif, fontSize: 26, lineHeight: 30, color: c.text, marginTop: 6 }}>{p.n}</Txt>
-              <Txt v="caption" color={c.textSecondary}>{p.price}</Txt>
-              <View style={[styles.soonSmall, { backgroundColor: c.surfaceAlt }]}><Txt v="caption" color={c.textSecondary}>{t('shop.soon')}</Txt></View>
-            </View>
-          ))}
-        </View>
-        <Txt v="caption" color={c.textTertiary} style={{ marginTop: 10 }}>{t('shop.soonNote')}</Txt>
       </ScrollView>
     </View>
   );

@@ -18,6 +18,7 @@ import { useApp, Level } from '../src/store/useApp';
 import { LANGUAGES, LangCode, UI_LANGUAGES } from '../src/data/languages';
 import { MaxBanner } from '../src/components/MaxBanner';
 import { deleteMyData, linkEmail, myEmail } from '../src/lib/api';
+import { askNotifications } from '../src/lib/notifications';
 import { qc, useNet } from '../src/lib/queries';
 
 export default function SettingsScreen() {
@@ -35,7 +36,18 @@ export default function SettingsScreen() {
   const uid = useNet((x) => x.uid);
 
   const confirmDelete = () => {
-    const doIt = async () => { await deleteMyData().catch(() => {}); qc.clear(); st.resetAll(); router.replace('/onboarding'); };
+    const doIt = async () => {
+      try {
+        await deleteMyData();
+      } catch {
+        toast(t('settings.deleteFailed'));
+        return;
+      }
+      qc.clear();
+      st.resetAll();
+      toast(t('settings.deleted'), 'success');
+      router.replace('/onboarding');
+    };
     if (Platform.OS === 'web') {
       if (window.confirm(t('settings.deleteConfirm'))) doIt();
     } else Alert.alert(t('settings.deleteAccount'), t('settings.deleteConfirm'), [{ text: t('common.cancel'), style: 'cancel' }, { text: t('common.delete'), style: 'destructive', onPress: doIt }]);
@@ -100,8 +112,8 @@ export default function SettingsScreen() {
 
         {Platform.OS !== 'web' && (
           <Group title={t('settings.notifications')}>
-            <ListRow title={t('settings.nDrop')} right={<Toggle value={s.notify.drop} onChange={(v) => st.updateSettings({ notify: { ...s.notify, drop: v } })} />} />
-            <ListRow title={t('settings.nReview')} right={<Toggle value={s.notify.review} onChange={(v) => st.updateSettings({ notify: { ...s.notify, review: v } })} />} />
+            <ListRow title={t('settings.nDrop')} right={<Toggle value={s.notify.drop} onChange={(v) => { if (v) askNotifications(true); st.updateSettings({ notify: { ...s.notify, drop: v } }); }} />} />
+            <ListRow title={t('settings.nReview')} right={<Toggle value={s.notify.review} onChange={(v) => { if (v) askNotifications(true); st.updateSettings({ notify: { ...s.notify, review: v } }); }} />} />
             <View style={{ paddingHorizontal: 16, paddingVertical: 12, gap: 8 }}>
               <Txt v="captionMedium" color={c.textSecondary}>{t('settings.reviewTime')}</Txt>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>

@@ -8,9 +8,9 @@ Deno.serve(async (req) => {
     const { image } = (await req.json()) as { image: string };
     if (!image) return json({ error: 'image required' }, 400);
     if (image.length > 4_000_000) return json({ error: 'image too large' }, 413);
-    const key = Deno.env.get('ANTHROPIC_API_KEY');
-    // without a key we can't check — don't block people from posting
-    if (!key) return json({ allowed: true, checked: false });
+    const key = (Deno.env.get('ANTHROPIC_API_KEY') ?? '').trim().replace(/^['"]+|['"]+$/g, '').replace(/\s+/g, '');
+    // fail closed: a photo that couldn't be checked is not published
+    if (!key) return json({ allowed: false, checked: false, error: 'no_key' });
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
@@ -34,13 +34,17 @@ Deno.serve(async (req) => {
         }],
       }),
     });
-    if (!res.ok) return json({ allowed: true, checked: false });
+    if (!res.ok) {
+      console.error('anthropic error', res.status, (await res.text()).slice(0, 200));
+      return json({ allowed: false, checked: false, error: 'api_' + res.status });
+    }
     const data = await res.json();
     const text: string = data?.content?.[0]?.text ?? '{}';
     const parsed = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
     return json({ allowed: parsed.allowed !== false, reason: String(parsed.reason ?? ''), checked: true });
   } catch (e) {
-    return json({ allowed: true, checked: false, error: String(e) });
+    console.error('moderate failed', String(e));
+    return json({ allowed: false, checked: false, error: String(e) });
   }
 });
 

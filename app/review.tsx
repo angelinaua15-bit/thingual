@@ -17,6 +17,7 @@ import { CONCEPTS, conceptById, fullWord, labelOf } from '../src/data/concepts';
 import { lang, LangCode } from '../src/data/languages';
 import { Answer, formatInterval, isDue, mastery, preview } from '../src/lib/srs';
 import { haptic, speak } from '../src/lib/feedback';
+import { askNotifications } from '../src/lib/notifications';
 import { listenOnce, similarity, speechRecognitionAvailable } from '../src/lib/speech';
 
 type ExType = 'recall' | 'listen' | 'choose' | 'type' | 'speak' | 'sentence' | 'article';
@@ -97,6 +98,8 @@ export default function Review() {
       logSession(queue.length, correct + (a !== 'again' ? 1 : 0), minutes());
       setDone(true);
       haptic.success();
+      // first finished session: the right moment to offer a daily reminder
+      setTimeout(() => askNotifications(), 1200);
     } else setIdx(idx + 1);
   };
 

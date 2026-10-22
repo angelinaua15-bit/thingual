@@ -47,6 +47,8 @@ export type Settings = {
   voice: 'female' | 'male';
   slowVoice: boolean;
   notify: { drop: boolean; review: boolean; friends: boolean; weekly: boolean; reviewHour: number };
+  /** we already asked for notification permission (asked in context, never at launch) */
+  notifyAsked?: boolean;
   sounds: boolean;
   haptics: boolean;
   reduceMotion: boolean;

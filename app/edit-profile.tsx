@@ -9,7 +9,7 @@ import { Avatar, Button, Txt } from '../src/components/ui';
 import { toast } from '../src/components/Overlay';
 import { useTheme, fonts, radius, space } from '../src/theme/tokens';
 import { useT } from '../src/i18n';
-import { handleAvailable, normalizeHandle, updateProfile, uploadImage } from '../src/lib/api';
+import { handleAvailable, normalizeHandle, updateProfile, uploadImage, PhotoRejected, PhotoUnchecked } from '../src/lib/api';
 import { useMe, useNet } from '../src/lib/queries';
 import { pickImage } from '../src/lib/pickImage';
 import { haptic } from '../src/lib/feedback';
@@ -60,7 +60,7 @@ export default function EditProfile() {
       toast(t('social.saved'));
       goBack();
     } catch (e) {
-      setError((e as { code?: string })?.code === '23505' ? t('social.handleTaken') : t('social.offline'));
+      setError((e as { code?: string })?.code === '23505' ? t('social.handleTaken') : e instanceof PhotoRejected ? t('safety.rejected') : e instanceof PhotoUnchecked ? t('safety.unchecked') : t('social.offline'));
     } finally {
       setSaving(false);
     }

@@ -1,4 +1,4 @@
-import { PhotoRejected } from '../src/lib/api';
+import { PhotoRejected, PhotoUnchecked } from '../src/lib/api';
 import { BrandBackground } from '../src/components/BrandBackground';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, ImageStyle, StyleProp } from 'react-native';
@@ -83,7 +83,7 @@ export default function Drop() {
       qc.invalidateQueries({ queryKey: ['feed'] });
       haptic.success();
     } catch (e) {
-      toast(e instanceof PhotoRejected ? t('safety.rejected') : t('social.offline'), 'default');
+      toast(e instanceof PhotoRejected ? t('safety.rejected') : e instanceof PhotoUnchecked ? t('safety.unchecked') : t('social.offline'), 'default');
     } finally {
       setPosting(false);
     }

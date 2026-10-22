@@ -10,7 +10,7 @@ import { PostCard } from './PostCard';
 import { toast } from './Overlay';
 import { useTheme, fonts, space } from '../theme/tokens';
 import { useT, languageName } from '../i18n';
-import { follow, followingIds, getProfile, unfollow, updateProfile, uploadImage, userPosts, type Profile } from '../lib/api';
+import { follow, followingIds, getProfile, unfollow, updateProfile, uploadImage, userPosts, type Profile, PhotoRejected, PhotoUnchecked } from '../lib/api';
 import { useLikedSet, useNet } from '../lib/queries';
 import { pickImage } from '../lib/pickImage';
 import { haptic } from '../lib/feedback';
@@ -68,8 +68,8 @@ export function ProfileView({ uid, header, footer }: { uid: string; header?: Rea
       qc.setQueryData(['me'], updated);
       qc.invalidateQueries({ queryKey: ['feed'] });
       haptic.success();
-    } catch {
-      toast(t('social.offline'), 'default');
+    } catch (e) {
+      toast(e instanceof PhotoRejected ? t('safety.rejected') : e instanceof PhotoUnchecked ? t('safety.unchecked') : t('social.offline'), 'default');
     } finally {
       setUploading(false);
     }

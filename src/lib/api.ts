@@ -132,6 +132,8 @@ export async function searchProfiles(q: string): Promise<Profile[]> {
 /* ---------------- images ---------------- */
 export async function uploadImage(bucket: 'avatars' | 'posts', uri: string): Promise<string> {
   const id = await ensureSession();
+  // avatars are public too, so they pass the same safety check as posts (posts are checked in createPost)
+  if (bucket === 'avatars') await moderatePhoto(uri);
   const res = await fetch(await resolvePhoto(uri));
   const buf = await res.arrayBuffer();
   const type = res.headers.get('content-type')?.startsWith('image/') ? res.headers.get('content-type')! : 'image/jpeg';
@@ -267,14 +269,20 @@ export async function myDropToday(day: string): Promise<PostRow | null> {
 export class PhotoRejected extends Error {
   constructor(public reason: string) { super('photo_rejected'); }
 }
+/** The safety check couldn't run (no connection to the AI) — try again later. */
+export class PhotoUnchecked extends Error {
+  constructor() { super('photo_unchecked'); }
+}
 
 /** AI check before a photo becomes public (function `moderate`). Fails open if the check itself is unavailable. */
 export async function moderatePhoto(uri: string) {
   const { toBase64 } = await import('./pickImage');
   const image = await toBase64(await resolvePhoto(uri), 640);
-  if (!image) return;
+  // fail closed: if the safety check can't run, the photo is not published
+  if (!image) throw new PhotoUnchecked();
   const { data, error } = await supabase.functions.invoke('moderate', { body: { image } });
-  if (!error && data && data.allowed === false) throw new PhotoRejected(String(data.reason ?? ''));
+  if (error || !data || data.checked === false) throw new PhotoUnchecked();
+  if (data.allowed === false) throw new PhotoRejected(String(data.reason ?? ''));
 }
 
 /** Errors on people’s devices land in `client_errors` so they can be fixed. */
@@ -389,18 +397,13 @@ export async function myEmail(): Promise<string | null> {
 export async function deleteMyData() {
   const id = await ensureSession();
   // full deletion on the server (auth user + files); fall back to removing rows if the function is unavailable
+  void id;
+  // full deletion on the server (auth user, profile, posts, files); if it fails nothing is wiped locally
   const { error } = await supabase.functions.invoke('delete-account', { body: {} });
-  if (!error) {
-    await supabase.auth.signOut();
-    sessionPromise = null;
-    currentUid = null;
-    return;
-  }
-  await supabase.from('posts').delete().eq('author_id', id);
-  await supabase.from('premium_waitlist').delete().eq('user_id', id);
-  await supabase.from('profiles').delete().eq('id', id);
+  if (error) throw error;
   await supabase.auth.signOut();
   sessionPromise = null;
+  currentUid = null;
 }
 
 export async function dropPosts(day: string, concept: string): Promise<PostRow[]> {

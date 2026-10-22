@@ -1,4 +1,4 @@
-import { PhotoRejected } from '../src/lib/api';
+import { PhotoRejected, PhotoUnchecked } from '../src/lib/api';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { goBack } from '../src/lib/nav';
@@ -73,7 +73,7 @@ export default function Compose() {
       toast(t('social.posted'));
       goBack();
     } catch (e) {
-      toast(e instanceof PhotoRejected ? t('safety.rejected') : t('social.offline'), 'default');
+      toast(e instanceof PhotoRejected ? t('safety.rejected') : e instanceof PhotoUnchecked ? t('safety.unchecked') : t('social.offline'), 'default');
     } finally {
       setPosting(false);
     }

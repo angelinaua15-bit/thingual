@@ -50,7 +50,8 @@ export default function Tutor() {
       speak(r.reply, s.active);
       setTimeout(() => list.current?.scrollToEnd({ animated: true }), 80);
     } catch (e) {
-      setError(String((e as Error).message).includes('no_key') ? t('tutor.noKey') : t('social.offline'));
+      const m = String((e as Error).message);
+      setError(m.includes('no_key') || m.startsWith('api_') ? t('tutor.noKey') : t('social.offline'));
     } finally {
       setBusy(false);
     }
