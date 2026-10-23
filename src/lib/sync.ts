@@ -15,6 +15,7 @@ const KEYS = [
   'onboarded', 'goal', 'quizScore', 'settings', 'words', 'collections', 'history', 'learnStreak', 'dropStreak', 'bestStreak',
   'activeDays', 'frozenDays', 'sparks', 'freezes', 'claimed', 'flames', 'flame', 'achievements', 'exprs', 'drops', 'quests', 'weekXp', 'grammar', 'maxUntil', 'trialUsed', 'maxFreezeMonth', 'maxWaitlist', 'lostStreak', 'notebook', 'noteTomb', 'books', 'crystals', 'crystalEarn', 'unlocks', 'timeToday',
 ] as const;
+const QUIET: readonly string[] = ['timeToday', 'crystals', 'crystalEarn'];
 type Snapshot = Partial<Pick<S, (typeof KEYS)[number]>> & { profile?: Partial<S['profile']> };
 
 const portablePhoto = (p: string) => (p && /^https?:/.test(p) ? p : '');
@@ -179,11 +180,18 @@ export function initSync() {
     prev = s;
     // only real edits on this device count — not loading from storage or applying a pull
     if (applying || !s.hydrated || !p.hydrated) return;
-    if (!KEYS.some((k) => (s as unknown as Record<string, unknown>)[k] !== (p as unknown as Record<string, unknown>)[k])) return;
+    const changed = KEYS.filter((k) => (s as unknown as Record<string, unknown>)[k] !== (p as unknown as Record<string, unknown>)[k]);
+    if (!changed.length) return;
     useApp.setState({ localChangedAt: Date.now() });
     if (!enabled) return;
+    const run = () => { pushTimer = null; push().catch(() => {}); };
+    // the time counter ticks every 10 s: batch those into one upload every 2 minutes
+    if (changed.every((k) => QUIET.includes(k))) {
+      if (!pushTimer) pushTimer = setTimeout(run, 120_000);
+      return;
+    }
     if (pushTimer) clearTimeout(pushTimer);
-    pushTimer = setTimeout(() => push().catch(() => {}), 4000);
+    pushTimer = setTimeout(run, 4000);
   });
 
   // a magic link opened on this device signs into the existing account → bring its progress here

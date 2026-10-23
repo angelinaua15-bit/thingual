@@ -348,11 +348,17 @@ export type Activity =
 
 export async function activity(): Promise<Activity[]> {
   const me = await ensureSession();
-  const [f, l, r] = await Promise.all([
+  // replies: a self-join on posts is ambiguous for PostgREST, so first my latest posts, then replies to them
+  const mine = supabase.from('posts').select('id').eq('author_id', me).is('parent_id', null).order('created_at', { ascending: false }).limit(100);
+  const [f, l, m] = await Promise.all([
     supabase.from('follows').select('created_at, user:profiles!follows_follower_id_fkey(*)').eq('following_id', me).order('created_at', { ascending: false }).limit(30),
     supabase.from('likes').select('created_at, user:profiles(*), post:posts!inner(id, body, photo_url, author_id)').eq('post.author_id', me).neq('user_id', me).order('created_at', { ascending: false }).limit(30),
-    supabase.from('posts').select('id, created_at, body, photo_url, parent_id, user:profiles!posts_author_id_fkey(*), parent:posts!posts_parent_id_fkey!inner(author_id)').eq('parent.author_id', me).neq('author_id', me).order('created_at', { ascending: false }).limit(30),
+    mine,
   ]);
+  const ids = (m.data ?? []).map((x) => x.id as string);
+  const r = ids.length
+    ? await supabase.from('posts').select('id, created_at, body, photo_url, parent_id, user:profiles!posts_author_id_fkey(*)').in('parent_id', ids).neq('author_id', me).order('created_at', { ascending: false }).limit(30)
+    : { data: [] as Record<string, unknown>[] };
   const out: Activity[] = [];
   (f.data ?? []).forEach((x) => out.push({ kind: 'follow', at: x.created_at as string, user: x.user as unknown as Profile }));
   (l.data ?? []).forEach((x) => out.push({ kind: 'like', at: x.created_at as string, user: x.user as unknown as Profile, post: x.post as unknown as { id: string; body: string; photo_url: string | null } }));

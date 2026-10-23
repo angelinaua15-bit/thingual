@@ -35,6 +35,7 @@ Deno.serve(async (req) => {
       }),
     });
     if (!res.ok) {
+      if (res.status === 401) console.error('key check', describeKey(Deno.env.get('ANTHROPIC_API_KEY')));
       console.error('anthropic error', res.status, (await res.text()).slice(0, 200));
       return json({ allowed: false, checked: false, error: 'api_' + res.status });
     }
@@ -47,6 +48,13 @@ Deno.serve(async (req) => {
     return json({ allowed: false, checked: false, error: String(e) });
   }
 });
+
+// safe description for the logs: shape only, never the secret itself
+const describeKey = (k?: string) => {
+  const raw = k ?? '';
+  const c = raw.trim().replace(/^['"]+|['"]+$/g, '').replace(/\s+/g, '');
+  return JSON.stringify({ rawLength: raw.length, length: c.length, prefix: c.slice(0, 10), last4: c.slice(-4), hadSpacesOrQuotes: raw !== c });
+};
 
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, content-type, apikey, x-client-info', 'Access-Control-Allow-Methods': 'POST, OPTIONS' };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...cors, 'content-type': 'application/json' } });
