@@ -67,6 +67,7 @@ Thingual перетворює світ навколо на урок мови.
 - Privacy policy: https://thingual.vercel.app/legal/privacy
 - Terms (EULA): https://thingual.vercel.app/legal/terms
 - Support / marketing: https://thingual.vercel.app
+- Contact email (store listing, privacy policy): thingual.app@gmail.com
 
 ## App Privacy (App Store) / Data safety (Google Play)
 | Data | Collected | Linked to user | Purpose |
