@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import { Check, Gift, Heart, Lock, MessageCircle, Star, Trophy } from './icons';
 import { Txt, PressableScale } from './ui';
 import { EmojiArt } from './NoteBits';
@@ -9,6 +9,8 @@ import { useTheme, fonts } from '../theme/tokens';
 import { useT } from '../i18n';
 import { useApp, heartsOf, HEARTS_MAX } from '../store/useApp';
 import { useIsMax } from '../lib/premium';
+import { haptic } from '../lib/feedback';
+import { useMoodStyle, type Mood } from './Fx';
 import type { NodeKind } from '../data/path';
 import { wearById } from '../data/wardrobe';
 
@@ -57,6 +59,15 @@ export function PathNodeButton({ kind, status, color, onPress, label }: { kind: 
     pulse.value = withRepeat(withSequence(withTiming(1.12, { duration: 900 }), withTiming(1, { duration: 900 })), -1);
     bob.value = withRepeat(withSequence(withTiming(-5, { duration: 700, easing: Easing.inOut(Easing.quad) }), withTiming(0, { duration: 700, easing: Easing.inOut(Easing.quad) })), -1);
   }, [status]);
+  const press = useSharedValue(0);
+  const shake = useSharedValue(0);
+  useEffect(() => {
+    if (kind !== 'chest' || status === 'done' || status === 'locked') return;
+    // the chest wiggles now and then: "open me!"
+    shake.value = withRepeat(withSequence(withTiming(0, { duration: 1400 }), withTiming(-12, { duration: 90 }), withTiming(12, { duration: 90 }), withTiming(-8, { duration: 90 }), withTiming(0, { duration: 90 })), -1);
+  }, [kind, status]);
+  const top = useAnimatedStyle(() => ({ transform: [{ translateY: press.value * 6 }] }));
+  const wiggle = useAnimatedStyle(() => ({ transform: [{ rotate: `${shake.value}deg` }] }));
   const ring = useAnimatedStyle(() => ({ transform: [{ scale: pulse.value }], opacity: 2 - pulse.value * 1.4 }));
   const bubble = useAnimatedStyle(() => ({ transform: [{ translateY: bob.value }] }));
   const locked = status === 'locked';
@@ -73,14 +84,22 @@ export function PathNodeButton({ kind, status, color, onPress, label }: { kind: 
       )}
       <View style={{ width: size + 18, height: size + 18, alignItems: 'center', justifyContent: 'center' }}>
         {status === 'current' && <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: 99, borderWidth: 5, borderColor: color }, ring]} />}
-        <PressableScale onPress={onPress} scaleTo={0.92} accessibilityRole="button" accessibilityLabel={`${kind} ${status}`}
-          style={[styles.node, { width: size, height: size, borderRadius: size / 2, backgroundColor: bg, borderBottomColor: locked ? (isDark ? '#1E343C' : '#C9C8C2') : shade(bg) }]}>
-          {kind === 'chest' && status !== 'done' ? (
-            <EmojiArt emoji="🎁" size={38} />
-          ) : (
-            <Icon size={kind === 'review' ? 32 : 28} color={locked ? (isDark ? '#5E7A83' : '#A8A7A1') : '#fff'} strokeWidth={2.8} fill={kind === 'lesson' && status !== 'locked' && status !== 'done' ? '#fff' : 'transparent'} />
-          )}
-        </PressableScale>
+        {/* a chunky 3D button: the lip under it disappears while pressed */}
+        <View style={{ width: size, height: size + 6 }}>
+          <View style={[StyleSheet.absoluteFill, { top: 6, borderRadius: size / 2, backgroundColor: locked ? (isDark ? '#1E343C' : '#C9C8C2') : shade(bg, 0.72) }]} />
+          <Pressable onPressIn={() => { press.value = withTiming(1, { duration: 70 }); }} onPressOut={() => { press.value = withSpring(0, { damping: 9 }); }} onPress={onPress}
+            accessibilityRole="button" accessibilityLabel={`${kind} ${status}`}>
+            <Animated.View style={[styles.node, { width: size, height: size, borderRadius: size / 2, backgroundColor: bg }, top]}>
+              {/* glossy highlight */}
+              <View style={[styles.gloss, { width: size * 0.5, height: size * 0.18, borderRadius: size, top: size * 0.12, left: size * 0.18 }]} />
+              {kind === 'chest' && status !== 'done' ? (
+                <Animated.View style={wiggle}><EmojiArt emoji="🎁" size={40} /></Animated.View>
+              ) : (
+                <Icon size={kind === 'review' ? 32 : 28} color={locked ? (isDark ? '#5E7A83' : '#A8A7A1') : '#fff'} strokeWidth={2.8} fill={kind === 'lesson' && status !== 'locked' && status !== 'done' ? '#fff' : 'transparent'} />
+              )}
+            </Animated.View>
+          </Pressable>
+        </View>
       </View>
     </View>
   );
@@ -104,13 +123,17 @@ export function FoxArt({ size, look }: { size: number; look?: { hat?: string; fa
 }
 
 /** The fox who keeps you company on the path. */
-export function Mascot({ size = 84, say }: { size?: number; say?: string }) {
+export function Mascot({ size = 84, say, mood = 'idle', moodKey, tappable = true }: { size?: number; say?: string; mood?: Mood; moodKey?: unknown; tappable?: boolean }) {
   const { c } = useTheme();
-  const y = useSharedValue(0);
+  // a tap makes Tingo jump
+  const [poke, setPoke] = useState(0);
+  const current: Mood = poke ? 'happy' : mood;
+  const a = useMoodStyle(current, poke || moodKey);
   useEffect(() => {
-    y.value = withRepeat(withSequence(withTiming(-6, { duration: 1100, easing: Easing.inOut(Easing.quad) }), withTiming(0, { duration: 1100, easing: Easing.inOut(Easing.quad) })), -1);
-  }, []);
-  const a = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
+    if (!poke) return;
+    const id = setTimeout(() => setPoke(0), 900);
+    return () => clearTimeout(id);
+  }, [poke]);
   return (
     <View style={{ alignItems: 'center' }}>
       {say ? (
@@ -119,7 +142,10 @@ export function Mascot({ size = 84, say }: { size?: number; say?: string }) {
         </View>
       ) : null}
       {/* room above for a hat */}
-      <Animated.View style={[a, { marginTop: say ? size * 0.28 : 0 }]}><FoxArt size={size} /></Animated.View>
+      <Pressable disabled={!tappable} onPress={() => { haptic.light(); setPoke(Date.now()); }} style={{ marginTop: say ? size * 0.28 : 0, alignItems: 'center' }}>
+        <Animated.View style={a}><FoxArt size={size} /></Animated.View>
+        <View style={{ width: size * 0.6, height: size * 0.08, borderRadius: size, backgroundColor: 'rgba(0,0,0,.12)', marginTop: 2 }} />
+      </Pressable>
     </View>
   );
 }
@@ -135,18 +161,27 @@ export function useMascotLine() {
 export function ChunkyButton({ title, color, onPress, disabled }: { title: string; color: string; onPress: () => void; disabled?: boolean }) {
   const { c, isDark } = useTheme();
   const bg = disabled ? (isDark ? '#23424B' : '#E5E4DF') : color;
+  const press = useSharedValue(0);
+  const top = useAnimatedStyle(() => ({ transform: [{ translateY: press.value * 4 }] }));
   return (
-    <PressableScale onPress={disabled ? undefined : onPress} scaleTo={0.98} accessibilityRole="button" accessibilityState={{ disabled }}
-      style={[styles.chunky, { backgroundColor: bg, borderBottomColor: disabled ? 'transparent' : shade(color) }]}>
-      <Txt style={{ fontFamily: fonts.semibold, fontSize: 16, letterSpacing: 0.6, textTransform: 'uppercase', color: disabled ? c.textTertiary : '#fff' }}>{title}</Txt>
-    </PressableScale>
+    <Pressable onPress={disabled ? undefined : () => { haptic.light(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled }}
+      onPressIn={() => { if (!disabled) press.value = withTiming(1, { duration: 60 }); }} onPressOut={() => { press.value = withSpring(0, { damping: 10 }); }}
+      style={{ height: 58 }}>
+      <View style={[StyleSheet.absoluteFill, { top: 4, borderRadius: 16, backgroundColor: disabled ? 'transparent' : shade(color) }]} />
+      <Animated.View style={[styles.chunky, { backgroundColor: bg }, top]}>
+        <View style={[styles.chunkyGloss, { opacity: disabled ? 0 : 1 }]} />
+        <Txt style={{ fontFamily: fonts.semibold, fontSize: 16, letterSpacing: 0.6, textTransform: 'uppercase', color: disabled ? c.textTertiary : '#fff' }}>{title}</Txt>
+      </Animated.View>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  chunky: { height: 54, borderRadius: 16, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 4 },
+  chunky: { height: 54, borderRadius: 16, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 5, height: 32, paddingHorizontal: 10, borderRadius: 16, borderWidth: StyleSheet.hairlineWidth },
-  node: { alignItems: 'center', justifyContent: 'center', borderBottomWidth: 6 },
+  node: { alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  chunkyGloss: { position: 'absolute', top: 6, left: 14, right: 14, height: 6, borderRadius: 6, backgroundColor: 'rgba(255,255,255,.22)' },
+  gloss: { position: 'absolute', backgroundColor: 'rgba(255,255,255,.28)', transform: [{ rotate: '-18deg' }] },
   bubble: { position: 'absolute', top: -40, zIndex: 2, paddingHorizontal: 14, height: 34, borderRadius: 12, borderWidth: 1.5, justifyContent: 'center', alignItems: 'center' },
   tail: { position: 'absolute', bottom: -6, width: 10, height: 10, transform: [{ rotate: '45deg' }], borderRightWidth: 1.5, borderBottomWidth: 1.5 },
   say: { maxWidth: 150, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, borderWidth: StyleSheet.hairlineWidth, marginBottom: 4 },

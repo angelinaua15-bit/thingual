@@ -631,6 +631,7 @@ export const en = {
     hat: 'Head', face: 'Eyes', neck: 'Neck', owned: 'Yours', wearing: 'Wearing', bought: 'Looks great! 🦊',
     buy: 'Buy {name} · {n} 💎', hint: 'Tap something you own to put it on or take it off.',
   },
+  reward: { crystals: 'crystals!', collect: 'Collect' },
   limits: { left: '{n} left today' },
 };
 

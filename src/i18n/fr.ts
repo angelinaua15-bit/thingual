@@ -633,5 +633,6 @@ export const fr: Strings = {
     hat: 'Tête', face: 'Yeux', neck: 'Cou', owned: 'À toi', wearing: 'Porté', bought: 'Trop stylé ! 🦊',
     buy: 'Acheter {name} · {n} 💎', hint: 'Touche un objet à toi pour le mettre ou l’enlever.',
   },
+  reward: { crystals: 'cristaux !', collect: 'Récupérer' },
   limits: { left: 'Encore {n} aujourd’hui' },
 };

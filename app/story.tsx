@@ -7,6 +7,7 @@ import { Check, Volume2, X } from '../src/components/icons';
 import { Txt, ProgressBar } from '../src/components/ui';
 import { EmojiArt } from '../src/components/NoteBits';
 import { ChunkyButton, FoxArt, Mascot } from '../src/components/PathBits';
+import { Confetti } from '../src/components/Fx';
 import { useTheme, fonts, radius, space } from '../src/theme/tokens';
 import { useT } from '../src/i18n';
 import { useApp } from '../src/store/useApp';
@@ -102,7 +103,8 @@ export default function StoryScreen() {
   if (done != null) {
     return (
       <View style={{ flex: 1, backgroundColor: c.background, alignItems: 'center', justifyContent: 'center', padding: space.l, paddingBottom: insets.bottom + 16 }}>
-        <Animated.View entering={ZoomIn.springify().damping(12)}><Mascot size={130} /></Animated.View>
+        <Confetti count={80} />
+        <Animated.View entering={ZoomIn.springify().damping(12)}><Mascot size={130} mood="dance" /></Animated.View>
         <Txt style={{ fontFamily: fonts.serif, fontSize: 36, lineHeight: 42, color: c.text, textAlign: 'center', marginTop: 12 }}>{t('stories.done')}</Txt>
         <Txt v="callout" color={c.textSecondary} center style={{ marginTop: 6, maxWidth: 340 }}>{t('stories.doneSub', { n: story.lines.length })}</Txt>
         <View style={[styles.xp, { backgroundColor: '#F59E0B' }]}><Txt v="headline" color="#fff">+{done} XP</Txt></View>

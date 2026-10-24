@@ -2,12 +2,14 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeInDown, SlideInDown, ZoomIn, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, FadeInDown, SlideInDown, ZoomIn, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import { Check, Heart, Timer, Turtle, Volume2, X, Zap } from '../src/components/icons';
 import { Txt, Button, ProgressBar, PressableScale } from '../src/components/ui';
 import { EmojiArt } from '../src/components/NoteBits';
 import { Sheet } from '../src/components/Overlay';
 import { ChunkyButton, Mascot, shade, useHearts } from '../src/components/PathBits';
+import { Burst, Confetti, CountUp, Floaty } from '../src/components/Fx';
+import { SCENERY } from '../src/data/scenery';
 import { useTheme, fonts, radius, space } from '../src/theme/tokens';
 import { useT, languageName } from '../src/i18n';
 import { useApp, heartsOf } from '../src/store/useApp';
@@ -50,6 +52,9 @@ export default function Lesson() {
   const correct = useRef(0);
   const started = useRef(Date.now());
   const ex = queue[i];
+  const [lost, setLost] = useState(0);
+  const heartShake = useSharedValue(1);
+  const heartStyle = useAnimatedStyle(() => ({ transform: [{ scale: heartShake.value }] }));
 
   useEffect(() => {
     if (!node) router.replace('/(tabs)/path');
@@ -102,6 +107,10 @@ export default function Lesson() {
       firstTry.current.add(i);
       setStreakRun(0);
       useApp.getState().loseHeart();
+      if (!hearts.unlimited) {
+        setLost((n) => n + 1);
+        heartShake.value = withSequence(withTiming(1.4, { duration: 120 }), withTiming(0.85, { duration: 120 }), withSpring(1, { damping: 6 }));
+      }
       // a missed exercise comes back at the end, like on Duolingo
       setQueue((q) => [...q, ex]);
     }
@@ -139,11 +148,21 @@ export default function Lesson() {
       <View style={styles.bar}>
         <Pressable onPress={() => setQuit(true)} hitSlop={12} accessibilityLabel={t('common.close')}><X size={24} color={c.textSecondary} /></Pressable>
         <View style={{ flex: 1 }}><ProgressBar value={progress} color={accent} height={14} /></View>
-        {streakRun >= 3 && <Animated.View entering={ZoomIn}><Txt v="captionMedium" color={accent}>🔥{streakRun}</Txt></Animated.View>}
-        <View style={styles.hearts}>
+        {streakRun >= 3 && <Animated.View key={streakRun} entering={ZoomIn.springify().damping(8)}><Txt v="captionMedium" color="#F97316">🔥{streakRun}</Txt></Animated.View>}
+        <Animated.View style={[styles.hearts, heartStyle]}>
           <Heart size={20} color="#F43F5E" fill="#F43F5E" />
           <Txt v="bodyMedium" color="#F43F5E">{hearts.unlimited ? '∞' : hearts.n}</Txt>
-        </View>
+          {lost > 0 && <View key={lost} style={{ position: 'absolute', left: 10, top: 10 }}><Burst emoji="❤️" count={5} size={16} radius={40} /></View>}
+        </Animated.View>
+      </View>
+
+      {/* the unit's little world, very faint, behind the exercise */}
+      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+        {SCENERY[unit.topic ?? 'mix'].map((e, k) => (
+          <Floaty key={e} amp={10} period={3400 + k * 500} delay={k * 300} style={{ position: 'absolute', opacity: isDark ? 0.12 : 0.16, top: `${22 + k * 24}%`, [k % 2 ? 'left' : 'right']: -14 }}>
+            <EmojiArt emoji={e} size={96} />
+          </Floaty>
+        ))}
       </View>
 
       <ScrollView key={i} contentContainerStyle={{ flexGrow: 1, padding: space.m, paddingBottom: 24, maxWidth: 620, width: '100%', alignSelf: 'center' }} keyboardShouldPersistTaps="handled">
@@ -158,6 +177,10 @@ export default function Lesson() {
         <View style={{ maxWidth: 620, width: '100%', alignSelf: 'center' }}>
           {verdict && (
             <Animated.View entering={SlideInDown.springify().damping(18)} style={{ marginBottom: 12 }}>
+              <View style={{ position: 'absolute', right: 0, top: -64 }} pointerEvents="none">
+                <Mascot size={60} mood={verdict.ok ? 'happy' : 'sad'} moodKey={i} tappable={false} />
+              </View>
+              {verdict.ok && <View style={{ position: 'absolute', left: 16, top: 16 }}><Burst emoji={['✨', '⭐', '🌟']} count={10} size={18} radius={90} /></View>}
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <View style={[styles.mark, { backgroundColor: verdict.ok ? '#2FB574' : '#EF4444' }]}>
                   {verdict.ok ? <Check size={20} color="#fff" strokeWidth={3} /> : <X size={20} color="#fff" strokeWidth={3} />}
@@ -448,7 +471,9 @@ function Done({ r, onContinue }: { r: { xp: number; acc: number; min: number; pe
   ];
   return (
     <View style={{ flex: 1, backgroundColor: c.background, paddingTop: insets.top, paddingBottom: insets.bottom + 16, paddingHorizontal: space.l, alignItems: 'center', justifyContent: 'center' }}>
-      <Animated.View entering={ZoomIn.springify().damping(12)}><Mascot size={140} /></Animated.View>
+      <Confetti count={r.perfect ? 110 : 70} />
+      <View style={styles.sunburst} pointerEvents="none"><Rays color={r.perfect ? '#FDE047' : '#86EFAC'} /></View>
+      <Animated.View entering={ZoomIn.springify().damping(12)}><Mascot size={150} mood="dance" /></Animated.View>
       <Animated.View entering={FadeInDown.delay(150)}>
         <Txt style={{ fontFamily: fonts.serif, fontSize: 38, lineHeight: 44, color: c.text, textAlign: 'center', marginTop: 12 }}>{r.perfect ? t('lesson.donePerfect') : t('lesson.done')}</Txt>
         <Txt v="callout" color={c.textSecondary} center style={{ marginTop: 6 }}>{r.perfect ? t('lesson.donePerfectSub') : t('lesson.doneSub')}</Txt>
@@ -457,7 +482,10 @@ function Done({ r, onContinue }: { r: { xp: number; acc: number; min: number; pe
         {stats.map((x, k) => (
           <Animated.View key={x.label} entering={FadeInDown.delay(300 + k * 120).springify()} style={[styles.stat, { borderColor: x.color, backgroundColor: x.color }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 4 }}>{x.icon}<Txt v="overline" color="#fff">{x.label}</Txt></View>
-            <View style={[styles.statIn, { backgroundColor: c.surface }]}><Txt v="headline" color={x.color}>{x.value}</Txt></View>
+            <View style={[styles.statIn, { backgroundColor: c.surface }]}>
+              {k === 0 ? <CountUp to={r.xp} prefix="+" style={{ fontFamily: fonts.semibold, fontSize: 20, color: x.color }} /> : k === 1 ? <CountUp to={r.acc} duration={1100} style={{ fontFamily: fonts.semibold, fontSize: 20, color: x.color }} /> : <Txt v="headline" color={x.color}>{x.value}</Txt>}
+              {k === 1 ? <Txt v="captionMedium" color={x.color} style={{ position: 'absolute', right: 10, top: 14 }}>%</Txt> : null}
+            </View>
           </Animated.View>
         ))}
       </View>
@@ -468,7 +496,22 @@ function Done({ r, onContinue }: { r: { xp: number; acc: number; min: number; pe
   );
 }
 
+/** Slowly turning rays behind the dancing fox. */
+function Rays({ color }: { color: string }) {
+  const r = useSharedValue(0);
+  useEffect(() => { r.value = withRepeat(withTiming(360, { duration: 16000, easing: Easing.linear }), -1); }, []);
+  const st = useAnimatedStyle(() => ({ transform: [{ rotate: `${r.value}deg` }] }));
+  return (
+    <Animated.View style={[{ width: 420, height: 420, alignItems: 'center', justifyContent: 'center' }, st]}>
+      {Array.from({ length: 12 }, (_, k) => (
+        <View key={k} style={{ position: 'absolute', width: 34, height: 420, backgroundColor: color, opacity: 0.18, borderRadius: 17, transform: [{ rotate: `${k * 15}deg` }] }} />
+      ))}
+    </Animated.View>
+  );
+}
+
 const styles = StyleSheet.create({
+  sunburst: { position: 'absolute', top: '8%', alignSelf: 'center', alignItems: 'center' },
   bar: { flexDirection: 'row', alignItems: 'center', gap: 14, height: 56, paddingHorizontal: 16, maxWidth: 680, width: '100%', alignSelf: 'center' },
   hearts: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   foot: { paddingHorizontal: space.m, paddingTop: 16, borderTopWidth: StyleSheet.hairlineWidth },

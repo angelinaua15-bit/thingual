@@ -16,6 +16,8 @@ import { FLAMES, FlameId, visibleStreak, doneToday } from '../lib/streak';
 import { shareStreak } from '../lib/shareStreak';
 import { MaxPill } from './MaxLock';
 import { haptic } from '../lib/feedback';
+import { Confetti } from './Fx';
+import { ChunkyButton, Mascot } from './PathBits';
 
 /** The picture people share: gradient, flame, big number. Also captured as PNG on native. */
 export const StreakCard = forwardRef<any, { count: number; flame: FlameId; words: number; width: number }>(({ count, flame, words, width }, ref) => {
@@ -135,7 +137,9 @@ function Milestone({ days, reward, onDone }: { days: number; reward: { sparks?: 
   const [cardShown] = useState(Platform.OS !== 'web');
   useEffect(() => haptic.success(), []);
   return (
-    <Animated.View entering={FadeIn.duration(250)} exiting={FadeOut.duration(200)} style={[StyleSheet.absoluteFill, { backgroundColor: c.background, alignItems: 'center', justifyContent: 'center', padding: 24, paddingBottom: insets.bottom + 24 }]}>
+    <Animated.View entering={FadeIn.duration(250)} exiting={FadeOut.duration(200)} style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', padding: 24, paddingBottom: insets.bottom + 24 }]}>
+      <LinearGradient colors={['#FFF4E0', '#FFD6A5', '#FFB4A2']} style={StyleSheet.absoluteFill} />
+      <Confetti count={90} />
       {/* off-screen card for native image capture */}
       {cardShown && (
         <View style={{ position: 'absolute', left: -2000 }} pointerEvents="none">
@@ -147,10 +151,11 @@ function Milestone({ days, reward, onDone }: { days: number; reward: { sparks?: 
         <Animated.View entering={ZoomIn.springify().damping(8).stiffness(120)}>
           <Flame size={120} />
         </Animated.View>
+        <View style={{ position: 'absolute', right: -92, bottom: -10 }}><Mascot size={84} mood="dance" tappable={false} /></View>
       </View>
       <Animated.View entering={FadeInDown.delay(250)}>
-        <Txt style={{ fontFamily: fonts.serif, fontSize: 64, lineHeight: 70, color: c.text, textAlign: 'center', marginTop: 8 }}>{t('streak.milestoneTitle', { n: days })}</Txt>
-        <Txt v="callout" color={c.textSecondary} center style={{ marginTop: 4, maxWidth: 320 }}>{t('streak.milestoneSub')}</Txt>
+        <Txt style={{ fontFamily: fonts.serif, fontSize: 64, lineHeight: 70, color: '#3B1D0B', textAlign: 'center', marginTop: 8 }}>{t('streak.milestoneTitle', { n: days })}</Txt>
+        <Txt v="callout" color="#7A4A2A" center style={{ marginTop: 4, maxWidth: 320 }}>{t('streak.milestoneSub')}</Txt>
       </Animated.View>
       <View style={{ gap: 8, marginTop: 20, width: '100%', maxWidth: 360 }}>
         {reward.sparks ? <RewardRow i={0} icon={<Sparkle size={18} color="#F59F00" fill="#F59F00" />} label={t('streak.rewardSparks', { n: reward.sparks })} /> : null}
@@ -158,8 +163,8 @@ function Milestone({ days, reward, onDone }: { days: number; reward: { sparks?: 
         {reward.flame ? <RewardRow i={2} icon={<Flame size={18} skin={reward.flame} animate={false} />} label={t('streak.rewardFlame', { name: t(`shop.flameNames.${reward.flame}`) })} /> : null}
       </View>
       <View style={{ width: '100%', maxWidth: 360, gap: 10, marginTop: 28 }}>
-        <Button title={t('streak.share')} variant="drop" icon={<Share2 size={18} color="#fff" />} onPress={() => share(days)} />
-        <Button title={t('streak.continue')} variant="secondary" onPress={onDone} />
+        <ChunkyButton title={t('streak.continue')} color="#F97316" onPress={onDone} />
+        <Button title={t('streak.share')} variant="secondary" icon={<Share2 size={18} color={c.text} />} onPress={() => share(days)} />
       </View>
     </Animated.View>
   );

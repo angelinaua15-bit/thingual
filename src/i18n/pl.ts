@@ -790,5 +790,6 @@ export const pl: Strings = {
     hat: 'Głowa', face: 'Oczy', neck: 'Szyja', owned: 'Twoje', wearing: 'Założone', bought: 'Wygląda super! 🦊',
     buy: 'Kup: {name} · {n} 💎', hint: 'Stuknij swoją rzecz, żeby ją założyć lub zdjąć.',
   },
+  reward: { crystals: 'kryształów!', collect: 'Odbierz' },
   limits: { left: 'Zostało dziś: {n}' },
 };

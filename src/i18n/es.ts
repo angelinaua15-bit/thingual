@@ -790,5 +790,6 @@ export const es: Strings = {
     hat: 'Cabeza', face: 'Ojos', neck: 'Cuello', owned: 'Tuyo', wearing: 'Puesto', bought: '¡Le queda genial! 🦊',
     buy: 'Comprar {name} · {n} 💎', hint: 'Toca algo tuyo para ponérselo o quitárselo.',
   },
+  reward: { crystals: '¡cristales!', collect: 'Recoger' },
   limits: { left: 'Quedan {n} hoy' },
 };

@@ -9,6 +9,7 @@ import { Txt } from '../src/components/ui';
 import { EmojiArt } from '../src/components/NoteBits';
 import { TimerRing } from '../src/components/Overlay';
 import { ChunkyButton, Mascot } from '../src/components/PathBits';
+import { Confetti, CountUp, Floaty } from '../src/components/Fx';
 import { fonts, radius, space } from '../src/theme/tokens';
 import { useT, languageName } from '../src/i18n';
 import { useApp } from '../src/store/useApp';
@@ -121,6 +122,14 @@ export default function Lightning() {
 
   return (
     <LinearGradient colors={['#1B1446', '#3B1E8F', '#6D28D9']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1, paddingTop: insets.top + 8, paddingBottom: insets.bottom + 16 }}>
+      {/* drifting bolts and stars in the background */}
+      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+        {['⚡', '⭐', '✨', '⚡', '🌟'].map((e, k) => (
+          <Floaty key={k} amp={14} period={2200 + k * 450} delay={k * 250} style={{ position: 'absolute', opacity: 0.22, top: `${8 + k * 19}%`, [k % 2 ? 'left' : 'right']: 10 + (k * 23) % 60 }}>
+            <EmojiArt emoji={e} size={40 + (k % 3) * 14} />
+          </Floaty>
+        ))}
+      </View>
       <View style={styles.bar}>
         <Pressable onPress={() => goBack('/(tabs)/path')} hitSlop={12} accessibilityLabel={t('common.close')}><X size={24} color="rgba(255,255,255,.8)" /></Pressable>
         <View style={{ flex: 1 }} />
@@ -174,9 +183,10 @@ export default function Lightning() {
 
       {phase === 'done' && result && (
         <View style={styles.center}>
-          <Animated.View entering={ZoomIn.springify().damping(12)}><Mascot size={120} /></Animated.View>
+          {result.record && <Confetti count={90} />}
+          <Animated.View entering={ZoomIn.springify().damping(12)}><Mascot size={120} mood={result.record ? 'dance' : 'happy'} /></Animated.View>
           {result.record && <Animated.View entering={FadeInDown.delay(200)} style={styles.record}><Txt v="overline" color="#1B1446">{t('lightning.record')}</Txt></Animated.View>}
-          <Txt style={styles.big}>{score}</Txt>
+          <CountUp to={score} style={styles.big} />
           <Txt v="body" color="rgba(255,255,255,.8)">{t('lightning.points')}</Txt>
           <View style={{ flexDirection: 'row', gap: 10, marginTop: 20 }}>
             {[[t('lightning.bestShort'), result.best], [t('lightning.combo'), maxCombo], ['XP', `+${result.xp}`]].map(([k, v]) => (

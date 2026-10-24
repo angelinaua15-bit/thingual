@@ -3,6 +3,9 @@ import { FlatList, Pressable, StyleSheet, View, useWindowDimensions } from 'reac
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Path } from 'react-native-svg';
+import { Floaty } from '../../src/components/Fx';
+import { SCENERY } from '../../src/data/scenery';
 import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 import { ArrowRight, ChevronDown, Trophy } from '../../src/components/icons';
 import { Txt, Button, PressableScale } from '../../src/components/ui';
@@ -11,6 +14,7 @@ import { Sheet, toast } from '../../src/components/Overlay';
 import { HeartsPill, Mascot, PathNodeButton, shade, useHearts, useMascotLine } from '../../src/components/PathBits';
 import { StreakPills } from '../../src/components/StreakBits';
 import { QuestStrip } from '../../src/components/QuestBits';
+import { ChestReward } from '../../src/components/Reward';
 import { useTheme, fonts, radius, space, TAB_BAR_HEIGHT } from '../../src/theme/tokens';
 import { useT, languageName } from '../../src/i18n';
 import { useApp } from '../../src/store/useApp';
@@ -34,6 +38,7 @@ export default function PathTab() {
   const st = useMemo(() => pathState(done, s.active, level), [done, s.active, level]);
   const currentUnit = NODES[Math.min(st.current, NODES.length - 1)].unit;
   const [picked, setPicked] = useState<PathNode | null>(null);
+  const [reward, setReward] = useState(0);
   const [topUnit, setTopUnit] = useState(currentUnit);
   const list = useRef<FlatList<Unit>>(null);
   const line = useMascotLine();
@@ -55,10 +60,7 @@ export default function PathTab() {
     setPicked(null);
     if (n.kind === 'chest') {
       const got = useApp.getState().openChest(key);
-      if (got) {
-        haptic.success();
-        toast(t('path.chestGot', { n: got }), 'success');
-      }
+      if (got) setReward(got);
       return;
     }
     if (!hearts.unlimited && hearts.n <= 0) {
@@ -131,13 +133,14 @@ export default function PathTab() {
       </View>
 
       {currentUnit !== topUnit && (
-        <Animated.View entering={ZoomIn} style={[styles.jump, { bottom: TAB_BAR_HEIGHT + 20 }]}>
+        <Animated.View entering={ZoomIn} style={[styles.jump, { bottom: TAB_BAR_HEIGHT + 20 + 3 * 62 }]}>
           <PressableScale onPress={() => list.current?.scrollToIndex({ index: currentUnit, animated: true })} style={[styles.jumpBtn, { backgroundColor: c.surface, borderColor: c.divider }]}>
             <ArrowRight size={18} color={c.text} style={{ transform: [{ rotate: currentUnit > topUnit ? '90deg' : '-90deg' }] }} />
           </PressableScale>
         </Animated.View>
       )}
 
+      <ChestReward amount={reward} onClose={() => setReward(0)} />
       <Sheet visible={!!picked} onClose={() => setPicked(null)}>
         {picked && <NodeCard node={picked} status={st.status(nodeIndex(picked.id))} onStart={() => start(picked)} t={t} />}
       </Sheet>
@@ -151,13 +154,34 @@ export const unitTitle = (u: Unit, t: T) =>
   u.topic ? `${t(`explore.topics.${u.topic}`)}${u.part > 1 ? ` ${u.part}` : ''}` : u.situation ? t(`phr.situations.${u.situation}`) : t('path.mixed', { level: u.level });
 
 function UnitBlock({ unit, status, onNode, mascot, t }: { unit: Unit; status: (i: number) => 'done' | 'current' | 'open' | 'locked'; onNode: (n: PathNode) => void; mascot?: string; t: T }) {
-  const { c } = useTheme();
+  const { c, isDark } = useTheme();
   const firstOfLevel = unit.n === 0 || UNITS[unit.n - 1].level !== unit.level;
   const done = unit.nodes.filter((n) => status(nodeIndex(n.id)) === 'done').length;
   // narrow phones: a tighter zigzag so the side buttons never cover a lesson
   const zig = Math.min(1, (useWindowDimensions().width - 150) / 240);
+  const W = Math.min(560, useWindowDimensions().width);
+  const decor = SCENERY[unit.topic ?? 'mix'];
+  // points of the trail between lessons
+  const pts = unit.nodes.map((_, i) => ({ x: W / 2 + OFFSETS[i % OFFSETS.length] * zig, y: HEADER_H + i * NODE_H + NODE_H / 2 }));
+  const trail = pts.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `C ${pts[i - 1].x} ${pts[i - 1].y + NODE_H / 2}, ${p.x} ${p.y - NODE_H / 2}, ${p.x} ${p.y}`)).join(' ');
+  const doneUpTo = unit.nodes.reduce((k, n, i) => (status(nodeIndex(n.id)) === 'done' ? i : k), -1);
   return (
     <View style={{ height: unitHeight(unit), maxWidth: 560, width: '100%', alignSelf: 'center' }}>
+      {/* a soft band of the unit's colour and its little world floating around */}
+      <LinearGradient pointerEvents="none" colors={[`${unit.color}00`, `${unit.color}${isDark ? '26' : '1A'}`, `${unit.color}00`]} locations={[0, 0.5, 1]} style={[StyleSheet.absoluteFill, { borderRadius: 40 }]} />
+      {decor.map((e, k) => (
+        <Floaty key={e + k} amp={7} period={2800 + k * 600} delay={k * 400}
+          style={{ position: 'absolute', top: HEADER_H + (unitHeight(unit) - HEADER_H) * (0.18 + k * 0.3), [k % 2 ? 'left' : 'right']: 12 + (k === 1 ? 10 : 0), opacity: isDark ? 0.75 : 0.9 }}>
+          <EmojiArt emoji={e} size={k === 1 ? 52 : 42} />
+        </Floaty>
+      ))}
+      <Svg pointerEvents="none" width={W} height={unitHeight(unit)} style={StyleSheet.absoluteFill}>
+        <Path d={trail} stroke={isDark ? 'rgba(255,255,255,.14)' : 'rgba(0,0,0,.1)'} strokeWidth={8} strokeLinecap="round" strokeDasharray="2 16" fill="none" />
+        {doneUpTo > 0 && (
+          <Path d={pts.slice(0, doneUpTo + 1).map((p, i, a) => (i === 0 ? `M ${p.x} ${p.y}` : `C ${a[i - 1].x} ${a[i - 1].y + NODE_H / 2}, ${p.x} ${p.y - NODE_H / 2}, ${p.x} ${p.y}`)).join(' ')}
+            stroke={unit.color} strokeOpacity={0.55} strokeWidth={8} strokeLinecap="round" strokeDasharray="2 16" fill="none" />
+        )}
+      </Svg>
       <View style={{ height: HEADER_H, paddingHorizontal: space.m, justifyContent: 'flex-end', paddingBottom: 18 }}>
         {firstOfLevel && (
           <View style={styles.levelRow}>
@@ -185,13 +209,8 @@ function UnitBlock({ unit, status, onNode, mascot, t }: { unit: Unit; status: (i
               <PathNodeButton kind={n.kind} status={stt} color={unit.color} onPress={() => onNode(n)} label={t('path.start')} />
             </View>
             {mascot && i === 1 && (
-              <View style={[styles.mascot, x >= 0 ? { left: 18 } : { right: 18 }]} pointerEvents="none">
+              <View style={[styles.mascot, x >= 0 ? { left: 18 } : { right: 18 }]} pointerEvents="box-none">
                 <Mascot size={76} say={mascot.trim() || undefined} />
-              </View>
-            )}
-            {!mascot && i === 2 && (
-              <View style={[styles.mascot, { opacity: 0.9 }, x >= 0 ? { left: 34 } : { right: 34 }]} pointerEvents="none">
-                <EmojiArt emoji={unit.emoji} size={54} />
               </View>
             )}
           </View>
@@ -248,8 +267,8 @@ const styles = StyleSheet.create({
   unitRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   unitDot: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   mascot: { position: 'absolute', top: 6 },
-  jump: { position: 'absolute', right: 18 },
-  side: { position: 'absolute', left: 14, gap: 10 },
+  jump: { position: 'absolute', right: 16 },
+  side: { position: 'absolute', right: 14, gap: 10 },
   sideBtn: { width: 52, height: 52, borderRadius: 18, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 4 },
   jumpBtn: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', borderWidth: StyleSheet.hairlineWidth, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 10, elevation: 4 },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 18, borderRadius: radius.l },

@@ -633,5 +633,6 @@ export const uk: Strings = {
     hat: 'Голова', face: 'Очі', neck: 'Шия', owned: 'Твоє', wearing: 'Вдягнено', bought: 'Красунчик! 🦊',
     buy: 'Купити: {name} · {n} 💎', hint: 'Торкнись свого предмета, щоб вдягнути або зняти.',
   },
+  reward: { crystals: 'кристалів!', collect: 'Забрати' },
   limits: { left: 'Сьогодні залишилось {n}' },
 };

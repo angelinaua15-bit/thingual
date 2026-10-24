@@ -11,6 +11,7 @@ import { useApp } from '../store/useApp';
 import { questsFor, CHEST_REWARD, CHEST_CRYSTALS_DAILY } from '../lib/quests';
 import { dateKey } from '../data/social';
 import { haptic } from '../lib/feedback';
+import { ChestReward } from './Reward';
 
 /** Today's quests: progress per quest and the chest once all three are done. */
 export function useQuests() {
@@ -53,14 +54,17 @@ export function QuestList() {
   const { c } = useTheme();
   const { t } = useT();
   const q = useQuests();
+  const [reward, setReward] = useState(0);
   const claim = (id: string) => {
     const n = useApp.getState().claimQuest(id);
     if (!n) return;
     haptic.success();
-    toast(id === 'chest' ? t('quests.chestGot', { n, c: CHEST_CRYSTALS_DAILY }) : t('quests.claimed', { n }), 'success');
+    if (id === 'chest') setReward(n);
+    else toast(t('quests.claimed', { n }), 'success');
   };
   return (
     <View style={{ gap: 10, paddingBottom: 8 }}>
+      <ChestReward amount={reward} emoji="✨" label={t('quests.chestGot', { n: reward, c: CHEST_CRYSTALS_DAILY })} onClose={() => setReward(0)} />
       {q.list.map((x, i) => (
         <Animated.View key={x.id} entering={FadeInDown.delay(i * 60)} style={[styles.row, { backgroundColor: c.surfaceAlt }]}>
           <EmojiArt emoji={x.emoji} size={32} />

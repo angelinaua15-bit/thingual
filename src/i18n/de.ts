@@ -633,5 +633,6 @@ export const de: Strings = {
     hat: 'Kopf', face: 'Augen', neck: 'Hals', owned: 'Deins', wearing: 'Angezogen', bought: 'Sieht super aus! 🦊',
     buy: '{name} kaufen · {n} 💎', hint: 'Tippe auf etwas, das dir gehört, um es an- oder auszuziehen.',
   },
+  reward: { crystals: 'Kristalle!', collect: 'Einsammeln' },
   limits: { left: 'Heute noch {n}' },
 };

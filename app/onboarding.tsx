@@ -10,6 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Camera, Check, ChevronLeft, Volume2, X } from '../src/components/icons';
 import { Mascot } from '../src/components/PathBits';
+import { Confetti } from '../src/components/Fx';
 import { EmojiArt } from '../src/components/NoteBits';
 import { Button, PressableScale, Txt, ProgressBar, Avatar } from '../src/components/ui';
 import { TextInput } from 'react-native';
@@ -607,8 +608,9 @@ function Ready({ t, onDone }: { t: (k: string) => string; onDone: () => void }) 
   const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: space.l }}>
-      <Animated.View style={[{ width: 96, height: 96, borderRadius: 48, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center', marginBottom: 28 }, a]}>
-        <Check size={44} color="#fff" />
+      <Confetti count={80} />
+      <Animated.View style={[{ marginBottom: 20 }, a]}>
+        <Mascot size={130} mood="dance" tappable={false} />
       </Animated.View>
       <Animated.View entering={FadeInDown.delay(300)} style={{ alignItems: 'center' }}>
         <Txt v="display" center>{t('onboarding.readyTitle')}</Txt>
