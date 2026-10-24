@@ -18,6 +18,7 @@ import { lang } from '../../src/data/languages';
 import { StreakPills } from '../../src/components/StreakBits';
 import { TimeCard } from '../../src/components/TimeCard';
 import { AudiobooksBanner } from '../../src/components/BookBits';
+import { ModeCards } from '../../src/components/ModeCards';
 
 const EX = [
   { id: 'recall', icon: Layers }, { id: 'choose', icon: ImageIcon }, { id: 'type', icon: Keyboard },
@@ -61,6 +62,7 @@ export default function Learn() {
         {/* audiobooks — photo banner at the top */}
         <Animated.View entering={FadeInDown.delay(30)} style={{ marginTop: space.m }}>
           <AudiobooksBanner />
+          <ModeCards />
         </Animated.View>
 
         {/* today */}

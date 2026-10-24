@@ -536,10 +536,12 @@ export const es: Strings = {
     tiers: { bronze: 'Bronce', silver: 'Plata', gold: 'Oro', sapphire: 'Zafiro', diamond: 'Diamante' },
   },
   quests: {
-    title: 'Misiones diarias',
+    title: 'Misiones diarias', allDone: '¡Todas las misiones de hoy completadas!', claim: 'Recoger',
     claimed: '¡+{n} {n:chispa|chispas}!',
-    chest: 'Todas las misiones hechas — abre el cofre: +{n} ✦',
+    chest: 'Todas las misiones hechas — abre el cofre: +{n} ✦', chestGot: '¡+{n} ✦ y +{c} 💎!', chestTitle: 'Cofre diario', chestOpened: 'Cofre abierto — ¡hasta mañana!', chestSub: 'Completa las tres misiones: +{n} ✦ y +{c} 💎',
     items: {
+      lessons2: 'Completa {n} lecciones del camino', lessons3: 'Completa {n} lecciones del camino', xp40: 'Gana {n} XP', xp80: 'Gana {n} XP',
+      perfect1: 'Completa una lección sin errores', lightning1: 'Juega una ronda de Relámpago', story1: 'Lee una historia de Tingo',
       words3: 'Guarda {n} {n:palabra|palabras} nuevas',
       words5: 'Guarda {n} {n:palabra|palabras} nuevas',
       review10: 'Responde {n} tarjetas de repaso',
@@ -771,6 +773,22 @@ export const es: Strings = {
     writeIn: 'Escribir en', promptPlaceholder: 'Tu respuesta en {lang}…', placeholder: 'Escribe algo en {lang}…', addPhoto: 'Añadir una foto', levelTag: 'Se mostrará como nivel {level}', sendCorrection: 'Enviar',
     prompts: { practice: 'Escribe unas frases en {lang} — la gente te corregirá', question: 'Pregunta por una palabra, la gramática o cómo se dice de verdad', culture: 'Comparte una tradición, un viaje o algo que te sorprendió', chat: '¡Charla sin más, en {lang}!' },
     topics: { practice: 'Corrígeme', question: 'Pregunta', culture: 'Cultura', chat: 'Charla', travel: 'Viaje', fact: 'Curioso', word: 'Palabra' },
+  },
+  lightning: {
+    title: 'Relámpago', short: '60 segundos, todas las palabras que puedas', sub: 'Todas las palabras en {lang} que puedas en 60 segundos.',
+    rule1: '⚡ Respuesta correcta — un punto', rule2: '🔥 5 seguidas — ×2 puntos, 10 seguidas — ×3', rule3: '⏱️ Un error cuesta 3 segundos',
+    best: 'Tu récord: {n}', bestShort: 'Récord', go: '¡Ya!', points: 'puntos', combo: 'Combo', record: '¡Nuevo récord!', missed: 'Palabras para practicar',
+    again: 'Jugar otra vez', done: 'Listo',
+  },
+  stories: {
+    title: 'Historias de Tingo', sub: 'Escenas cortas de los viajes de Tingo — lee, escucha y responde en {lang}.', progress: '{n} de {total} leídas',
+    with: 'con {name}', tingo: 'Tingo', whatSay: '¿Qué debería decir Tingo?', whatMeant: '¿Qué dijo {name}?',
+    done: '¡Historia terminada!', doneSub: 'Sus frases ya están en tus repasos de frases.',
+  },
+  wardrobe: {
+    title: 'El armario de Tingo', sub: 'Pruébale cosas gratis. Cómpralas con cristales y Tingo las llevará a todas partes.', cardSub: 'Sombreros, gafas y bufandas por cristales',
+    hat: 'Cabeza', face: 'Ojos', neck: 'Cuello', owned: 'Tuyo', wearing: 'Puesto', bought: '¡Le queda genial! 🦊',
+    buy: 'Comprar {name} · {n} 💎', hint: 'Toca algo tuyo para ponérselo o quitárselo.',
   },
   limits: { left: 'Quedan {n} hoy' },
 };

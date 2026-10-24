@@ -8,6 +8,7 @@ import { Check, Gem, Lock, X } from '../../src/components/icons';
 import { Txt } from '../../src/components/ui';
 import { EmojiArt } from '../../src/components/NoteBits';
 import { TimeCard } from '../../src/components/TimeCard';
+import { WardrobeCard } from '../../src/components/ModeCards';
 import { toast } from '../../src/components/Overlay';
 import { useTheme, fonts, radius, space } from '../../src/theme/tokens';
 import { useT } from '../../src/i18n';
@@ -70,6 +71,7 @@ export default function Crystals() {
 
         <View style={{ paddingHorizontal: space.m, maxWidth: 640, width: '100%', alignSelf: 'center' }}>
           <TimeCard compact />
+          <View style={{ marginTop: 14 }}><WardrobeCard /></View>
 
           {/* colour themes */}
           <Txt v="overline" color={c.textSecondary} style={styles.section}>{t('cr.themes')}</Txt>

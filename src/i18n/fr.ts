@@ -487,10 +487,12 @@ export const fr: Strings = {
     tiers: { bronze: 'Bronze', silver: 'Argent', gold: 'Or', sapphire: 'Saphir', diamond: 'Diamant' },
   },
   quests: {
-    title: 'Quêtes du jour',
+    title: 'Quêtes du jour', allDone: 'Toutes les quêtes du jour sont faites !', claim: 'Récupérer',
     claimed: '+{n} {n:étincelle|étincelles} !',
-    chest: 'Toutes les quêtes faites — ouvre le coffre pour +{n} ✦',
+    chest: 'Toutes les quêtes faites — ouvre le coffre pour +{n} ✦', chestGot: '+{n} ✦ et +{c} 💎 !', chestTitle: 'Coffre du jour', chestOpened: 'Coffre ouvert — à demain !', chestSub: 'Termine les trois quêtes : +{n} ✦ et +{c} 💎',
     items: {
+      lessons2: 'Termine {n} leçons du parcours', lessons3: 'Termine {n} leçons du parcours', xp40: 'Gagne {n} XP', xp80: 'Gagne {n} XP',
+      perfect1: 'Termine une leçon sans faute', lightning1: 'Joue une partie d’Éclair', story1: 'Lis une histoire de Tingo',
       words3: 'Enregistre {n} nouveaux mots', words5: 'Enregistre {n} nouveaux mots', review10: 'Réponds à {n} cartes de révision', review20: 'Réponds à {n} cartes de révision',
       phrases5: 'Pratique {n} phrases', photo1: 'Photographie {n} objet', photo3: 'Photographie {n} objets', drop1: 'Publie le Drop du jour',
       grammar1: 'Termine une leçon de grammaire', chat3: 'Envoie {n} {n:message|messages} au partenaire IA',
@@ -614,6 +616,22 @@ export const fr: Strings = {
     writeIn: 'Écrire en', promptPlaceholder: 'Ta réponse en {lang}…', placeholder: 'Écris quelque chose en {lang}…', addPhoto: 'Ajouter une photo', levelTag: 'Affiché au niveau {level}', sendCorrection: 'Envoyer',
     prompts: { practice: 'Écris quelques phrases en {lang} — on te corrigera', question: 'Pose une question sur un mot, la grammaire ou ce qu’on dit vraiment', culture: 'Partage une tradition, un voyage ou quelque chose de surprenant', chat: 'Discute, tout simplement — en {lang} !' },
     topics: { practice: 'Corrige-moi', question: 'Question', culture: 'Culture', chat: 'Discussion', travel: 'Voyage', fact: 'Insolite', word: 'Mot' },
+  },
+  lightning: {
+    title: 'Éclair', short: '60 secondes, un max de mots', sub: 'Le plus de mots en {lang} possible en 60 secondes.',
+    rule1: '⚡ Bonne réponse — un point', rule2: '🔥 5 d’affilée — points ×2, 10 d’affilée — ×3', rule3: '⏱️ Une erreur coûte 3 secondes',
+    best: 'Ton record : {n}', bestShort: 'Record', go: 'C’est parti !', points: 'points', combo: 'Combo', record: 'Nouveau record !', missed: 'Mots à revoir',
+    again: 'Rejouer', done: 'Terminé',
+  },
+  stories: {
+    title: 'Histoires de Tingo', sub: 'De courtes scènes des voyages de Tingo — lis, écoute et réponds en {lang}.', progress: '{n} sur {total} lues',
+    with: 'avec {name}', tingo: 'Tingo', whatSay: 'Que doit dire Tingo ?', whatMeant: 'Qu’a dit {name} ?',
+    done: 'Histoire terminée !', doneSub: 'Ses phrases sont maintenant dans tes révisions de phrases.',
+  },
+  wardrobe: {
+    title: 'La garde-robe de Tingo', sub: 'Essaie tout gratuitement. Achète avec des cristaux — Tingo les portera partout.', cardSub: 'Chapeaux, lunettes et écharpes contre des cristaux',
+    hat: 'Tête', face: 'Yeux', neck: 'Cou', owned: 'À toi', wearing: 'Porté', bought: 'Trop stylé ! 🦊',
+    buy: 'Acheter {name} · {n} 💎', hint: 'Touche un objet à toi pour le mettre ou l’enlever.',
   },
   limits: { left: 'Encore {n} aujourd’hui' },
 };

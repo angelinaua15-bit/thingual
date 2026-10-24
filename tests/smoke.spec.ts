@@ -34,7 +34,7 @@ test('new visitor lands in onboarding, even from a deep link', async ({ page }) 
   expect(errs).toEqual([]);
 });
 
-for (const path of ['/path', '/threads', '/lesson?node=u0-0', '/lesson?node=u0-2', '/lesson?node=u0-5', '/hearts', '/compose', '/learn', '/dictionary', '/explore', '/phrases', '/phrases/phrasal', '/grammar', '/grammar/to-be', '/tutor', '/streak', '/shop', '/premium', '/league', '/settings', '/word/strawberry', '/review', '/phrase-review', '/notebook', '/notebook/edit', '/notebook/n-test', '/notebook/practice', '/books']) {
+for (const path of ['/lightning', '/stories', '/story?id=cafe-morning', '/wardrobe', '/path', '/threads', '/lesson?node=u0-0', '/lesson?node=u0-2', '/lesson?node=u0-5', '/hearts', '/compose', '/learn', '/dictionary', '/explore', '/phrases', '/phrases/phrasal', '/grammar', '/grammar/to-be', '/tutor', '/streak', '/shop', '/premium', '/league', '/settings', '/word/strawberry', '/review', '/phrase-review', '/notebook', '/notebook/edit', '/notebook/n-test', '/notebook/practice', '/books']) {
   test(`renders ${path} without crashing`, async ({ page }) => {
     const errs = errors(page);
     await page.goto('/');
@@ -192,5 +192,42 @@ test('the chest on the path gives crystals once', async ({ page }) => {
   const st = await page.evaluate(() => JSON.parse(localStorage.getItem('thingual-v1')!).state);
   expect(st.crystals).toBe(15);
   expect(st.path['es:u0-3']).toBe(1);
+  expect(errs).toEqual([]);
+});
+
+test('Tingo’s wardrobe: try on, buy with crystals, wear', async ({ page }) => {
+  const errs = errors(page);
+  await page.goto('/');
+  await page.evaluate((s) => { const st = JSON.parse(s); st.state.crystals = 100; localStorage.setItem('thingual-v1', JSON.stringify(st)); }, seed());
+  await page.goto('/wardrobe');
+  await page.getByText('Циліндр', { exact: true }).click();
+  await page.getByText(/Купити: Циліндр/).click();
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('thingual-v1')!).state.crystals)).toBe(30);
+  const st = await page.evaluate(() => JSON.parse(localStorage.getItem('thingual-v1')!).state);
+  expect(st.foxLook.hat).toBe('tophat');
+  expect(st.unlocks).toContain('fox:tophat');
+  expect(errs).toEqual([]);
+});
+
+test('a Tingo story plays line by line and asks questions', async ({ page }) => {
+  const errs = errors(page);
+  await page.goto('/');
+  await page.evaluate((s) => localStorage.setItem('thingual-v1', s), seed());
+  await page.goto('/story?id=cafe-morning');
+  await expect(page.getByText('¿Está libre esta mesa?')).toBeVisible();
+  await page.getByText('Продовжити').click();
+  await expect(page.getByText(/Що сказав\(ла\) офіціант\?/)).toBeVisible();
+  await page.getByText('Так.', { exact: true }).first().click();
+  await page.getByText('Продовжити').click();
+  expect(errs).toEqual([]);
+});
+
+test('Lightning starts a 60-second round and counts answers', async ({ page }) => {
+  const errs = errors(page);
+  await page.goto('/');
+  await page.evaluate((s) => localStorage.setItem('thingual-v1', s), seed());
+  await page.goto('/lightning');
+  await page.getByText('Погнали!').click();
+  await expect(page.getByText('60').or(page.getByText('59')).first()).toBeVisible();
   expect(errs).toEqual([]);
 });

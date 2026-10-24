@@ -536,10 +536,12 @@ export const pl: Strings = {
     tiers: { bronze: 'Brązowa', silver: 'Srebrna', gold: 'Złota', sapphire: 'Szafirowa', diamond: 'Diamentowa' },
   },
   quests: {
-    title: 'Zadania dnia',
+    title: 'Zadania dnia', allDone: 'Wszystkie zadania na dziś zrobione!', claim: 'Odbierz',
     claimed: '+{n} {n:iskra|iskry|iskier}!',
-    chest: 'Wszystkie zadania gotowe — otwórz skrzynię: +{n} ✦',
+    chest: 'Wszystkie zadania gotowe — otwórz skrzynię: +{n} ✦', chestGot: '+{n} ✦ i +{c} 💎!', chestTitle: 'Skrzynia dnia', chestOpened: 'Skrzynia otwarta — do jutra!', chestSub: 'Wykonaj wszystkie trzy zadania: +{n} ✦ i +{c} 💎',
     items: {
+      lessons2: 'Ukończ lekcje na ścieżce: {n}', lessons3: 'Ukończ lekcje na ścieżce: {n}', xp40: 'Zdobądź {n} XP', xp80: 'Zdobądź {n} XP',
+      perfect1: 'Ukończ lekcję bez błędów', lightning1: 'Zagraj rundę Błyskawicy', story1: 'Przeczytaj historię Tingo',
       words3: 'Zapisz nowe słowa: {n}',
       words5: 'Zapisz nowe słowa: {n}',
       review10: 'Odpowiedz na fiszki: {n}',
@@ -771,6 +773,22 @@ export const pl: Strings = {
     writeIn: 'Piszę w języku', promptPlaceholder: 'Twoja odpowiedź ({lang})…', placeholder: 'Napisz coś ({lang})…', addPhoto: 'Dodaj zdjęcie', levelTag: 'Widoczny poziom: {level}', sendCorrection: 'Wyślij',
     prompts: { practice: 'Napisz kilka zdań ({lang}) — inni cię poprawią', question: 'Zapytaj o słowo, gramatykę albo jak się naprawdę mówi', culture: 'Opowiedz o tradycji, podróży albo czymś zaskakującym', chat: 'Po prostu pogadaj ({lang})!' },
     topics: { practice: 'Sprawdź mnie', question: 'Pytanie', culture: 'Kultura', chat: 'Pogaduszki', travel: 'Podróż', fact: 'Ciekawostka', word: 'Słowo' },
+  },
+  lightning: {
+    title: 'Błyskawica', short: '60 sekund, jak najwięcej słów', sub: 'Jak najwięcej słów ({lang}) w 60 sekund.',
+    rule1: '⚡ Dobra odpowiedź — punkt', rule2: '🔥 5 z rzędu — ×2 punkty, 10 z rzędu — ×3', rule3: '⏱️ Błąd kosztuje 3 sekundy',
+    best: 'Twój rekord: {n}', bestShort: 'Rekord', go: 'Start!', points: 'pkt', combo: 'Combo', record: 'Nowy rekord!', missed: 'Słowa do powtórki',
+    again: 'Zagraj jeszcze raz', done: 'Gotowe',
+  },
+  stories: {
+    title: 'Historie Tingo', sub: 'Krótkie scenki z podróży Tingo — czytaj, słuchaj i odpowiadaj ({lang}).', progress: 'Przeczytano {n} z {total}',
+    with: 'z: {name}', tingo: 'Tingo', whatSay: 'Co powinien powiedzieć Tingo?', whatMeant: 'Co powiedział(a) {name}?',
+    done: 'Historia ukończona!', doneSub: 'Zwroty z niej są już w twoich powtórkach zwrotów.',
+  },
+  wardrobe: {
+    title: 'Garderoba Tingo', sub: 'Przymierzaj za darmo. Kupuj za kryształy — Tingo będzie to nosić wszędzie.', cardSub: 'Kapelusze, okulary i szaliki za kryształy',
+    hat: 'Głowa', face: 'Oczy', neck: 'Szyja', owned: 'Twoje', wearing: 'Założone', bought: 'Wygląda super! 🦊',
+    buy: 'Kup: {name} · {n} 💎', hint: 'Stuknij swoją rzecz, żeby ją założyć lub zdjąć.',
   },
   limits: { left: 'Zostało dziś: {n}' },
 };

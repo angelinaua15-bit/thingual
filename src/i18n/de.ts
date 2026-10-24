@@ -487,10 +487,12 @@ export const de: Strings = {
     tiers: { bronze: 'Bronze', silver: 'Silber', gold: 'Gold', sapphire: 'Saphir', diamond: 'Diamant' },
   },
   quests: {
-    title: 'Tagesquests',
+    title: 'Tagesquests', allDone: 'Alle Quests für heute geschafft!', claim: 'Abholen',
     claimed: '+{n} {n:Funken|Funken}!',
-    chest: 'Alle Quests geschafft — öffne die Truhe für +{n} ✦',
+    chest: 'Alle Quests geschafft — öffne die Truhe für +{n} ✦', chestGot: '+{n} ✦ und +{c} 💎!', chestTitle: 'Tagestruhe', chestOpened: 'Truhe geöffnet — bis morgen!', chestSub: 'Schaff alle drei Quests: +{n} ✦ und +{c} 💎',
     items: {
+      lessons2: 'Schließ {n} Lektionen auf dem Pfad ab', lessons3: 'Schließ {n} Lektionen auf dem Pfad ab', xp40: 'Sammle {n} XP', xp80: 'Sammle {n} XP',
+      perfect1: 'Schließ eine Lektion fehlerfrei ab', lightning1: 'Spiel eine Runde Blitz', story1: 'Lies eine Tingo-Geschichte',
       words3: 'Speichere {n} neue Wörter', words5: 'Speichere {n} neue Wörter', review10: 'Beantworte {n} Wiederholungskarten', review20: 'Beantworte {n} Wiederholungskarten',
       phrases5: 'Übe {n} Sätze', photo1: 'Fotografiere {n} Ding', photo3: 'Fotografiere {n} Dinge', drop1: 'Poste den heutigen Drop',
       grammar1: 'Schließ eine Grammatiklektion ab', chat3: 'Schick {n} {n:Nachricht|Nachrichten} an den KI-Partner',
@@ -614,6 +616,22 @@ export const de: Strings = {
     writeIn: 'Schreiben auf', promptPlaceholder: 'Deine Antwort auf {lang}…', placeholder: 'Schreib etwas auf {lang}…', addPhoto: 'Foto hinzufügen', levelTag: 'Wird als Niveau {level} angezeigt', sendCorrection: 'Senden',
     prompts: { practice: 'Schreib ein paar Sätze auf {lang} — andere korrigieren dich', question: 'Frag nach einem Wort, nach Grammatik oder wie man es wirklich sagt', culture: 'Erzähl von einer Tradition, einer Reise oder etwas Überraschendem', chat: 'Einfach plaudern — auf {lang}!' },
     topics: { practice: 'Korrigier mich', question: 'Frage', culture: 'Kultur', chat: 'Plaudern', travel: 'Reise', fact: 'Interessant', word: 'Wort' },
+  },
+  lightning: {
+    title: 'Blitz', short: '60 Sekunden, so viele Wörter wie möglich', sub: 'So viele Wörter auf {lang} wie möglich in 60 Sekunden.',
+    rule1: '⚡ Richtige Antwort — ein Punkt', rule2: '🔥 5 in Folge — ×2 Punkte, 10 in Folge — ×3', rule3: '⏱️ Ein Fehler kostet 3 Sekunden',
+    best: 'Dein Rekord: {n}', bestShort: 'Rekord', go: 'Los!', points: 'Punkte', combo: 'Combo', record: 'Neuer Rekord!', missed: 'Wörter zum Üben',
+    again: 'Nochmal spielen', done: 'Fertig',
+  },
+  stories: {
+    title: 'Tingo-Geschichten', sub: 'Kurze Szenen von Tingos Reisen — lies, hör zu und antworte auf {lang}.', progress: '{n} von {total} gelesen',
+    with: 'mit {name}', tingo: 'Tingo', whatSay: 'Was soll Tingo sagen?', whatMeant: 'Was hat {name} gesagt?',
+    done: 'Geschichte geschafft!', doneSub: 'Die Sätze daraus sind jetzt in deinen Satz-Wiederholungen.',
+  },
+  wardrobe: {
+    title: 'Tingos Kleiderschrank', sub: 'Probier alles gratis an. Kauf es mit Kristallen — dann trägt Tingo es überall.', cardSub: 'Hüte, Brillen und Schals für Kristalle',
+    hat: 'Kopf', face: 'Augen', neck: 'Hals', owned: 'Deins', wearing: 'Angezogen', bought: 'Sieht super aus! 🦊',
+    buy: '{name} kaufen · {n} 💎', hint: 'Tippe auf etwas, das dir gehört, um es an- oder auszuziehen.',
   },
   limits: { left: 'Heute noch {n}' },
 };

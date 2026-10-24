@@ -1,3 +1,4 @@
+import { wearById } from './wardrobe';
 import type { LangCode } from './languages';
 
 /** Fun collections unlocked with crystals: words and sayings that make people smile. */
@@ -97,6 +98,6 @@ export const DAILY_TIME_CAP = 30;
 export const spentOn = (unlocks: string[] = []) =>
   unlocks.reduce((sum, u) => {
     const [kind, id] = u.split(':');
-    const price = kind === 'accent' ? ACCENTS.find((a) => a.id === id)?.price : kind === 'pack' ? packById(id)?.price : kind === 'spend' ? Number(id) || 0 : 0;
+    const price = kind === 'accent' ? ACCENTS.find((a) => a.id === id)?.price : kind === 'pack' ? packById(id)?.price : kind === 'spend' ? Number(id) || 0 : kind === 'fox' ? wearById(id)?.price : 0;
     return sum + (price ?? 0);
   }, 0);

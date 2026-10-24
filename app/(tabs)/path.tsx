@@ -10,6 +10,7 @@ import { EmojiArt } from '../../src/components/NoteBits';
 import { Sheet, toast } from '../../src/components/Overlay';
 import { HeartsPill, Mascot, PathNodeButton, shade, useHearts, useMascotLine } from '../../src/components/PathBits';
 import { StreakPills } from '../../src/components/StreakBits';
+import { QuestStrip } from '../../src/components/QuestBits';
 import { useTheme, fonts, radius, space, TAB_BAR_HEIGHT } from '../../src/theme/tokens';
 import { useT, languageName } from '../../src/i18n';
 import { useApp } from '../../src/store/useApp';
@@ -82,6 +83,7 @@ export default function PathTab() {
             <HeartsPill />
           </View>
         </View>
+        <QuestStrip />
         {/* the unit you're looking at stays pinned on top */}
         <Animated.View key={topUnit} entering={FadeIn.duration(200)} style={[styles.unitPin, { backgroundColor: unit.color, borderBottomColor: shade(unit.color) }]}>
           <View style={{ flex: 1 }}>
@@ -113,6 +115,21 @@ export default function PathTab() {
         )}
       />
 
+      {/* side buttons: Lightning, Stories, Tingo's wardrobe */}
+      <View style={[styles.side, { bottom: TAB_BAR_HEIGHT + 20 }]}>
+        {[
+          { e: '⚡', to: '/lightning', label: t('lightning.title'), bg: '#6D28D9' },
+          { e: '📖', to: '/stories', label: t('stories.title'), bg: '#8B5CF6' },
+          { e: '👕', to: '/wardrobe', label: t('wardrobe.title'), bg: '#F4A261' },
+        ].map((b, i) => (
+          <Animated.View key={b.to} entering={ZoomIn.delay(200 + i * 80)}>
+            <PressableScale onPress={() => router.push(b.to as never)} style={[styles.sideBtn, { backgroundColor: b.bg, borderBottomColor: shade(b.bg) }]} accessibilityLabel={b.label}>
+              <EmojiArt emoji={b.e} size={28} />
+            </PressableScale>
+          </Animated.View>
+        ))}
+      </View>
+
       {currentUnit !== topUnit && (
         <Animated.View entering={ZoomIn} style={[styles.jump, { bottom: TAB_BAR_HEIGHT + 20 }]}>
           <PressableScale onPress={() => list.current?.scrollToIndex({ index: currentUnit, animated: true })} style={[styles.jumpBtn, { backgroundColor: c.surface, borderColor: c.divider }]}>
@@ -137,6 +154,8 @@ function UnitBlock({ unit, status, onNode, mascot, t }: { unit: Unit; status: (i
   const { c } = useTheme();
   const firstOfLevel = unit.n === 0 || UNITS[unit.n - 1].level !== unit.level;
   const done = unit.nodes.filter((n) => status(nodeIndex(n.id)) === 'done').length;
+  // narrow phones: a tighter zigzag so the side buttons never cover a lesson
+  const zig = Math.min(1, (useWindowDimensions().width - 150) / 240);
   return (
     <View style={{ height: unitHeight(unit), maxWidth: 560, width: '100%', alignSelf: 'center' }}>
       <View style={{ height: HEADER_H, paddingHorizontal: space.m, justifyContent: 'flex-end', paddingBottom: 18 }}>
@@ -158,7 +177,7 @@ function UnitBlock({ unit, status, onNode, mascot, t }: { unit: Unit; status: (i
       </View>
       {unit.nodes.map((n, i) => {
         const idx = nodeIndex(n.id);
-        const x = OFFSETS[i % OFFSETS.length];
+        const x = OFFSETS[i % OFFSETS.length] * zig;
         const stt = status(idx);
         return (
           <View key={n.id} style={{ height: NODE_H, alignItems: 'center', justifyContent: 'center' }}>
@@ -230,6 +249,8 @@ const styles = StyleSheet.create({
   unitDot: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   mascot: { position: 'absolute', top: 6 },
   jump: { position: 'absolute', right: 18 },
+  side: { position: 'absolute', left: 14, gap: 10 },
+  sideBtn: { width: 52, height: 52, borderRadius: 18, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 4 },
   jumpBtn: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', borderWidth: StyleSheet.hairlineWidth, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 10, elevation: 4 },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 18, borderRadius: radius.l },
 });

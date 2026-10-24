@@ -486,13 +486,14 @@ export const en = {
     tiers: { bronze: 'Bronze', silver: 'Silver', gold: 'Gold', sapphire: 'Sapphire', diamond: 'Diamond' },
   },
   quests: {
-    title: 'Daily quests',
-    claimed: '+{n} {n:spark|sparks}!',
-    chest: 'All quests done — open the chest for +{n} ✦',
+    title: 'Daily quests', allDone: 'All quests done today!', claim: 'Claim',
+    claimed: '+{n} {n:spark|sparks}!', chestGot: '+{n} ✦ and +{c} 💎!',
+    chest: 'All quests done — open the chest for +{n} ✦', chestTitle: 'Daily chest', chestOpened: 'Chest opened — see you tomorrow!', chestSub: 'Finish all three quests: +{n} ✦ and +{c} 💎',
     items: {
-      words3: 'Save {n} new words', words5: 'Save {n} new words', review10: 'Answer {n} review cards', review20: 'Answer {n} review cards',
-      phrases5: 'Practise {n} phrases', photo1: 'Photograph {n} thing', photo3: 'Photograph {n} things', drop1: 'Post today’s Drop',
-      grammar1: 'Finish a grammar lesson', chat3: 'Send {n} {n:message|messages} to the AI partner',
+      lessons2: 'Finish {n} lessons on the path', lessons3: 'Finish {n} lessons on the path', xp40: 'Earn {n} XP', xp80: 'Earn {n} XP',
+      perfect1: 'Finish a lesson without mistakes', lightning1: 'Play a Lightning round', story1: 'Read a Tingo story',
+      review10: 'Answer {n} review cards', phrases5: 'Practise {n} phrases', grammar1: 'Finish a grammar lesson',
+      words3: 'Save {n} new words', words5: 'Save {n} new words', review20: 'Answer {n} review cards', photo1: 'Photograph {n} thing', photo3: 'Photograph {n} things', drop1: 'Post today’s Drop', chat3: 'Send {n} {n:message|messages} to the AI partner',
     },
   },
   pron: { heard: 'Heard: “{text}”', again: 'Try again', say: 'Say it aloud' },
@@ -613,6 +614,22 @@ export const en = {
     writeIn: 'Write in', promptPlaceholder: 'Your answer in {lang}…', placeholder: 'Write something in {lang}…', addPhoto: 'Add a photo', levelTag: 'Shown as level {level}', sendCorrection: 'Send',
     prompts: { practice: 'Write a few sentences in {lang} — people will correct you', question: 'Ask about a word, grammar or how people really say it', culture: 'Share a tradition, a trip or something surprising', chat: 'Just chat — in {lang}!' },
     topics: { practice: 'Check me', question: 'Question', culture: 'Culture', chat: 'Chat', travel: 'Trip', fact: 'Interesting', word: 'Word' },
+  },
+  lightning: {
+    title: 'Lightning', short: '60 seconds, as many words as you can', sub: 'As many {lang} words as you can in 60 seconds.',
+    rule1: '⚡ Correct answer — a point', rule2: '🔥 5 in a row — ×2 points, 10 in a row — ×3', rule3: '⏱️ A mistake costs 3 seconds',
+    best: 'Your best: {n}', bestShort: 'Best', go: 'Go!', points: 'points', combo: 'Combo', record: 'New record!', missed: 'Words to practise',
+    again: 'Play again', done: 'Done',
+  },
+  stories: {
+    title: 'Tingo Stories', sub: 'Short scenes from Tingo’s travels — read, listen and answer in {lang}.', progress: '{n} of {total} read',
+    with: 'with {name}', tingo: 'Tingo', whatSay: 'What should Tingo say?', whatMeant: 'What did {name} say?',
+    done: 'Story finished!', doneSub: 'The phrases from it are now in your phrase reviews.',
+  },
+  wardrobe: {
+    title: 'Tingo’s wardrobe', sub: 'Try things on for free. Buy with crystals — Tingo will wear them everywhere.', cardSub: 'Hats, glasses and scarves for crystals',
+    hat: 'Head', face: 'Eyes', neck: 'Neck', owned: 'Yours', wearing: 'Wearing', bought: 'Looks great! 🦊',
+    buy: 'Buy {name} · {n} 💎', hint: 'Tap something you own to put it on or take it off.',
   },
   limits: { left: '{n} left today' },
 };

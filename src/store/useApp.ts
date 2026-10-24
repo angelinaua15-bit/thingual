@@ -6,7 +6,7 @@ import { newCard, review as srsReview, StoredCard, Answer } from '../lib/srs';
 import { dateKey, nicknameFor } from '../data/social';
 import { conceptById, Place } from '../data/concepts';
 import { needsPersist, persistPhoto } from '../lib/photoStore';
-import { questsFor, CHEST_REWARD, type QuestField } from '../lib/quests';
+import { questsFor, CHEST_REWARD, CHEST_CRYSTALS_DAILY, type QuestField } from '../lib/quests';
 import { LIMITS } from '../lib/limits';
 import { DAILY_TIME_CAP, SECONDS_PER_CRYSTAL, TIME_TIERS, spentOn } from '../data/wordPacks';
 import type { CEFR } from '../data/words/types';
@@ -131,6 +131,12 @@ type State = {
   path: Record<string, number>;
   /** hearts for path lessons: count and when the last refill was counted (Max has unlimited) */
   hearts: { n: number; at: number };
+  /** best Lightning score per language */
+  lightningBest: Record<string, number>;
+  /** finished Tingo stories: "lang:storyId" → times */
+  stories: Record<string, number>;
+  /** Tingo's wardrobe: what he wears now (ids from WARDROBE) */
+  foxLook: { hat?: string; face?: string; neck?: string };
   /** last time synced progress changed on this device (ms) */
   localChangedAt?: number;
   /** grammar lesson id → best score (0–100) */
@@ -179,6 +185,9 @@ type Actions = {
   unlockReward: (id: string, price: number) => 'ok' | 'funds' | 'owned';
   finishNode: (key: string, r: { words: string[]; total: number; correct: number; minutes: number; perfect: boolean }) => number;
   openChest: (key: string) => number;
+  finishLightning: (lang: string, r: { score: number; total: number; minutes: number }) => { xp: number; best: number; record: boolean };
+  finishStory: (key: string, r: { correct: number; total: number; minutes: number; phrases: string[] }) => number;
+  setFoxLook: (p: Partial<State['foxLook']>) => void;
   loseHeart: () => void;
   refillHearts: (price: number) => 'ok' | 'funds';
   saveBookProgress: (id: string, p: Partial<BookProgress>) => void;
@@ -288,6 +297,9 @@ const initialState = (): State => {
     timeToday: { day: '', seconds: 0, earned: 0, claimed: [] },
     unlocks: [],
     path: {},
+    lightningBest: {},
+    stories: {},
+    foxLook: {},
     hearts: { n: HEARTS_MAX, at: Date.now() },
     drops: {},
     achievements: [],
@@ -575,7 +587,9 @@ export const useApp = create<State & Actions>()(
           reward = q.reward;
         }
         if (s.maxUntil && s.maxUntil > Date.now()) reward *= 2;
-        set({ sparks: s.sparks + reward, weekXp: addXp(s.weekXp, reward), quests: { ...s.quests, claimed: [...s.quests.claimed, id] } });
+        // the chest of the day also holds crystals
+        const crystals = id === 'chest' ? earn(s, CHEST_CRYSTALS_DAILY * (isMaxNow(s) ? 2 : 1)) : {};
+        set({ ...crystals, sparks: s.sparks + reward, weekXp: addXp(s.weekXp, reward), quests: { ...s.quests, claimed: [...s.quests.claimed, id] } });
         return reward;
       },
       saveBookProgress: (id, p) =>
@@ -611,7 +625,11 @@ export const useApp = create<State & Actions>()(
         const bonus = (r.perfect ? 10 : 5) * (isMaxNow(s) ? 2 : 1);
         set((x) => ({ path: { ...x.path, [key]: (x.path[key] ?? 0) + 1 }, sparks: x.sparks + bonus, weekXp: addXp(x.weekXp, bonus) }));
         if (Object.keys(get().path).length >= 10) get().unlock('lessons-10');
-        return Math.min(r.correct, 20) * (isMaxNow(s) ? 2 : 1) + bonus;
+        get().questBump('lessons');
+        if (r.perfect) get().questBump('perfect');
+        const xp = Math.min(r.correct, 20) * (isMaxNow(s) ? 2 : 1) + bonus;
+        get().questBump('xp', xp);
+        return xp;
       },
       openChest: (key) => {
         const s = get();
@@ -621,6 +639,31 @@ export const useApp = create<State & Actions>()(
         get().markActive();
         return n;
       },
+      finishLightning: (lang, r) => {
+        const s = get();
+        const prev = s.lightningBest[lang] ?? 0;
+        const record = r.score > prev;
+        get().logSession(r.total, Math.min(r.score, 20), r.minutes);
+        const bonus = (record && prev > 0 ? 10 : 0) * (isMaxNow(s) ? 2 : 1);
+        set((x) => ({ lightningBest: { ...x.lightningBest, [lang]: Math.max(prev, r.score) }, sparks: x.sparks + bonus, weekXp: addXp(x.weekXp, bonus) }));
+        const xp = Math.min(r.score, 20) * (isMaxNow(s) ? 2 : 1) + bonus;
+        get().questBump('lightning');
+        get().questBump('xp', xp);
+        return { xp, best: Math.max(prev, r.score), record };
+      },
+      finishStory: (key, r) => {
+        const s = get();
+        get().logSession(r.total, r.correct, r.minutes);
+        const first = !s.stories[key];
+        const bonus = (first ? 15 : 5) * (isMaxNow(s) ? 2 : 1);
+        set((x) => ({ stories: { ...x.stories, [key]: (x.stories[key] ?? 0) + 1 }, sparks: x.sparks + bonus, weekXp: addXp(x.weekXp, bonus) }));
+        if (first) get().saveExprs(r.phrases);
+        const xp = Math.min(r.correct, 20) * (isMaxNow(s) ? 2 : 1) + bonus;
+        get().questBump('story');
+        get().questBump('xp', xp);
+        return xp;
+      },
+      setFoxLook: (p) => set((s) => ({ foxLook: { ...s.foxLook, ...p } })),
       loseHeart: () => {
         const s = get();
         if (isMaxNow(s)) return;

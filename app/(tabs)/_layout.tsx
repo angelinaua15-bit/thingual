@@ -5,8 +5,7 @@ import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { BookOpen, Dumbbell, MessageCircle, User } from '../../src/components/icons';
-import { EmojiArt } from '../../src/components/NoteBits';
-import { MASCOT } from '../../src/components/PathBits';
+import { FoxArt } from '../../src/components/PathBits';
 import { useTheme, fonts } from '../../src/theme/tokens';
 import { useT } from '../../src/i18n';
 import { Txt } from '../../src/components/ui';
@@ -64,7 +63,7 @@ function CamButton({ focused }: { focused: boolean }) {
   const a = useAnimatedStyle(() => ({ transform: [{ scale: withSpring(focused ? 1.08 : 1) }] }));
   return (
     <Animated.View style={[styles.cam, { backgroundColor: focused ? '#2FB574' : c.ink, borderColor: focused ? '#23905C' : 'transparent' }, a]}>
-      <EmojiArt emoji={MASCOT} size={34} />
+      <FoxArt size={34} />
     </Animated.View>
   );
 }

@@ -13,7 +13,7 @@ import { spentOn } from '../data/wordPacks';
 type S = ReturnType<typeof useApp.getState>;
 const KEYS = [
   'onboarded', 'goal', 'quizScore', 'settings', 'words', 'collections', 'history', 'learnStreak', 'dropStreak', 'bestStreak',
-  'activeDays', 'frozenDays', 'sparks', 'freezes', 'claimed', 'flames', 'flame', 'achievements', 'exprs', 'drops', 'quests', 'weekXp', 'grammar', 'maxUntil', 'trialUsed', 'maxFreezeMonth', 'maxWaitlist', 'lostStreak', 'notebook', 'noteTomb', 'books', 'crystals', 'crystalEarn', 'unlocks', 'timeToday', 'path',
+  'activeDays', 'frozenDays', 'sparks', 'freezes', 'claimed', 'flames', 'flame', 'achievements', 'exprs', 'drops', 'quests', 'weekXp', 'grammar', 'maxUntil', 'trialUsed', 'maxFreezeMonth', 'maxWaitlist', 'lostStreak', 'notebook', 'noteTomb', 'books', 'crystals', 'crystalEarn', 'unlocks', 'timeToday', 'path', 'lightningBest', 'stories', 'foxLook',
 ] as const;
 const QUIET: readonly string[] = ['timeToday', 'crystals', 'crystalEarn'];
 type Snapshot = Partial<Pick<S, (typeof KEYS)[number]>> & { profile?: Partial<S['profile']> };
@@ -74,6 +74,9 @@ function mergeTime(a: S['timeToday'], b?: S['timeToday']): S['timeToday'] {
   return { day: a.day, seconds: Math.max(a.seconds, b.seconds), earned: Math.max(a.earned, b.earned), claimed: union(a.claimed, b.claimed) };
 }
 
+const maxMerge = (a: Record<string, number> = {}, b: Record<string, number> = {}) =>
+  Object.fromEntries([...new Set([...Object.keys(a), ...Object.keys(b)])].map((k) => [k, Math.max(a[k] ?? 0, b[k] ?? 0)]));
+
 function merge(local: S, remote: Snapshot, remoteNewer: boolean): Partial<S> {
   const newer = <K extends keyof Snapshot>(k: K) => ((remoteNewer ? remote[k] : undefined) ?? (local as unknown as Snapshot)[k]);
   const words = { ...local.words };
@@ -118,6 +121,9 @@ function merge(local: S, remote: Snapshot, remoteNewer: boolean): Partial<S> {
     ...mergeNotebook(local, remote),
     ...mergeCrystals(local, remote),
     timeToday: mergeTime(local.timeToday, remote.timeToday),
+    lightningBest: maxMerge(local.lightningBest, remote.lightningBest),
+    stories: maxMerge(local.stories, remote.stories),
+    foxLook: remoteNewer ? remote.foxLook ?? local.foxLook : local.foxLook,
     path: Object.fromEntries([...new Set([...Object.keys(local.path ?? {}), ...Object.keys(remote.path ?? {})])].map((k) => [k, Math.max(local.path?.[k] ?? 0, remote.path?.[k] ?? 0)])),
     books: Object.fromEntries(
       [...new Set([...Object.keys(local.books), ...Object.keys(remote.books ?? {})])].map((id) => {

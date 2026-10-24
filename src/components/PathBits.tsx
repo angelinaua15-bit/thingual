@@ -10,6 +10,7 @@ import { useT } from '../i18n';
 import { useApp, heartsOf, HEARTS_MAX } from '../store/useApp';
 import { useIsMax } from '../lib/premium';
 import type { NodeKind } from '../data/path';
+import { wearById } from '../data/wardrobe';
 
 export const MASCOT = '🦊';
 
@@ -85,6 +86,23 @@ export function PathNodeButton({ kind, status, color, onPress, label }: { kind: 
   );
 }
 
+/** Tingo with whatever he is wearing (hat, glasses, scarf…). Pass `look` to preview. */
+export function FoxArt({ size, look }: { size: number; look?: { hat?: string; face?: string; neck?: string } }) {
+  const mine = useApp((s) => s.foxLook);
+  const l = look ?? mine ?? {};
+  const hat = wearById(l.hat);
+  const face = wearById(l.face);
+  const neck = wearById(l.neck);
+  return (
+    <View style={{ width: size, height: size }}>
+      <EmojiArt emoji={MASCOT} size={size} />
+      {neck && <View style={{ position: 'absolute', left: size * 0.3, bottom: -size * 0.16 }} pointerEvents="none"><EmojiArt emoji={neck.emoji} size={size * 0.4} /></View>}
+      {face && <View style={{ position: 'absolute', left: size * 0.22, top: size * 0.33 }} pointerEvents="none"><EmojiArt emoji={face.emoji} size={size * 0.56} /></View>}
+      {hat && <View style={{ position: 'absolute', left: size * 0.24, top: -size * 0.3 }} pointerEvents="none"><EmojiArt emoji={hat.emoji} size={size * 0.52} /></View>}
+    </View>
+  );
+}
+
 /** The fox who keeps you company on the path. */
 export function Mascot({ size = 84, say }: { size?: number; say?: string }) {
   const { c } = useTheme();
@@ -100,7 +118,8 @@ export function Mascot({ size = 84, say }: { size?: number; say?: string }) {
           <Txt v="caption" center>{say}</Txt>
         </View>
       ) : null}
-      <Animated.View style={a}><EmojiArt emoji={MASCOT} size={size} /></Animated.View>
+      {/* room above for a hat */}
+      <Animated.View style={[a, { marginTop: say ? size * 0.28 : 0 }]}><FoxArt size={size} /></Animated.View>
     </View>
   );
 }

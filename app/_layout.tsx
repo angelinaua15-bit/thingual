@@ -97,6 +97,9 @@ export default function RootLayout() {
           <Stack.Screen name="review" options={{ animation: 'slide_from_bottom', gestureEnabled: false }} />
           <Stack.Screen name="lesson" options={{ animation: 'slide_from_bottom', gestureEnabled: false }} />
           <Stack.Screen name="hearts" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="lightning" options={{ animation: 'fade', gestureEnabled: false }} />
+          <Stack.Screen name="story" options={{ animation: 'slide_from_bottom', gestureEnabled: false }} />
+          <Stack.Screen name="wardrobe" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="compose" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="edit-profile" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="postcard/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
