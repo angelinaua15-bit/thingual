@@ -112,7 +112,6 @@ export default function SettingsScreen() {
 
         {Platform.OS !== 'web' && (
           <Group title={t('settings.notifications')}>
-            <ListRow title={t('settings.nDrop')} right={<Toggle value={s.notify.drop} onChange={(v) => { if (v) askNotifications(true); st.updateSettings({ notify: { ...s.notify, drop: v } }); }} />} />
             <ListRow title={t('settings.nReview')} right={<Toggle value={s.notify.review} onChange={(v) => { if (v) askNotifications(true); st.updateSettings({ notify: { ...s.notify, review: v } }); }} />} />
             <View style={{ paddingHorizontal: 16, paddingVertical: 12, gap: 8 }}>
               <Txt v="captionMedium" color={c.textSecondary}>{t('settings.reviewTime')}</Txt>

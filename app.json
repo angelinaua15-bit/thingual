@@ -8,7 +8,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "description": "Learn languages from the things around you: point your camera, learn the word in 16 languages, practise phrases and share photos on a world map.",
+    "description": "Learn languages step by step: a Duolingo-style path from A1 to C2 in 16 languages, with lessons, hearts, streaks and threads where learners write to each other and fix each other's mistakes.",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -18,9 +18,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "app.thingual",
       "infoPlist": {
-        "NSCameraUsageDescription": "Thingual uses the camera to recognise objects and show their names in the language you learn.",
-        "NSPhotoLibraryUsageDescription": "Choose a photo to learn the words in it.",
-        "NSLocationWhenInUseUsageDescription": "Your posts show only your city, never the exact place.",
+        "NSPhotoLibraryUsageDescription": "Choose a photo for your post, profile picture or a word card.",
         "NSMicrophoneUsageDescription": "Thingual listens when you practise pronunciation or talk to the AI partner.",
         "NSSpeechRecognitionUsageDescription": "Speech recognition checks your pronunciation and turns your voice into text in conversation practice.",
         "ITSAppUsesNonExemptEncryption": false
@@ -35,12 +33,12 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "permissions": [
-        "CAMERA",
-        "ACCESS_COARSE_LOCATION",
         "RECORD_AUDIO"
       ],
       "predictiveBackGestureEnabled": false,
       "blockedPermissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.CAMERA",
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.READ_MEDIA_IMAGES",
@@ -73,21 +71,10 @@
       "expo-localization",
       "expo-sharing",
       [
-        "expo-camera",
-        {
-          "cameraPermission": "Thingual uses the camera to recognise objects and show their names in the language you learn."
-        }
-      ],
-      [
         "expo-image-picker",
         {
-          "photosPermission": "Choose a photo to learn the words in it."
-        }
-      ],
-      [
-        "expo-location",
-        {
-          "locationWhenInUsePermission": "Your posts show only your city, never the exact place."
+          "photosPermission": "Choose a photo for your post, profile picture or a word card.",
+          "cameraPermission": false
         }
       ],
       [

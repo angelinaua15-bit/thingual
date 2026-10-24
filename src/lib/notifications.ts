@@ -2,8 +2,6 @@ import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { useApp } from '../store/useApp';
-import { dropFor, dropReleaseTime } from '../data/social';
-import { fullWord } from '../data/concepts';
 import { translate } from '../i18n';
 
 if (Platform.OS !== 'web') {
@@ -48,20 +46,9 @@ export function useNotificationSchedule() {
             trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour: notify.reviewHour, minute: 0 },
           });
         }
-        if (notify.drop) {
-          for (let i = 0; i < 7; i++) {
-            const day = new Date(Date.now() + i * 86400000);
-            const at = dropReleaseTime(day);
-            if (at.getTime() <= Date.now()) continue;
-            await Notifications.scheduleNotificationAsync({
-              content: { title: translate(ui, 'camera.dropBanner', { word: fullWord(dropFor(day), active) }), body: translate(ui, 'drop.sub') },
-              trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: at },
-            });
-          }
-        }
       } catch {
         // notifications are best-effort
       }
     })();
-  }, [onboarded, asked, notify.drop, notify.review, notify.reviewHour, active, ui]);
+  }, [onboarded, asked, notify.review, notify.reviewHour, active, ui]);
 }

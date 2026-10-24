@@ -27,7 +27,7 @@ export default function PostScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: c.background, paddingTop: insets.top }}>
       <View style={styles.bar}>
-        <Pressable onPress={() => (goBack('/(tabs)/map'))} hitSlop={12}><ArrowLeft size={22} color={c.text} /></Pressable>
+        <Pressable onPress={() => (goBack('/(tabs)/threads'))} hitSlop={12}><ArrowLeft size={22} color={c.text} /></Pressable>
         <Txt v="headline">{t('social.thread')}</Txt>
       </View>
       <ScrollView contentContainerStyle={{ paddingHorizontal: space.m, paddingBottom: 120, maxWidth: 640, width: '100%', alignSelf: 'center' }}>

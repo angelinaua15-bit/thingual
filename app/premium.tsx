@@ -5,13 +5,13 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown, LinearTransition } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BookOpen, Camera, Check, ChevronDown, Crown, Languages, Lock, MessageCircle, Snowflake, Sparkle, X, Headphones } from '../src/components/icons';
+import { BookOpen, Check, Heart, ChevronDown, Crown, Languages, Lock, MessageCircle, Snowflake, Sparkle, X, Headphones } from '../src/components/icons';
 import { Txt, Button } from '../src/components/ui';
 import { Flame } from '../src/components/Flame';
 import { toast } from '../src/components/Overlay';
 import { useTheme, fonts, radius, space } from '../src/theme/tokens';
 import { useT } from '../src/i18n';
-import { useApp } from '../src/store/useApp';
+import { useApp, HEARTS_MAX } from '../src/store/useApp';
 import { joinPremiumWaitlist } from '../src/lib/api';
 import { billingAvailable, buy, getPlans, restore, type Plan as StorePlan } from '../src/lib/billing';
 import { haptic } from '../src/lib/feedback';
@@ -76,7 +76,7 @@ export default function Premium() {
   };
 
   const perks = [
-    { k: 'ai', icon: <Camera size={20} color={GOLD} /> },
+    { k: 'hearts', icon: <Heart size={20} color="#FDA4AF" fill="#FDA4AF" /> },
     { k: 'chat', icon: <MessageCircle size={20} color="#A7F3D0" /> },
     { k: 'books', icon: <Headphones size={20} color="#93C5FD" /> },
     { k: 'phrases', icon: <BookOpen size={20} color="#FCA5A5" /> },
@@ -103,8 +103,8 @@ export default function Premium() {
 
   const U = t('premium.cells.unlimited');
   const rows: [string, string, string][] = [
-    ['words', '✓', '✓'], ['drop', '✓', '✓'],
-    ['ai', t('premium.cells.aiFree', { ai: LIMITS.aiScansPerDay }), U],
+    ['path', '✓', '✓'], ['threads', '✓', '✓'],
+    ['hearts', t('premium.cells.heartsFree', { n: HEARTS_MAX }), U],
     ['chat', t('premium.cells.chatFree', { chat: LIMITS.chatPerDay }), U],
     ['books', t('premium.cells.booksFree', { n: LIMITS.freeBooksPerLang }), t('premium.cells.all')],
     ['phrases', t('premium.cells.phrasesFree'), t('premium.cells.all')],
@@ -115,7 +115,6 @@ export default function Premium() {
     ['langs', t('premium.cells.langsFree'), t('premium.cells.langsMax')],
     ['freeze', t('premium.cells.freezeFree'), t('premium.cells.freezeMax')],
     ['sparks', '×1', t('premium.cells.sparksMax')],
-    ['map', '—', '✓'],
   ];
 
   return (

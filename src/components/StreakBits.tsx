@@ -51,7 +51,7 @@ export function useShareStreak() {
 }
 
 /** Small pills for headers: flame + streak, sparks. */
-export function StreakPills() {
+export function StreakPills({ compact }: { compact?: boolean } = {}) {
   const { c } = useTheme();
   const st = useApp((s) => s.learnStreak);
   const sparks = useApp((s) => s.sparks);
@@ -71,7 +71,7 @@ export function StreakPills() {
         <Gem size={15} color="#7C5CFF" fill="#C4B5FD" />
         <Txt v="captionMedium" style={{ fontVariant: ['tabular-nums'] }}>{crystals}</Txt>
       </PressableScale>
-      {!narrow && (
+      {!narrow && !compact && (
         <PressableScale onPress={() => router.push('/shop')} style={[styles.pill, pad, { backgroundColor: c.surface, borderColor: c.divider }]} accessibilityLabel="sparks">
           <Sparkle size={15} color="#F59F00" fill="#F59F00" />
           <Txt v="captionMedium" style={{ fontVariant: ['tabular-nums'] }}>{sparks}</Txt>

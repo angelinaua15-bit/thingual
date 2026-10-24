@@ -28,13 +28,13 @@ const errors = (page: Page) => {
 
 test('new visitor lands in onboarding, even from a deep link', async ({ page }) => {
   const errs = errors(page);
-  await page.goto('/map');
+  await page.goto('/threads');
   await expect(page).toHaveURL(/onboarding/);
-  await expect(page.getByText('Point.')).toBeVisible();
+  await expect(page.getByText('Learn.')).toBeVisible();
   expect(errs).toEqual([]);
 });
 
-for (const path of ['/learn', '/dictionary', '/explore', '/phrases', '/phrases/phrasal', '/grammar', '/grammar/to-be', '/tutor', '/streak', '/shop', '/premium', '/league', '/settings', '/word/strawberry', '/review', '/phrase-review', '/notebook', '/notebook/edit', '/notebook/n-test', '/notebook/practice', '/books']) {
+for (const path of ['/path', '/threads', '/lesson?node=u0-0', '/lesson?node=u0-2', '/lesson?node=u0-5', '/hearts', '/compose', '/learn', '/dictionary', '/explore', '/phrases', '/phrases/phrasal', '/grammar', '/grammar/to-be', '/tutor', '/streak', '/shop', '/premium', '/league', '/settings', '/word/strawberry', '/review', '/phrase-review', '/notebook', '/notebook/edit', '/notebook/n-test', '/notebook/practice', '/books']) {
   test(`renders ${path} without crashing`, async ({ page }) => {
     const errs = errors(page);
     await page.goto('/');
@@ -154,5 +154,43 @@ test('crystals buy a colour theme and keep an honest ledger', async ({ page }) =
   const st = await page.evaluate(() => JSON.parse(localStorage.getItem('thingual-v1')!).state);
   expect(st.unlocks).toContain('accent:mint');
   expect(st.settings.accent).toBe('mint');
+  expect(errs).toEqual([]);
+});
+
+test('a path lesson checks answers and takes a heart for a mistake', async ({ page }) => {
+  const errs = errors(page);
+  await page.goto('/');
+  await page.evaluate((s) => localStorage.setItem('thingual-v1', s), seed());
+  await page.goto('/lesson?node=u0-0');
+  await expect(page.getByText('Нове слово').first()).toBeVisible();
+  // pick the first picture and check it
+  await page.getByText('Перевірити').first().isVisible();
+  const cards = page.locator('div[tabindex="0"]').filter({ has: page.locator('img') });
+  await cards.nth(0).click();
+  await page.getByText('Перевірити').click();
+  await expect(page.getByText('Продовжити')).toBeVisible();
+  const wrong = await page.getByText('Не зовсім').isVisible();
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('thingual-v1')!).state.hearts?.n ?? 5)).toBe(wrong ? 4 : 5);
+  await page.getByText('Продовжити').click();
+  await expect(page.getByText('Перевірити')).toBeVisible();
+  expect(errs).toEqual([]);
+});
+
+test('the chest on the path gives crystals once', async ({ page }) => {
+  const errs = errors(page);
+  await page.goto('/');
+  await page.evaluate((s) => {
+    const st = JSON.parse(s);
+    st.state.settings.cefr = 'A1';
+    st.state.crystals = 5;
+    st.state.path = { 'es:u0-0': 1, 'es:u0-1': 1, 'es:u0-2': 1 };
+    localStorage.setItem('thingual-v1', JSON.stringify(st));
+  }, seed());
+  await page.goto('/path');
+  await page.getByLabel('chest current').click();
+  await page.getByText('Відкрити', { exact: true }).click();
+  const st = await page.evaluate(() => JSON.parse(localStorage.getItem('thingual-v1')!).state);
+  expect(st.crystals).toBe(15);
+  expect(st.path['es:u0-3']).toBe(1);
   expect(errs).toEqual([]);
 });

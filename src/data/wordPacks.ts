@@ -97,6 +97,6 @@ export const DAILY_TIME_CAP = 30;
 export const spentOn = (unlocks: string[] = []) =>
   unlocks.reduce((sum, u) => {
     const [kind, id] = u.split(':');
-    const price = kind === 'accent' ? ACCENTS.find((a) => a.id === id)?.price : kind === 'pack' ? packById(id)?.price : 0;
+    const price = kind === 'accent' ? ACCENTS.find((a) => a.id === id)?.price : kind === 'pack' ? packById(id)?.price : kind === 'spend' ? Number(id) || 0 : 0;
     return sum + (price ?? 0);
   }, 0);

@@ -12,10 +12,25 @@ import { DAILY_TIME_CAP, SECONDS_PER_CRYSTAL, TIME_TIERS, spentOn } from '../dat
 import type { CEFR } from '../data/words/types';
 import { addDays, DAILY_SPARKS, dayDiff, FLAMES, FlameId, MAX_FREEZES, MILESTONES, PRICES, REPAIR_WINDOW, Reward } from '../lib/streak';
 
+export const HEARTS_MAX = 5;
+/** one heart comes back every 30 minutes */
+export const HEART_EVERY = 30 * 60_000;
+export const CHEST_CRYSTALS = 10;
+const isMaxNow = (s: { maxUntil?: number }) => !!s.maxUntil && s.maxUntil > Date.now();
+/** Hearts right now, counting the ones that came back with time. */
+export function heartsOf(s: { hearts: State['hearts'] }) {
+  const h = s.hearts ?? { n: HEARTS_MAX, at: Date.now() };
+  if (h.n >= HEARTS_MAX) return { n: HEARTS_MAX, at: h.at, next: 0 };
+  const back = Math.floor((Date.now() - h.at) / HEART_EVERY);
+  const n = Math.min(HEARTS_MAX, h.n + back);
+  const at = h.at + back * HEART_EVERY;
+  return { n, at, next: n >= HEARTS_MAX ? 0 : at + HEART_EVERY };
+}
+
 export type Level = 'beginner' | 'intermediate' | 'advanced';
 export type Goal = 'move' | 'travel' | 'study' | 'curious';
 export type AgeGroup = 'under13' | 'teen' | 'adult';
-export type WordSource = 'camera' | 'drop' | 'world' | 'quiz' | 'set' | 'gallery' | 'find';
+export type WordSource = 'camera' | 'drop' | 'world' | 'quiz' | 'set' | 'gallery' | 'find' | 'path';
 
 export type SavedWord = {
   conceptId: string;
@@ -112,6 +127,10 @@ type State = {
   timeToday: { day: string; seconds: number; earned: number; claimed: number[] };
   /** unlocked rewards: 'accent:mint', 'pack:idioms'… */
   unlocks: string[];
+  /** learning path: "lang:nodeId" → how many times the node was finished */
+  path: Record<string, number>;
+  /** hearts for path lessons: count and when the last refill was counted (Max has unlimited) */
+  hearts: { n: number; at: number };
   /** last time synced progress changed on this device (ms) */
   localChangedAt?: number;
   /** grammar lesson id → best score (0–100) */
@@ -158,6 +177,10 @@ type Actions = {
   addActiveTime: (seconds: number) => void;
   claimTimeTier: (min: number) => number;
   unlockReward: (id: string, price: number) => 'ok' | 'funds' | 'owned';
+  finishNode: (key: string, r: { words: string[]; total: number; correct: number; minutes: number; perfect: boolean }) => number;
+  openChest: (key: string) => number;
+  loseHeart: () => void;
+  refillHearts: (price: number) => 'ok' | 'funds';
   saveBookProgress: (id: string, p: Partial<BookProgress>) => void;
   updateNote: (id: string, patch: Partial<NoteInput & { done: boolean }>) => void;
   removeNote: (id: string) => void;
@@ -264,6 +287,8 @@ const initialState = (): State => {
     deviceId: `d-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
     timeToday: { day: '', seconds: 0, earned: 0, claimed: [] },
     unlocks: [],
+    path: {},
+    hearts: { n: HEARTS_MAX, at: Date.now() },
     drops: {},
     achievements: [],
     familyMode: { enabled: false },
@@ -578,6 +603,37 @@ export const useApp = create<State & Actions>()(
         set({ ...earn(s, bonus), timeToday: { ...t, claimed: [...t.claimed, min] } });
         return bonus;
       },
+      finishNode: (key, r) => {
+        const s = get();
+        r.words.forEach((w) => get().saveWord(w, '', 'path'));
+        get().logSession(r.total, r.correct, r.minutes);
+        // finishing a node is worth a little extra; a lesson without mistakes even more
+        const bonus = (r.perfect ? 10 : 5) * (isMaxNow(s) ? 2 : 1);
+        set((x) => ({ path: { ...x.path, [key]: (x.path[key] ?? 0) + 1 }, sparks: x.sparks + bonus, weekXp: addXp(x.weekXp, bonus) }));
+        if (Object.keys(get().path).length >= 10) get().unlock('lessons-10');
+        return Math.min(r.correct, 20) * (isMaxNow(s) ? 2 : 1) + bonus;
+      },
+      openChest: (key) => {
+        const s = get();
+        if (s.path[key]) return 0;
+        const n = CHEST_CRYSTALS * (isMaxNow(s) ? 2 : 1);
+        set({ ...earn(s, n), path: { ...s.path, [key]: 1 } });
+        get().markActive();
+        return n;
+      },
+      loseHeart: () => {
+        const s = get();
+        if (isMaxNow(s)) return;
+        const h = heartsOf(s);
+        set({ hearts: { n: Math.max(0, h.n - 1), at: h.n >= HEARTS_MAX ? Date.now() : h.at } });
+      },
+      refillHearts: (price) => {
+        const s = get();
+        if (s.crystals < price) return 'funds';
+        // recorded like an unlock so syncing between devices keeps the spend
+        set({ crystals: s.crystals - price, unlocks: [...s.unlocks, `spend:${price}:${Date.now().toString(36)}`], hearts: { n: HEARTS_MAX, at: Date.now() } });
+        return 'ok';
+      },
       unlockReward: (id, price) => {
         const s = get();
         if (s.unlocks.includes(id)) return 'owned';
@@ -642,6 +698,8 @@ export const useApp = create<State & Actions>()(
 );
 
 export { weekKey };
+
+
 
 /** Add crystals to the balance and to this device's lifetime ledger. */
 function earn(s: State, n: number): Pick<State, 'crystals' | 'crystalEarn'> {

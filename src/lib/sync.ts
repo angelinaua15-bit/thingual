@@ -13,7 +13,7 @@ import { spentOn } from '../data/wordPacks';
 type S = ReturnType<typeof useApp.getState>;
 const KEYS = [
   'onboarded', 'goal', 'quizScore', 'settings', 'words', 'collections', 'history', 'learnStreak', 'dropStreak', 'bestStreak',
-  'activeDays', 'frozenDays', 'sparks', 'freezes', 'claimed', 'flames', 'flame', 'achievements', 'exprs', 'drops', 'quests', 'weekXp', 'grammar', 'maxUntil', 'trialUsed', 'maxFreezeMonth', 'maxWaitlist', 'lostStreak', 'notebook', 'noteTomb', 'books', 'crystals', 'crystalEarn', 'unlocks', 'timeToday',
+  'activeDays', 'frozenDays', 'sparks', 'freezes', 'claimed', 'flames', 'flame', 'achievements', 'exprs', 'drops', 'quests', 'weekXp', 'grammar', 'maxUntil', 'trialUsed', 'maxFreezeMonth', 'maxWaitlist', 'lostStreak', 'notebook', 'noteTomb', 'books', 'crystals', 'crystalEarn', 'unlocks', 'timeToday', 'path',
 ] as const;
 const QUIET: readonly string[] = ['timeToday', 'crystals', 'crystalEarn'];
 type Snapshot = Partial<Pick<S, (typeof KEYS)[number]>> & { profile?: Partial<S['profile']> };
@@ -118,6 +118,7 @@ function merge(local: S, remote: Snapshot, remoteNewer: boolean): Partial<S> {
     ...mergeNotebook(local, remote),
     ...mergeCrystals(local, remote),
     timeToday: mergeTime(local.timeToday, remote.timeToday),
+    path: Object.fromEntries([...new Set([...Object.keys(local.path ?? {}), ...Object.keys(remote.path ?? {})])].map((k) => [k, Math.max(local.path?.[k] ?? 0, remote.path?.[k] ?? 0)])),
     books: Object.fromEntries(
       [...new Set([...Object.keys(local.books), ...Object.keys(remote.books ?? {})])].map((id) => {
         const a = local.books[id];

@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 
@@ -12,13 +11,9 @@ export async function shrink(uri: string, max = 1280): Promise<string> {
   }
 }
 
-export async function pickImage(opts: { square?: boolean; camera?: boolean; max?: number } = {}): Promise<string | null> {
-  if (opts.camera && Platform.OS !== 'web') {
-    const p = await ImagePicker.requestCameraPermissionsAsync();
-    if (!p.granted) return null;
-  }
-  const fn = opts.camera && Platform.OS !== 'web' ? ImagePicker.launchCameraAsync : ImagePicker.launchImageLibraryAsync;
-  const r = await fn({ mediaTypes: ['images'], allowsEditing: !!opts.square, aspect: opts.square ? [1, 1] : undefined, quality: 0.8 });
+/** A photo from the gallery (the app no longer uses the camera). */
+export async function pickImage(opts: { square?: boolean; max?: number } = {}): Promise<string | null> {
+  const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: !!opts.square, aspect: opts.square ? [1, 1] : undefined, quality: 0.8 });
   if (r.canceled || !r.assets?.[0]) return null;
   return shrink(r.assets[0].uri, opts.max ?? 1280);
 }

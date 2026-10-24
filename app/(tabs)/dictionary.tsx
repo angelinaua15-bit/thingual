@@ -22,7 +22,7 @@ import { NotebookCard } from '../../src/components/NoteBits';
 import { MaxBadge, MaxPill } from '../../src/components/MaxLock';
 
 type View_ = 'grid' | 'list';
-type Filter = 'all' | 'new' | 'hard' | 'learned' | 'drop' | `col:${string}`;
+type Filter = 'all' | 'new' | 'hard' | 'learned' | `col:${string}`;
 
 export default function Dictionary() {
   const max = useIsMax();
@@ -50,7 +50,6 @@ export default function Dictionary() {
       if (filter === 'new') return m === 0;
       if (filter === 'hard') return w.lapses >= 1 || w.card.difficulty > 6;
       if (filter === 'learned') return m === 3;
-      if (filter === 'drop') return w.source === 'drop';
       if (filter.startsWith('col:')) return collections.find((col) => col.id === filter.slice(4))?.conceptIds.includes(w.conceptId);
       return true;
     });
@@ -106,8 +105,8 @@ export default function Dictionary() {
         <View style={{ maxWidth: 720, width: '100%', alignSelf: 'center' }}>
           {/* collections */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: space.m, paddingVertical: 8 }}>
-            {(['all', 'new', 'hard', 'learned', 'drop'] as Filter[]).map((f) => (
-              <Chip key={f} label={t(`dictionary.filters.${f}`)} selected={filter === f} onPress={() => setFilter(f)} tone={f === 'drop' ? 'drop' : undefined} />
+            {(['all', 'new', 'hard', 'learned'] as Filter[]).map((f) => (
+              <Chip key={f} label={t(`dictionary.filters.${f}`)} selected={filter === f} onPress={() => setFilter(f)} />
             ))}
             {collections.map((col) => (
               <Chip key={col.id} label={`${col.name} · ${col.conceptIds.length}`} selected={filter === `col:${col.id}`} onPress={() => setFilter(`col:${col.id}`)} />
@@ -121,7 +120,7 @@ export default function Dictionary() {
               title={t('dictionary.emptyTitle')}
               sub={t('dictionary.emptySub')}
               cta={t('dictionary.emptyCta')}
-              onCta={() => router.navigate('/(tabs)/camera')}
+              onCta={() => router.navigate('/(tabs)/path')}
             />
           ) : view === 'grid' ? (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingHorizontal: space.m, paddingTop: 8 }}>

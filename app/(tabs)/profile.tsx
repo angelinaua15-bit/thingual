@@ -2,7 +2,7 @@ import React from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Award, Bell, BookOpen, Camera, Flame, Globe2, Languages, Settings, Sparkles, Trophy, UserPlus, Moon, Sun } from '../../src/components/icons';
+import { Bell, BookOpen, Flame, Languages, MessageCircle, Settings, Star, Trophy, UserPlus, Moon, Sun } from '../../src/components/icons';
 import { Screen, Txt, Button } from '../../src/components/ui';
 import { ProfileView } from '../../src/components/ProfileView';
 import { useTheme, fonts, radius, space, TAB_BAR_HEIGHT } from '../../src/theme/tokens';
@@ -14,8 +14,8 @@ import { MaxBanner } from '../../src/components/MaxBanner';
 import { visibleStreak } from '../../src/lib/streak';
 
 const ACH = [
-  { id: 'first-word', icon: BookOpen }, { id: '25-words', icon: Languages }, { id: '100-words', icon: Trophy }, { id: 'first-post', icon: Camera },
-  { id: 'streak-7', icon: Flame }, { id: 'streak-30', icon: Flame }, { id: 'drop-30', icon: Sparkles },
+  { id: 'first-word', icon: BookOpen }, { id: '25-words', icon: Languages }, { id: '100-words', icon: Trophy }, { id: 'first-post', icon: MessageCircle },
+  { id: 'streak-7', icon: Flame }, { id: 'streak-30', icon: Flame }, { id: 'lessons-10', icon: Star },
 ];
 
 export default function Profile() {
@@ -27,7 +27,7 @@ export default function Profile() {
   const status = useNet((s) => s.status);
   const words = useApp((x) => x.words);
   const learnStreak = useApp((x) => x.learnStreak);
-  const drops = useApp((x) => x.drops);
+  const lessons = useApp((x) => Object.keys(x.path).length);
   const achievements = useApp((x) => x.achievements);
 
   const stats = (
@@ -37,7 +37,7 @@ export default function Profile() {
         <View style={{ width: StyleSheet.hairlineWidth, backgroundColor: c.divider }} />
         <Stat n={visibleStreak(learnStreak)} label={t('profile.streak')} onPress={() => router.push('/streak')} />
         <View style={{ width: StyleSheet.hairlineWidth, backgroundColor: c.divider }} />
-        <Stat n={Object.keys(drops).length} label={t('profile.drops')} color={c.drop} />
+        <Stat n={lessons} label={t('profile.lessons')} color="#2FB574" onPress={() => router.navigate('/(tabs)/path')} />
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginTop: 12 }}>
         {ACH.map((a) => {

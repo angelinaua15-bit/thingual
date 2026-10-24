@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 import { router, useLocalSearchParams } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BookOpen, Camera, ImagePlus, Lightbulb, Trash2, Volume2, X } from '../../src/components/icons';
+import { BookOpen, ImagePlus, Lightbulb, Trash2, Volume2, X } from '../../src/components/icons';
 import { Txt, Button, Chip } from '../../src/components/ui';
 import { EmojiArt, NoteArt } from '../../src/components/NoteBits';
 import { toast, Sheet } from '../../src/components/Overlay';
@@ -47,8 +47,8 @@ export default function EditNote() {
     setMsg({ text: t('nb.filled'), ok: true });
     speak(d.word ?? f.word, f.lang);
   };
-  const addPhoto = async (camera?: boolean) => {
-    const uri = await pickImage({ square: true, camera, max: 1080 });
+  const addPhoto = async () => {
+    const uri = await pickImage({ square: true, max: 1080 });
     if (uri) set({ photo: uri });
   };
 
@@ -155,8 +155,7 @@ export default function EditNote() {
               ) : null}
             </View>
             <View style={{ flex: 1, gap: 8, justifyContent: 'center' }}>
-              <Button title={t('nb.gallery')} variant="secondary" size="m" icon={<ImagePlus size={17} color={c.text} />} onPress={() => addPhoto(false)} />
-              {Platform.OS !== 'web' && <Button title={t('nb.camera')} variant="secondary" size="m" icon={<Camera size={17} color={c.text} />} onPress={() => addPhoto(true)} />}
+              <Button title={t('nb.gallery')} variant="secondary" size="m" icon={<ImagePlus size={17} color={c.text} />} onPress={() => addPhoto()} />
               <Txt v="caption" color={c.textTertiary}>{t('nb.pictureHint')}</Txt>
             </View>
           </View>

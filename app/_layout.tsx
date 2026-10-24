@@ -95,8 +95,8 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
           <Stack.Screen name="word/[id]" options={{ animation: 'fade_from_bottom', presentation: 'card' }} />
           <Stack.Screen name="review" options={{ animation: 'slide_from_bottom', gestureEnabled: false }} />
-          <Stack.Screen name="drop" options={{ animation: 'slide_from_bottom' }} />
-          <Stack.Screen name="find" options={{ animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="lesson" options={{ animation: 'slide_from_bottom', gestureEnabled: false }} />
+          <Stack.Screen name="hearts" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="compose" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="edit-profile" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="postcard/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />

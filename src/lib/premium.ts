@@ -33,7 +33,7 @@ export const useIsMax = () => {
 };
 export const isMax = () => isMaxState(useApp.getState());
 
-export type MaxReason = 'ai' | 'chat' | 'word' | 'books' | 'phrases' | 'english' | 'grammar' | 'topics' | 'bulk' | 'languages' | 'satellite' | 'flame';
+export type MaxReason = 'ai' | 'chat' | 'word' | 'books' | 'phrases' | 'english' | 'grammar' | 'topics' | 'bulk' | 'languages' | 'satellite' | 'flame' | 'hearts';
 
 /** Opens the Max page explaining what is locked. Returns true when the feature can be used. */
 export function requireMax(reason: MaxReason) {

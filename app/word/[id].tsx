@@ -133,10 +133,6 @@ export default function WordScreen() {
             <Animated.View entering={FadeInDown.delay(180)} style={{ marginTop: space.l }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                 <Txt v="headline">{t('word.worldSays')}</Txt>
-                <Pressable onPress={() => router.push({ pathname: '/(tabs)/map', params: { concept: concept.id } })} style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
-                  <Map size={16} color={c.accent} />
-                  <Txt v="captionMedium" color={c.accent}>{t('word.seeOnMap')}</Txt>
-                </Pressable>
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingRight: 20 }}>
                 {LANGUAGES.filter((x) => x.code !== target).map((x) => {

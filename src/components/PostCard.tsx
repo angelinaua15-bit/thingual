@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, Share, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
-import { BookmarkPlus, Heart, MapPin, MessageCircle, MoreHorizontal, Send, Volume2 } from './icons';
+import { BookmarkPlus, Heart, MessageCircle, MoreHorizontal, Send, SpellCheck, Volume2 } from './icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { Avatar, Txt, PressableScale } from './ui';
 import { Photo } from './Photo';
@@ -13,9 +13,9 @@ import { useT, languageName } from '../i18n';
 import { useApp } from '../store/useApp';
 import { fullWord, labelOf } from '../data/concepts';
 import { LangCode, lang as langInfo } from '../data/languages';
-import { haptic, speak, timeAgo, formatLate } from '../lib/feedback';
+import { haptic, speak, timeAgo } from '../lib/feedback';
 import { block, deletePost, report, setLike, type PostRow } from '../lib/api';
-import { POST_TOPICS } from '../lib/api';
+import { TOPIC_EMOJI } from '../lib/api';
 import { useNet } from '../lib/queries';
 
 /** Threads-style post: avatar column, text, photo, word tag, actions. */
@@ -80,28 +80,25 @@ export function PostCard({ post, liked = false, i = 0, threadLine, big, onDelete
         </View>
 
         <Pressable onPress={open}>
-          {(post.is_drop || post.place || post.topic) && (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-              {post.topic && !post.is_drop ? (
-                <View style={[styles.dropTag, { backgroundColor: c.accentSoft }]}>
-                  <Txt v="captionMedium" color={c.accent} style={{ fontSize: 10 }}>{POST_TOPICS.find((x) => x.id === post.topic)?.emoji} {t(`share.topics.${post.topic}`)}</Txt>
+          {(post.lang || post.topic) && post.kind !== 'correction' && (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+              {post.lang && !post.parent_id ? (
+                <View style={[styles.tag, { backgroundColor: c.surfaceAlt }]}>
+                  <Txt v="captionMedium" style={{ fontSize: 11 }}>{languageName(post.lang as LangCode, s.uiLang)}{post.level ? ` · ${post.level}` : ''}</Txt>
                 </View>
               ) : null}
-              {post.is_drop && (
-                <View style={[styles.dropTag, { backgroundColor: c.drop }]}>
-                  <Txt v="captionMedium" color="#fff" style={{ fontSize: 10 }}>DROP</Txt>
+              {post.topic ? (
+                <View style={[styles.tag, { backgroundColor: c.accentSoft }]}>
+                  <Txt v="captionMedium" color={c.accent} style={{ fontSize: 11 }}>{TOPIC_EMOJI[post.topic]} {t(`threads.topics.${post.topic}`)}</Txt>
                 </View>
-              )}
-              {post.place ? (
-                <>
-                  <MapPin size={12} color={c.textTertiary} />
-                  <Txt v="caption" color={c.textTertiary} style={{ fontSize: 12 }}>{post.place}</Txt>
-                </>
               ) : null}
-              {post.late_minutes ? <Txt v="caption" color={c.drop} style={{ fontSize: 12 }}>· {t('drop.late', { t: formatLate(post.late_minutes, t) })}</Txt> : null}
             </View>
           )}
-          {post.body ? <Txt v={big ? 'bodyMedium' : 'body'} style={{ fontSize: big ? 17 : 15.5, lineHeight: big ? 24 : 22 }}>{post.body}</Txt> : null}
+          {post.kind === 'correction' ? (
+            <Correction post={post} />
+          ) : post.body ? (
+            <Txt v={big ? 'bodyMedium' : 'body'} style={{ fontSize: big ? 17 : 15.5, lineHeight: big ? 24 : 22 }}>{post.body}</Txt>
+          ) : null}
           {post.photo_url ? (
             <View style={[styles.photo, { marginTop: post.body ? 10 : 2, aspectRatio: big ? 4 / 5 : 1 }]}>
               <Photo uri={post.photo_url} style={{ width: '100%', height: '100%' }} />
@@ -141,6 +138,12 @@ export function PostCard({ post, liked = false, i = 0, threadLine, big, onDelete
             <MessageCircle size={20} color={c.text} />
             {post.reply_count > 0 && <Txt v="caption" color={c.textSecondary}>{post.reply_count}</Txt>}
           </Pressable>
+          {!post.parent_id && post.kind !== 'correction' && post.body && !mine ? (
+            <Pressable onPress={() => router.push({ pathname: '/compose', params: { parent: post.id, correct: '1' } })} hitSlop={8} style={styles.action} accessibilityLabel={t('threads.correct')}>
+              <SpellCheck size={19} color={c.text} />
+              <Txt v="caption" color={c.textSecondary}>{t('threads.fix')}</Txt>
+            </Pressable>
+          ) : null}
           <Pressable onPress={() => shareText(`${post.body ? `${post.body}\n` : ''}https://thingual.vercel.app/post/${post.id}`)} hitSlop={8} style={styles.action}>
             <Send size={19} color={c.text} />
           </Pressable>
@@ -185,11 +188,31 @@ export function PostCard({ post, liked = false, i = 0, threadLine, big, onDelete
   );
 }
 
+/** A reply that fixes someone's text: what they wrote, crossed out, and the corrected version. */
+function Correction({ post }: { post: PostRow }) {
+  const { c } = useTheme();
+  const { t } = useT();
+  const [fixed, ...rest] = post.body.split('\n\n');
+  const note = rest.join('\n\n');
+  return (
+    <View style={[styles.fix, { backgroundColor: c.surfaceAlt }]}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <SpellCheck size={14} color={c.success} />
+        <Txt v="overline" color={c.success}>{t('threads.correction')}</Txt>
+      </View>
+      {post.quote ? <Txt v="callout" color={c.error} style={{ textDecorationLine: 'line-through', opacity: 0.8 }}>{post.quote}</Txt> : null}
+      <Txt v="bodyMedium" color={c.success}>{fixed}</Txt>
+      {note ? <Txt v="callout" color={c.textSecondary}>{note}</Txt> : null}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   wrap: { flexDirection: 'row', gap: 12, paddingTop: 14 },
   line: { width: 2, flex: 1, marginTop: 6, borderRadius: 1 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 },
-  dropTag: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 },
+  tag: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
+  fix: { padding: 10, borderRadius: radius.s, gap: 6 },
   photo: { borderRadius: radius.m, overflow: 'hidden', maxHeight: 460, width: '100%' },
   word: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, paddingLeft: 12, paddingRight: 6, paddingVertical: 6, borderRadius: radius.s },
   learn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, height: 30, borderRadius: 999, maxWidth: 170 },

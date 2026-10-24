@@ -21,10 +21,12 @@ export type Profile = {
   created_at: string;
 };
 
-export type PostTopic = 'travel' | 'fact' | 'word' | 'question';
+/** Thread topics. 'travel' | 'fact' | 'word' are kept only so older posts still show their tag. */
+export type PostTopic = 'practice' | 'question' | 'culture' | 'chat' | 'travel' | 'fact' | 'word';
 export const POST_TOPICS: { id: PostTopic; emoji: string }[] = [
-  { id: 'travel', emoji: '✈️' }, { id: 'fact', emoji: '💡' }, { id: 'word', emoji: '📸' }, { id: 'question', emoji: '🗣️' },
+  { id: 'practice', emoji: '✍️' }, { id: 'question', emoji: '🗣️' }, { id: 'culture', emoji: '🌍' }, { id: 'chat', emoji: '💬' },
 ];
+export const TOPIC_EMOJI: Record<PostTopic, string> = { practice: '✍️', question: '🗣️', culture: '🌍', chat: '💬', travel: '✈️', fact: '💡', word: '📸' };
 
 export type PostRow = {
   id: string;
@@ -35,6 +37,11 @@ export type PostRow = {
   photo_url: string | null;
   concept_id: string | null;
   lang: string | null;
+  /** CEFR level of the author when they posted */
+  level?: string | null;
+  /** 'correction': a reply that fixes the parent's text (quote = the original, body = the fixed text) */
+  kind?: 'post' | 'correction';
+  quote?: string | null;
   place: string | null;
   lat: number | null;
   lng: number | null;
@@ -198,9 +205,10 @@ export async function report(postId: string, reason = '') {
 /* ---------------- posts ---------------- */
 const PAGE = 20;
 
-export async function feed(kind: 'for_you' | 'following', before?: string, topic?: PostTopic): Promise<PostRow[]> {
+export async function feed(kind: 'for_you' | 'following', before?: string, topic?: PostTopic, lang?: string): Promise<PostRow[]> {
   let req = supabase.from('posts').select(POST_SELECT).is('parent_id', null).order('created_at', { ascending: false }).limit(PAGE);
   if (topic) req = req.eq('topic', topic);
+  if (lang) req = req.eq('lang', lang);
   if (before) req = req.lt('created_at', before);
   if (kind === 'following') {
     const ids = await followingIds();
@@ -210,15 +218,7 @@ export async function feed(kind: 'for_you' | 'following', before?: string, topic
   const { data, error } = await req;
   if (error) throw error;
   const blocked = new Set(await blockedIds().catch(() => []));
-  return hideUnrevealedDrops((data ?? []) as PostRow[]).filter((p) => !blocked.has(p.author_id));
-}
-
-/** Today's Daily Drop stays hidden until you've posted yours ("post to see"). */
-function hideUnrevealedDrops(rows: PostRow[]) {
-  const today = dateKey();
-  if (useApp.getState().drops[today]) return rows;
-  const me = currentUid;
-  return rows.filter((p) => !(p.is_drop && p.drop_day === today && p.author_id !== me));
+  return ((data ?? []) as PostRow[]).filter((p) => !blocked.has(p.author_id));
 }
 
 export async function userPosts(uid: string, replies = false): Promise<PostRow[]> {
@@ -246,24 +246,6 @@ export async function conceptPosts(concept: string): Promise<PostRow[]> {
   const { data, error } = await supabase.from('posts').select(POST_SELECT).eq('concept_id', concept).not('photo_url', 'is', null).order('created_at', { ascending: false }).limit(30);
   if (error) throw error;
   return (data ?? []) as PostRow[];
-}
-
-export async function mapPosts(opts: { concept?: string; dropDay?: string; authors?: string[] }): Promise<PostRow[]> {
-  let req = supabase.from('posts').select(POST_SELECT).not('lat', 'is', null).not('photo_url', 'is', null).order('created_at', { ascending: false }).limit(500);
-  if (opts.concept) req = req.eq('concept_id', opts.concept);
-  if (opts.dropDay) req = req.eq('is_drop', true).eq('drop_day', opts.dropDay);
-  if (opts.authors) req = req.in('author_id', opts.authors.length ? opts.authors : ['00000000-0000-0000-0000-000000000000']);
-  const { data, error } = await req;
-  if (error) throw error;
-  const blocked = new Set(await blockedIds().catch(() => []));
-  const rows = (data ?? []) as PostRow[];
-  return (opts.dropDay ? rows : hideUnrevealedDrops(rows)).filter((p) => !blocked.has(p.author_id));
-}
-
-export async function myDropToday(day: string): Promise<PostRow | null> {
-  const id = await ensureSession();
-  const { data } = await supabase.from('posts').select(POST_SELECT).eq('author_id', id).eq('is_drop', true).eq('drop_day', day).maybeSingle();
-  return data as PostRow | null;
 }
 
 export class PhotoRejected extends Error {
@@ -297,7 +279,7 @@ export async function reportError(message: string, stack?: string) {
 export async function createPost(p: {
   body?: string; photoUri?: string | null; concept_id?: string | null; lang?: string | null; parent_id?: string | null;
   place?: string | null; lat?: number | null; lng?: number | null; is_drop?: boolean; drop_day?: string | null; late_minutes?: number | null;
-  topic?: PostTopic | null;
+  topic?: PostTopic | null; level?: string | null; kind?: 'post' | 'correction'; quote?: string | null;
 }): Promise<PostRow> {
   const id = await ensureSession();
   if (p.photoUri && !p.photoUri.startsWith('https://')) await moderatePhoto(p.photoUri);
@@ -309,6 +291,8 @@ export async function createPost(p: {
       parent_id: p.parent_id ?? null, place: p.place ?? null, lat: p.lat ?? null, lng: p.lng ?? null,
       is_drop: !!p.is_drop, drop_day: p.drop_day ?? null, late_minutes: p.late_minutes ?? null,
       ...(p.topic ? { topic: p.topic } : {}),
+      ...(p.level ? { level: p.level } : {}),
+      ...(p.kind === 'correction' ? { kind: 'correction', quote: (p.quote ?? '').slice(0, 500) } : {}),
     })
     .select(POST_SELECT)
     .single();

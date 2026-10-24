@@ -4,12 +4,13 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, ImageStyle, StyleProp } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useCameraPermissions } from 'expo-camera';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   Easing, FadeIn, FadeInDown, FadeInUp, FadeOut, ZoomIn, useAnimatedStyle, useSharedValue, withRepeat, withTiming, withDelay, withSequence, withSpring,
 } from 'react-native-reanimated';
 import { Camera, Check, ChevronLeft, Volume2, X } from '../src/components/icons';
+import { Mascot } from '../src/components/PathBits';
+import { EmojiArt } from '../src/components/NoteBits';
 import { Button, PressableScale, Txt, ProgressBar, Avatar } from '../src/components/ui';
 import { TextInput } from 'react-native';
 import { pickImage } from '../src/lib/pickImage';
@@ -25,8 +26,8 @@ import { CEFR_ORDER, bucketOf, cefrFromQuiz } from '../src/lib/level';
 import type { CEFR } from '../src/data/words/types';
 import { haptic, speak } from '../src/lib/feedback';
 
-type Step = 'welcome' | 'native' | 'target' | 'goal' | 'quizIntro' | 'quiz' | 'result' | 'camera' | 'profile' | 'ready';
-const ORDER: Step[] = ['welcome', 'native', 'target', 'goal', 'quizIntro', 'quiz', 'result', 'camera', 'profile', 'ready'];
+type Step = 'welcome' | 'native' | 'target' | 'goal' | 'quizIntro' | 'quiz' | 'result' | 'fox' | 'profile' | 'ready';
+const ORDER: Step[] = ['welcome', 'native', 'target', 'goal', 'quizIntro', 'quiz', 'result', 'fox', 'profile', 'ready'];
 
 const QUIZ_CONCEPTS = ['coffee', 'apple', 'window', 'key', 'umbrella', 'mirror'];
 
@@ -58,7 +59,7 @@ export default function Onboarding() {
   const finish = () => {
     const missed = QUIZ_CONCEPTS.filter((_, i) => !answers[i]);
     store.completeOnboarding({ goal, level, cefr, native, target, quizScore: score, quizWords: missed });
-    router.replace('/(tabs)/camera');
+    router.replace('/(tabs)/path');
   };
 
   const progressIdx = ORDER.indexOf(step);
@@ -69,9 +70,9 @@ export default function Onboarding() {
       {step === 'welcome' && <Welcome t={t} onStart={() => go('native')} />}
       {step !== 'welcome' && (
         <Frame
-          onBack={['native', 'target', 'goal', 'quizIntro', 'camera', 'profile'].includes(step) ? back : undefined}
+          onBack={['native', 'target', 'goal', 'quizIntro', 'fox', 'profile'].includes(step) ? back : undefined}
           progress={progressIdx / (ORDER.length - 1)}
-          dark={step === 'quiz' || step === 'camera' || step === 'quizIntro'}
+          dark={step === 'quiz' || step === 'fox' || step === 'quizIntro'}
         >
           {step === 'native' && (
             <LanguagePicker
@@ -106,8 +107,8 @@ export default function Onboarding() {
               onDone={(a) => { setAnswers(a); go('result'); }}
             />
           )}
-          {step === 'result' && <Result t={t} score={score} cefr={cefr} onPick={setCefrPick} missed={QUIZ_CONCEPTS.filter((_, i) => !answers[i])} target={target} onNext={() => go('camera')} />}
-          {step === 'camera' && <CameraStep t={t} target={target} native={native} onNext={() => go('profile')} />}
+          {step === 'result' && <Result t={t} score={score} cefr={cefr} onPick={setCefrPick} missed={QUIZ_CONCEPTS.filter((_, i) => !answers[i])} target={target} onNext={() => go('fox')} />}
+          {step === 'fox' && <FoxStep t={t} ta={ta} onNext={() => go('profile')} />}
           {step === 'profile' && <ProfileStep t={t} onNext={() => go('ready')} />}
           {step === 'ready' && <Ready t={t} onDone={finish} />}
         </Frame>
@@ -204,7 +205,7 @@ function Welcome({ t, onStart }: { t: (k: string) => string; onStart: () => void
           <View style={{ marginBottom: 18 }}><Logo size={34} /></View>
         </Animated.View>
         <Animated.View entering={FadeInDown.delay(300).duration(800)}>
-          <Txt style={{ fontFamily: fonts.serif, fontSize: 58, lineHeight: 58, color: '#fff', letterSpacing: -1 }}>{t('onboarding.welcomeTitle')}</Txt>
+          <Txt style={{ fontFamily: fonts.serif, fontSize: width < 360 ? 46 : 58, lineHeight: width < 360 ? 52 : 64, color: '#fff', letterSpacing: -1 }}>{t('onboarding.welcomeTitle')}</Txt>
         </Animated.View>
         <Animated.View entering={FadeInDown.delay(500).duration(800)}>
           <Txt v="body" color="rgba(255,255,255,0.75)" style={{ marginTop: 16, marginBottom: 28 }}>{t('onboarding.welcomeSub')}</Txt>
@@ -522,49 +523,29 @@ function Result({ t, score, cefr, onPick, missed, target, onNext }: { t: (k: str
 }
 
 /* ------------------------------------------------------------------ */
-/* Camera permission                                                    */
+/* Meet the fox: how the path works                                     */
 /* ------------------------------------------------------------------ */
-function CameraStep({ t, onNext, target, native }: { t: (k: string) => string; onNext: () => void; target: LangCode; native: LangCode }) {
-  const [, request] = useCameraPermissions();
-  const pulse = useSharedValue(1);
-  useEffect(() => {
-    pulse.value = withRepeat(withSequence(withTiming(1.35, { duration: 1100 }), withTiming(1, { duration: 1100 })), -1);
-  }, []);
-  const ring = useAnimatedStyle(() => ({ transform: [{ scale: pulse.value }], opacity: 2 - pulse.value * 1.2 }));
+function FoxStep({ t, ta, onNext }: { t: (k: string) => string; ta: (k: string) => string[]; onNext: () => void }) {
+  const points = ta('onboarding.foxPoints');
+  const icons = ['🗺️', '❤️', '💬'];
   return (
     <View style={{ flex: 1 }}>
-      <View style={{ flex: 1, margin: space.l, borderRadius: radius.xl, overflow: 'hidden', maxWidth: 512, width: '100%', alignSelf: 'center' }}>
-        <Photo uri={unsplash('photo-1496092607007-ca127e0b6a10', 900)} style={StyleSheet.absoluteFill as StyleProp<ImageStyle>} />
-        <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}>
-          <Animated.View style={[styles.dotRing, ring]} />
-          <View style={styles.dot} />
-          <Animated.View entering={FadeInUp.delay(600)} style={styles.bubble}>
-            <Txt style={{ fontFamily: fonts.serif, fontSize: 22, color: '#141414' }}>{fullWord('teapot', target)}</Txt>
-            <Txt v="caption" color="#6B6B6B">{labelOf('teapot', native)?.word}</Txt>
-          </Animated.View>
+      <ScrollView contentContainerStyle={{ padding: space.l, paddingBottom: 140, maxWidth: 560, width: '100%', alignSelf: 'center', alignItems: 'center' }}>
+        <Animated.View entering={ZoomIn.springify().damping(12)}><Mascot size={150} /></Animated.View>
+        <Animated.View entering={FadeInDown.delay(200)} style={{ alignSelf: 'stretch' }}>
+          <Txt v="title" color="#fff" center style={{ marginTop: 18 }}>{t('onboarding.foxTitle')}</Txt>
+          <Txt v="callout" color="rgba(255,255,255,0.7)" center style={{ marginTop: 8 }}>{t('onboarding.foxSub')}</Txt>
+        </Animated.View>
+        <View style={{ alignSelf: 'stretch', gap: 10, marginTop: 24 }}>
+          {points.map((x, i) => (
+            <Animated.View key={x} entering={FadeInDown.delay(350 + i * 120).springify()} style={styles.foxRow}>
+              <EmojiArt emoji={icons[i]} size={30} />
+              <Txt v="callout" color="#fff" style={{ flex: 1 }}>{x}</Txt>
+            </Animated.View>
+          ))}
         </View>
-        {['tl', 'tr', 'bl', 'br'].map((k) => (
-          <View key={k} style={[styles.corner, k.includes('t') ? { top: 18 } : { bottom: 18 }, k.includes('l') ? { left: 18 } : { right: 18 }, {
-            borderTopWidth: k.includes('t') ? 3 : 0, borderBottomWidth: k.includes('b') ? 3 : 0, borderLeftWidth: k.includes('l') ? 3 : 0, borderRightWidth: k.includes('r') ? 3 : 0,
-          }]} />
-        ))}
-      </View>
-      <View style={{ paddingHorizontal: space.l, paddingBottom: space.m, maxWidth: 560, width: '100%', alignSelf: 'center' }}>
-        <Txt v="title" color="#fff">{t('onboarding.cameraTitle')}</Txt>
-        <Txt v="callout" color="rgba(255,255,255,0.7)" style={{ marginTop: 8, marginBottom: 20 }}>{t('onboarding.cameraSub')}</Txt>
-        <Button
-          title={t('onboarding.allowCamera')}
-          variant="inverse"
-          icon={<Camera size={18} color="#141414" />}
-          onPress={async () => {
-            try { await request(); } catch {}
-            onNext();
-          }}
-        />
-        <Pressable onPress={onNext} style={{ alignItems: 'center', padding: 14 }}>
-          <Txt v="bodyMedium" color="rgba(255,255,255,0.6)">{t('onboarding.later')}</Txt>
-        </Pressable>
-      </View>
+      </ScrollView>
+      <BottomCta title={t('common.continue')} onPress={onNext} dark />
     </View>
   );
 }
@@ -632,7 +613,7 @@ function Ready({ t, onDone }: { t: (k: string) => string; onDone: () => void }) 
       <Animated.View entering={FadeInDown.delay(300)} style={{ alignItems: 'center' }}>
         <Txt v="display" center>{t('onboarding.readyTitle')}</Txt>
         <Txt v="body" color={c.textSecondary} center style={{ marginTop: 12, marginBottom: 32, maxWidth: 320 }}>{t('onboarding.readySub')}</Txt>
-        <Button title={t('onboarding.openCamera')} onPress={onDone} style={{ minWidth: 260 }} />
+        <Button title={t('onboarding.startPath')} onPress={onDone} style={{ minWidth: 260 }} />
       </Animated.View>
     </View>
   );
@@ -652,4 +633,5 @@ const styles = StyleSheet.create({
   camBadge: { position: 'absolute', right: 0, bottom: 0, width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', borderWidth: 3 },
   input: { height: 52, borderRadius: radius.m, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 14, fontFamily: fonts.regular, fontSize: 16 },
   corner: { position: 'absolute', width: 28, height: 28, borderColor: '#fff', borderRadius: 4 },
+  foxRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14, borderRadius: radius.m, backgroundColor: 'rgba(255,255,255,0.08)' },
 });

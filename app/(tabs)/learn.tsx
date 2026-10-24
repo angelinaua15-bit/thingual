@@ -7,7 +7,7 @@ import React from 'react';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { router } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { ArrowRight, Image as ImageIcon, Keyboard, Mic, Puzzle, Search, Type as TypeIcon, Layers } from '../../src/components/icons';
+import { ArrowRight, Image as ImageIcon, Keyboard, Mic, Puzzle, Type as TypeIcon, Layers } from '../../src/components/icons';
 import { Screen, Txt, Button, PressableScale } from '../../src/components/ui';
 import { Photo, photoForWord } from '../../src/components/Photo';
 import { useTheme, fonts, radius, space, TAB_BAR_HEIGHT } from '../../src/theme/tokens';
@@ -21,7 +21,7 @@ import { AudiobooksBanner } from '../../src/components/BookBits';
 
 const EX = [
   { id: 'recall', icon: Layers }, { id: 'choose', icon: ImageIcon }, { id: 'type', icon: Keyboard },
-  { id: 'speak', icon: Mic }, { id: 'sentence', icon: Puzzle }, { id: 'article', icon: TypeIcon }, { id: 'find', icon: Search },
+  { id: 'speak', icon: Mic }, { id: 'sentence', icon: Puzzle }, { id: 'article', icon: TypeIcon },
 ] as const;
 
 export default function Learn() {
@@ -69,7 +69,7 @@ export default function Learn() {
             <>
               <Txt v="headline" color={c.background}>{t('learn.emptyTitle')}</Txt>
               <Txt v="callout" color={c.background} style={{ opacity: 0.7, marginTop: 6, marginBottom: 16 }}>{t('learn.emptySub')}</Txt>
-              <Button title={t('dictionary.emptyCta')} variant="inverse" onPress={() => router.navigate('/(tabs)/camera')} />
+              <Button title={t('dictionary.emptyCta')} variant="inverse" onPress={() => router.navigate('/(tabs)/path')} />
             </>
           ) : (
             <>
@@ -121,14 +121,13 @@ export default function Learn() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingRight: space.m }} style={{ marginHorizontal: -space.m, paddingLeft: space.m }}>
           {exercises.map((e) => {
             const Icon = e.icon;
-            const hot = e.id === 'find';
             return (
               <PressableScale
                 key={e.id}
-                onPress={() => (e.id === 'find' ? router.push('/find') : router.push({ pathname: '/review', params: { mode: e.id } }))}
-                style={[styles.ex, { backgroundColor: hot ? c.dropSoft : c.surface, borderColor: c.divider }]}
+                onPress={() => router.push({ pathname: '/review', params: { mode: e.id } })}
+                style={[styles.ex, { backgroundColor: c.surface, borderColor: c.divider }]}
               >
-                <Icon size={18} color={hot ? c.drop : c.text} />
+                <Icon size={18} color={c.text} />
                 <Txt v="captionMedium">{t(`learn.ex.${e.id}`)}</Txt>
               </PressableScale>
             );
