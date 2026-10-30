@@ -27,8 +27,8 @@ Spaced repetition (FSRS, the algorithm behind modern flashcards) schedules every
 STAY MOTIVATED
 Hearts for mistakes, XP for every lesson, a daily streak with freezes and rewards, crystals for time spent learning and a weekly league with friends.
 
-THREADS
-Write in the language you learn — answer the topic of the day, ask a question, share a tradition. Other learners and native speakers reply and correct your mistakes right in the thread.
+ARENA
+Duel anyone 1-on-1: the same 10 words for both of you, and you race your opponent's run live. Build a fox pack of up to 10 — family, a class or friends — and hit the weekly goal together. Record the phrase of the day as a voice postcard and hear how people all over the world say it. Every week the whole world walks Tingo through a new country — each stop opens a chest for everyone. No free text anywhere: pack names come from word lists and reactions are stickers, so it's safe for kids too.
 
 Private by design: no ads, no tracking, no location.
 
@@ -50,8 +50,8 @@ Thingual — це гра, в якій ти вчиш мову по три хви�
 ТРИМАЙ МОТИВАЦІЮ
 Серця за помилки, XP за кожен урок, щоденна серія із заморозками й нагородами, кристали за час навчання та ліга тижня з друзями.
 
-ТРЕДИ
-Пиши мовою, яку вчиш: відповідай на тему дня, питай, ділися традиціями. Інші учні й носії мови відповідають і виправляють помилки прямо в треді.
+АРЕНА
+Дуелі 1 на 1: однакові 10 слів для обох, і ти змагаєшся із записом суперника наживо. Зграя лисів до 10 людей — сім'я, клас чи друзі — разом виконує мету тижня. Голосові листівки: запиши фразу дня й послухай, як її кажуть люди з усього світу. Щотижня весь світ разом веде Тінґо новою країною — кожна зупинка відкриває скриню для всіх. Жодного вільного тексту: назви зграй — зі списку слів, реакції — наліпки, тож це безпечно й для дітей.
 
 Приватність за замовчуванням: без реклами, без стеження, без геолокації.
 
@@ -81,4 +81,4 @@ Thingual — це гра, в якій ти вчиш мову по три хви�
 - No tracking, no ads, no data sold. Data encrypted in transit. Users can delete their account in the app.
 
 ## Review notes (paste into App Review Information)
-No login is required — the app creates an anonymous account automatically. To test community features, open the Threads tab and post a thread (or correct someone's post with Fix); you will be asked for an age group and to accept the community terms first. Objectionable content can be reported (⋯ on any post) and users can be blocked; photos are checked by an AI safety filter before publishing. Account deletion: Settings → Privacy → Delete account. Subscriptions (Thingual Max, monthly/yearly) are sold through the store via RevenueCat; Restore purchases is on the Max screen.
+No login is required — the app creates an anonymous account automatically. To test community features, open the Arena tab: "Find an opponent" starts a duel (a practice bot plays if nobody is waiting), "Fox packs" lets you create or join a pack, and "Voice postcards" records the phrase of the day. There is no free-text user content: pack names are picked from fixed word lists and reactions are stickers. Voice postcards can be reported (⋯ on any postcard; hidden after 3 reports) and users can be blocked; under-13 accounts cannot publish recordings. Account deletion: Settings → Privacy → Delete account. Subscriptions (Thingual Max, monthly/yearly) are sold through the store via RevenueCat; Restore purchases is on the Max screen.

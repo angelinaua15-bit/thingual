@@ -4,7 +4,7 @@ import { Tabs, type BottomTabBarProps } from 'expo-router/js-tabs';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
-import { BookOpen, Dumbbell, MessageCircle, User } from '../../src/components/icons';
+import { BookOpen, Dumbbell, Swords, User } from '../../src/components/icons';
 import { FoxArt } from '../../src/components/PathBits';
 import { EmojiArt } from '../../src/components/NoteBits';
 import { useApp } from '../../src/store/useApp';
@@ -15,7 +15,7 @@ import { Txt } from '../../src/components/ui';
 import { MiniPlayer } from '../../src/components/BookBits';
 import { haptic } from '../../src/lib/feedback';
 
-const ICONS: Record<string, typeof BookOpen> = { threads: MessageCircle, dictionary: BookOpen, learn: Dumbbell, profile: User };
+const ICONS: Record<string, typeof BookOpen> = { arena: Swords, dictionary: BookOpen, learn: Dumbbell, profile: User };
 
 function TabBar({ state, navigateToTab }: BottomTabBarProps) {
   const { c, isDark } = useTheme();
@@ -91,7 +91,7 @@ export default function TabsLayout() {
       screenOptions={{ headerShown: false, tabBarStyle: { position: 'absolute' } }}
       tabBar={(p) => <TabBar {...p} />}
     >
-      <Tabs.Screen name="threads" />
+      <Tabs.Screen name="arena" />
       <Tabs.Screen name="dictionary" />
       <Tabs.Screen name="path" />
       <Tabs.Screen name="learn" />

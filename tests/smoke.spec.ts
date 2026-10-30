@@ -28,13 +28,13 @@ const errors = (page: Page) => {
 
 test('new visitor lands in onboarding, even from a deep link', async ({ page }) => {
   const errs = errors(page);
-  await page.goto('/threads');
+  await page.goto('/arena');
   await expect(page).toHaveURL(/onboarding/);
   await expect(page.getByText('Learn.')).toBeVisible();
   expect(errs).toEqual([]);
 });
 
-for (const path of ['/lightning', '/stories', '/story?id=cafe-morning', '/wardrobe', '/path', '/threads', '/lesson?node=u0-0', '/lesson?node=u0-2', '/lesson?node=u0-5', '/hearts', '/compose', '/learn', '/dictionary', '/explore', '/phrases', '/phrases/phrasal', '/grammar', '/grammar/to-be', '/tutor', '/streak', '/shop', '/premium', '/league', '/settings', '/word/strawberry', '/review', '/phrase-review', '/notebook', '/notebook/edit', '/notebook/n-test', '/notebook/practice', '/books']) {
+for (const path of ['/lightning', '/stories', '/story?id=cafe-morning', '/wardrobe', '/path', '/arena', '/duel?friend=1', '/team', '/voices', '/lesson?node=u0-0', '/lesson?node=u0-2', '/lesson?node=u0-5', '/hearts', '/learn', '/dictionary', '/explore', '/phrases', '/phrases/phrasal', '/grammar', '/grammar/to-be', '/tutor', '/streak', '/shop', '/premium', '/league', '/settings', '/word/strawberry', '/review', '/phrase-review', '/notebook', '/notebook/edit', '/notebook/n-test', '/notebook/practice', '/books']) {
   test(`renders ${path} without crashing`, async ({ page }) => {
     const errs = errors(page);
     await page.goto('/');
@@ -46,6 +46,32 @@ for (const path of ['/lightning', '/stories', '/story?id=cafe-morning', '/wardro
     expect(errs).toEqual([]);
   });
 }
+
+test('a friend duel round can be played to the end', async ({ page }) => {
+  const errs = errors(page);
+  await page.goto('/');
+  await page.evaluate((s) => localStorage.setItem('thingual-v1', s), seed());
+  await page.goto('/duel?friend=1');
+  await page.getByText('Зіграти свій раунд', { exact: false }).click();
+  for (let k = 0; k < 10; k++) {
+    await page.getByTestId('opt-0').click({ timeout: 8000 });
+    await page.waitForTimeout(900);
+  }
+  await expect(page.getByText('Надіслати виклик', { exact: false })).toBeVisible();
+  await expect(page.getByText('Правильно:', { exact: false })).toBeVisible();
+  expect(errs).toEqual([]);
+});
+
+test('arena shows the journey, duels, packs and postcards', async ({ page }) => {
+  const errs = errors(page);
+  await page.goto('/');
+  await page.evaluate((s) => localStorage.setItem('thingual-v1', s), seed());
+  await page.goto('/arena');
+  await expect(page.getByText('Подорож Тінґо', { exact: false })).toBeVisible();
+  await expect(page.getByText('Дуель 1 на 1')).toBeVisible();
+  await expect(page.getByText('Записати свою', { exact: false })).toBeVisible();
+  expect(errs).toEqual([]);
+});
 
 test('review session can be answered', async ({ page }) => {
   await page.goto('/');

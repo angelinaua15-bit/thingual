@@ -14,7 +14,7 @@ export default function UserScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: c.background, paddingTop: insets.top }}>
       <View style={{ height: 48, paddingHorizontal: 16, justifyContent: 'center', maxWidth: 680, width: '100%', alignSelf: 'center' }}>
-        <Pressable onPress={() => (goBack('/(tabs)/threads'))} hitSlop={12}>
+        <Pressable onPress={() => (goBack('/(tabs)/arena'))} hitSlop={12}>
           <ArrowLeft size={22} color={c.text} />
         </Pressable>
       </View>

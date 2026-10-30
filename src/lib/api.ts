@@ -333,28 +333,20 @@ export async function setLike(postId: string, on: boolean) {
 /* ---------------- activity ---------------- */
 export type Activity =
   | { kind: 'follow'; at: string; user: Profile }
-  | { kind: 'like'; at: string; user: Profile; post: { id: string; body: string; photo_url: string | null } }
-  | { kind: 'reply'; at: string; user: Profile; post: { id: string; body: string; photo_url: string | null }; parentId: string; correction?: boolean };
+  | { kind: 'duel'; at: string; user: Profile; mine: number; theirs: number };
 
+/** New followers and friends who played my duel challenges. */
 export async function activity(): Promise<Activity[]> {
   const me = await ensureSession();
-  // replies: a self-join on posts is ambiguous for PostgREST, so first my latest posts, then replies to them
-  const mine = supabase.from('posts').select('id').eq('author_id', me).is('parent_id', null).order('created_at', { ascending: false }).limit(100);
-  const [f, l, m] = await Promise.all([
+  const [f, d] = await Promise.all([
     supabase.from('follows').select('created_at, user:profiles!follows_follower_id_fkey(*)').eq('following_id', me).order('created_at', { ascending: false }).limit(30),
-    supabase.from('likes').select('created_at, user:profiles(*), post:posts!inner(id, body, photo_url, author_id)').eq('post.author_id', me).neq('user_id', me).order('created_at', { ascending: false }).limit(30),
-    mine,
+    supabase.rpc('my_duels', { p_limit: 30 }),
   ]);
-  const ids = (m.data ?? []).map((x) => x.id as string);
-  const r = ids.length
-    ? await supabase.from('posts').select('id, created_at, body, photo_url, parent_id, kind, user:profiles!posts_author_id_fkey(*)').in('parent_id', ids).neq('author_id', me).order('created_at', { ascending: false }).limit(30)
-    : { data: [] as Record<string, unknown>[] };
   const out: Activity[] = [];
   (f.data ?? []).forEach((x) => out.push({ kind: 'follow', at: x.created_at as string, user: x.user as unknown as Profile }));
-  (l.data ?? []).forEach((x) => out.push({ kind: 'like', at: x.created_at as string, user: x.user as unknown as Profile, post: x.post as unknown as { id: string; body: string; photo_url: string | null } }));
-  (r.data ?? []).forEach((x) =>
-    out.push({ kind: 'reply', at: x.created_at as string, user: x.user as unknown as Profile, post: { id: x.id as string, body: x.body as string, photo_url: x.photo_url as string | null }, parentId: x.parent_id as string, correction: x.kind === 'correction' }),
-  );
+  ((d.data ?? []) as { me_first: boolean; finished_at: string | null; my_score: number; their_score: number | null; opponent: Profile | null }[])
+    .filter((x) => x.me_first && x.finished_at && x.opponent && x.their_score != null)
+    .forEach((x) => out.push({ kind: 'duel', at: x.finished_at!, user: x.opponent!, mine: x.my_score, theirs: x.their_score! }));
   return out.sort((a, b) => b.at.localeCompare(a.at));
 }
 

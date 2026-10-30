@@ -12,7 +12,7 @@ export const LEGAL: Record<'privacy' | 'terms', Record<'uk' | 'en', Doc>> = {
           'Анонімний акаунт (випадковий ідентифікатор). Email — лише якщо ти сама/сам його додаси, щоб відновлювати прогрес на інших пристроях.',
           'Прогрес навчання: пройдені уроки шляху, слова, фрази, серія, іскри, кристали, налаштування — щоб синхронізувати їх між пристроями.',
           'Профіль спільноти: ім’я, нікнейм, опис, аватар, мови.',
-          'Треди, відповіді й виправлення, які ти публікуєш: текст, мова, рівень і за бажанням фото з галереї. Ми не збираємо твоє місцезнаходження.',
+          'Те, що ти робиш на Арені: результати дуелей, участь у зграї та голосові листівки (запис фрази дня, який ти сам надсилаєш). Діти до 13 років не публікують голос — їхні записи лишаються на пристрої. Ми не збираємо твоє місцезнаходження.',
           'Вікова група (не дата народження) — щоб застосовувати вікові обмеження.',
           'Звіти про помилки застосунку (текст помилки, адреса сторінки, тип браузера) — щоб виправляти збої.',
         ] },
@@ -41,7 +41,7 @@ export const LEGAL: Record<'privacy' | 'terms', Record<'uk' | 'en', Doc>> = {
           'An anonymous account (random id). An email only if you add one to restore progress on other devices.',
           'Learning progress — finished path lessons, words, phrases, streak, sparks, crystals, settings — to sync it between your devices.',
           'Your community profile: name, handle, bio, avatar, languages.',
-          'Threads, replies and corrections you publish: text, language, level and optionally a photo from your gallery. We don’t collect your location.',
+          'What you do in the Arena: duel results, pack membership and voice postcards (a recording of the phrase of the day that you choose to send). Children under 13 can’t publish their voice — their recordings stay on the device. We don’t collect your location.',
           'Your age group (not your birth date) to apply age rules.',
           'App error reports (error text, page address, browser type) to fix crashes.',
         ] },
@@ -69,7 +69,7 @@ export const LEGAL: Record<'privacy' | 'terms', Record<'uk' | 'en', Doc>> = {
       sections: [
         { h: 'Сервіс', p: ['Thingual допомагає вчити мови через шлях коротких уроків, практику та спільноту. Базові функції безкоштовні.'] },
         { h: 'Твій контент', p: [
-          'Фото й тексти, які ти публікуєш, лишаються твоїми. Публікуючи, ти дозволяєш показувати їх у застосунку (треди, профіль).',
+          'Голосові листівки й фото, які ти публікуєш, лишаються твоїми. Публікуючи, ти дозволяєш показувати їх у застосунку (Арена, профіль). Реакції — лише наліпки; на листівку можна поскаржитися, після трьох скарг вона ховається.',
           'Публікуй лише те, що зняла/зняв сам(а) або маєш право поширювати.',
         ] },
         { h: 'Правила спільноти', p: [
@@ -87,7 +87,7 @@ export const LEGAL: Record<'privacy' | 'terms', Record<'uk' | 'en', Doc>> = {
       sections: [
         { h: 'The service', p: ['Thingual helps you learn languages through a path of short lessons, practice and a community. Core features are free.'] },
         { h: 'Your content', p: [
-          'Photos and texts you publish remain yours. By posting you allow us to show them in the app (threads, profile).',
+          'Voice postcards and photos you publish remain yours. By posting you allow us to show them in the app (Arena, profile). Reactions are stickers only; any postcard can be reported and is hidden after three reports.',
           'Only post what you took yourself or have the right to share.',
         ] },
         { h: 'Community rules', p: [

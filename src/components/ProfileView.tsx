@@ -1,17 +1,16 @@
 import { shareText } from '../lib/share';
 import React, { useState } from 'react';
-import { ActivityIndicator, Pressable, Share, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { Camera } from './icons';
-import { Avatar, Button, Txt, Segmented } from './ui';
-import { PostCard } from './PostCard';
+import { Avatar, Button, Txt } from './ui';
 import { toast } from './Overlay';
 import { useTheme, fonts, space } from '../theme/tokens';
 import { useT, languageName } from '../i18n';
-import { follow, followingIds, getProfile, unfollow, updateProfile, uploadImage, userPosts, type Profile, PhotoRejected, PhotoUnchecked } from '../lib/api';
-import { useLikedSet, useNet } from '../lib/queries';
+import { follow, followingIds, getProfile, unfollow, updateProfile, uploadImage, type Profile, PhotoRejected, PhotoUnchecked } from '../lib/api';
+import { useNet } from '../lib/queries';
 import { pickImage } from '../lib/pickImage';
 import { haptic } from '../lib/feedback';
 import { LangCode } from '../data/languages';
@@ -27,14 +26,11 @@ export function ProfileView({ uid, header, footer }: { uid: string; header?: Rea
   const me = useNet((s) => s.uid);
   const ui = useApp((s) => s.settings.uiLang);
   const isMe = me === uid;
-  const [tab, setTab] = useState<'posts' | 'replies'>('posts');
   const [uploading, setUploading] = useState(false);
 
   const profile = useQuery({ queryKey: ['profile', uid], queryFn: () => getProfile(uid) });
   const myFollowing = useQuery({ queryKey: ['followingIds', me], queryFn: () => followingIds(), enabled: !!me });
   const theirFollowing = useQuery({ queryKey: ['followingIds', uid], queryFn: () => followingIds(uid), enabled: !isMe });
-  const posts = useQuery({ queryKey: ['userPosts', uid, tab], queryFn: () => userPosts(uid, tab === 'replies') });
-  const liked = useLikedSet(posts.data);
 
   const p = profile.data;
   const iFollow = !!myFollowing.data?.includes(uid);
@@ -148,20 +144,6 @@ export function ProfileView({ uid, header, footer }: { uid: string; header?: Rea
         </View>
       </Animated.View>
       {footer}
-      <View style={{ paddingHorizontal: space.m, marginTop: 18 }}>
-        <Segmented value={tab} onChange={setTab} options={[{ value: 'posts', label: t('social.posts') }, { value: 'replies', label: t('social.replies') }]} />
-      </View>
-      <View style={{ paddingHorizontal: space.m }}>
-        {posts.isLoading ? (
-          <ActivityIndicator style={{ marginTop: 30 }} color={c.textSecondary} />
-        ) : posts.data?.length ? (
-          posts.data.map((post, i) => <PostCard key={post.id} post={post} i={i} liked={liked.has(post.id)} />)
-        ) : (
-          <Animated.View entering={FadeInDown}>
-            <Txt v="callout" color={c.textSecondary} center style={{ marginTop: 30 }}>{t('social.noPosts')}</Txt>
-          </Animated.View>
-        )}
-      </View>
     </View>
   );
 }

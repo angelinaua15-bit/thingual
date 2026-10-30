@@ -80,3 +80,8 @@ export { default as Reply } from 'lucide-react-native/icons/reply';
 export { default as SpellCheck } from 'lucide-react-native/icons/spell-check';
 export { default as Flag } from 'lucide-react-native/icons/flag';
 export { default as Dumbbell } from 'lucide-react-native/icons/dumbbell';
+export { default as Swords } from 'lucide-react-native/icons/swords';
+export { default as Users } from 'lucide-react-native/icons/users';
+export { default as Square } from 'lucide-react-native/icons/square';
+export { default as Dices } from 'lucide-react-native/icons/dices';
+export { default as Ellipsis } from 'lucide-react-native/icons/ellipsis';

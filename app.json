@@ -98,8 +98,8 @@
         "expo-audio",
         {
           "enableBackgroundPlayback": true,
-          "recordAudioAndroid": false,
-          "microphonePermission": false
+          "recordAudioAndroid": true,
+          "microphonePermission": "Thingual records your voice when you make a voice postcard."
         }
       ]
     ],

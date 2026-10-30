@@ -188,6 +188,9 @@ type Actions = {
   unlockReward: (id: string, price: number) => 'ok' | 'funds' | 'owned';
   finishNode: (key: string, r: { words: string[]; total: number; correct: number; minutes: number; perfect: boolean }) => number;
   openChest: (key: string) => number;
+  /** one-off crystal reward (arena chests); 0 if already taken */
+  claimReward: (key: string, crystals: number) => number;
+  finishDuel: (r: { correct: number; total: number; won: boolean; draw: boolean }) => number;
   finishLightning: (lang: string, r: { score: number; total: number; minutes: number }) => { xp: number; best: number; record: boolean };
   finishStory: (key: string, r: { correct: number; total: number; minutes: number; phrases: string[] }) => number;
   setFoxLook: (p: Partial<State['foxLook']>) => void;
@@ -650,6 +653,22 @@ export const useApp = create<State & Actions>()(
         set({ ...earn(s, n), path: { ...s.path, [key]: 1 } });
         get().markActive();
         return n;
+      },
+      claimReward: (key, n) => {
+        const s = get();
+        if (s.path[key]) return 0;
+        const k = n * (isMaxNow(s) ? 2 : 1);
+        set({ ...earn(s, k), path: { ...s.path, [key]: 1 } });
+        return k;
+      },
+      finishDuel: (r) => {
+        const s = get();
+        get().logSession(r.total, r.correct, 1);
+        const bonus = (r.won ? 15 : r.draw ? 8 : 3) * (isMaxNow(s) ? 2 : 1);
+        set((x) => ({ sparks: x.sparks + bonus, weekXp: addXp(x.weekXp, bonus) }));
+        const xp = Math.min(r.correct, 20) * (isMaxNow(s) ? 2 : 1) + bonus;
+        get().questBump('xp', xp);
+        return xp;
       },
       finishLightning: (lang, r) => {
         const s = get();
