@@ -15,7 +15,9 @@ export function ModeCards() {
   const { t } = useT();
   const best = useApp((s) => s.lightningBest[s.settings.active] ?? 0);
   const done = useApp((s) => STORIES.filter((st) => s.stories[`${s.settings.active}:${st.id}`]).length);
+  const mistakes = useApp((s) => Object.keys(s.mistakes).length);
   return (
+    <>
     <View style={styles.row}>
       <PressableScale onPress={() => router.push('/lightning')} style={{ flex: 1 }}>
         <LinearGradient colors={['#3B1E8F', '#6D28D9']} style={styles.card}>
@@ -32,6 +34,18 @@ export function ModeCards() {
         </LinearGradient>
       </PressableScale>
     </View>
+    {mistakes >= 3 && (
+      <PressableScale onPress={() => router.push({ pathname: '/lesson', params: { node: 'mistakes' } })} style={{ marginTop: 12 }}>
+        <LinearGradient colors={['#F43F5E', '#FB923C']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.card, { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 0 }]}>
+          <EmojiArt emoji="🎯" size={44} />
+          <View style={{ flex: 1 }}>
+            <Txt v="headline" color="#fff">{t('mistakes.title', { n: mistakes })}</Txt>
+            <Txt v="caption" color="rgba(255,255,255,.9)">{t('mistakes.sub')}</Txt>
+          </View>
+        </LinearGradient>
+      </PressableScale>
+    )}
+    </>
   );
 }
 

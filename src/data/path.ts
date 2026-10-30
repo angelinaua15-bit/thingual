@@ -28,6 +28,9 @@ const PHRASE_LEVELS: CEFR[] = ['A1', 'A2', 'B1'];
 
 const chunk = <T,>(xs: T[], n: number) => Array.from({ length: Math.ceil(xs.length / n) }, (_, i) => xs.slice(i * n, i * n + n));
 
+/** old position-based ids ("u3-2") → stable ids, for progress saved by earlier versions */
+const LEGACY = new Map<string, string>();
+
 function build(): Unit[] {
   const units: Unit[] = [];
   // phrases are handed out situation by situation, in phrasebook order
@@ -64,8 +67,13 @@ function build(): Unit[] {
       if (lessons.length > 1 && lessons[lessons.length - 1].length < 4) lessons[lessons.length - 2].push(...lessons.pop()!);
       const phrase = PHRASE_LEVELS.includes(level) && pq < phraseQueue.length ? phraseQueue[pq++] : undefined;
       const nodes: PathNode[] = [];
-      const node = (kind: NodeKind, words: string[] = [], phrases: string[] = []) =>
-        nodes.push({ id: `u${n}-${nodes.length}`, kind, unit: n, words, phrases });
+      // ids come from the content (first word / phrase / the unit itself), so adding units later never shifts progress
+      const unitKey = `${level}-${key}-${seen[key]}`;
+      const node = (kind: NodeKind, words: string[] = [], phrases: string[] = []) => {
+        const id = kind === 'lesson' ? `l:${words[0]}` : kind === 'phrases' ? `p:${phrases[0].replace(/^ph:/, '')}` : `${kind === 'chest' ? 'c' : 'r'}:${unitKey}`;
+        LEGACY.set(`u${n}-${nodes.length}`, id);
+        nodes.push({ id, kind, unit: n, words, phrases });
+      };
       lessons.forEach((w, i) => {
         node('lesson', w);
         if (i === 1 && phrase) node('phrases', [], phrase.ids);
@@ -92,7 +100,18 @@ function build(): Unit[] {
 export const UNITS: Unit[] = build();
 export const NODES: PathNode[] = UNITS.flatMap((u) => u.nodes);
 const BY_ID = new Map(NODES.map((x, i) => [x.id, i]));
-export const nodeIndex = (id: string) => BY_ID.get(id) ?? -1;
+export const stableId = (id: string) => LEGACY.get(id) ?? id;
+export const nodeIndex = (id: string) => BY_ID.get(stableId(id)) ?? -1;
+/** "lang:u3-2" keys from older versions → "lang:l:apple" */
+export function migratePathKeys(path: Record<string, number> = {}) {
+  const out: Record<string, number> = {};
+  Object.entries(path).forEach(([k, v]) => {
+    const i = k.indexOf(':');
+    const key = i > 0 && /^u\d+-\d+$/.test(k.slice(i + 1)) ? `${k.slice(0, i)}:${stableId(k.slice(i + 1))}` : k;
+    out[key] = Math.max(out[key] ?? 0, v);
+  });
+  return out;
+}
 export const nodeById = (id: string) => NODES[nodeIndex(id)];
 /** first node of the section for a CEFR level (learners start at their own level) */
 export const sectionStart = (level: CEFR) => {

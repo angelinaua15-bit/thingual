@@ -8,6 +8,7 @@ import { ChunkyButton } from './PathBits';
 import { fonts } from '../theme/tokens';
 import { useT } from '../i18n';
 import { haptic } from '../lib/feedback';
+import { sfx } from '../lib/sfx';
 
 /**
  * A chest that shakes, pops open and showers you with gems.
@@ -21,7 +22,7 @@ export function ChestReward({ amount, label, onClose, emoji = '💎' }: { amount
     if (!amount) return;
     setOpen(false);
     shake.value = withRepeat(withSequence(withTiming(-14, { duration: 70 }), withTiming(14, { duration: 70 })), 5, true);
-    const id = setTimeout(() => { setOpen(true); haptic.success(); }, 800);
+    const id = setTimeout(() => { setOpen(true); haptic.success(); sfx('chest'); }, 800);
     return () => clearTimeout(id);
   }, [amount]);
   const st = useAnimatedStyle(() => ({ transform: [{ rotate: `${shake.value}deg` }] }));

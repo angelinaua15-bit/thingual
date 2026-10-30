@@ -16,6 +16,7 @@ import { EXPRESSIONS, exprById, exprMeaning, exprTarget } from '../src/data/expr
 import type { LangCode } from '../src/data/languages';
 import { haptic, speak } from '../src/lib/feedback';
 import { goBack } from '../src/lib/nav';
+import { sfx } from '../src/lib/sfx';
 
 type Step =
   | { k: 'line'; i: number }
@@ -86,6 +87,7 @@ export default function StoryScreen() {
     if (at + 1 >= steps.length) {
       const min = Math.max(1, Math.round((Date.now() - started.current) / 60000));
       haptic.success();
+      sfx('fanfare');
       setDone(useApp.getState().finishStory(`${target}:${story.id}`, { correct: correct.current, total: Math.max(1, questions.current), minutes: min, phrases: story.lines.map(([, p]) => `ph:${p}`) }));
       return;
     }
@@ -97,7 +99,7 @@ export default function StoryScreen() {
     setPick(o);
     questions.current++;
     const right = `ph:${story.lines[step.i][1]}`;
-    if (o === right) { correct.current++; haptic.success(); } else haptic.error();
+    if (o === right) { correct.current++; haptic.success(); sfx('correct'); } else { haptic.error(); sfx('wrong'); }
   };
 
   if (done != null) {

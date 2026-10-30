@@ -14,6 +14,7 @@ import { useApp } from '../src/store/useApp';
 import { WARDROBE, wearById, type Slot } from '../src/data/wardrobe';
 import { haptic } from '../src/lib/feedback';
 import { goBack } from '../src/lib/nav';
+import { sfx } from '../src/lib/sfx';
 
 /** Tingo's wardrobe: try things on for free, buy them with crystals, wear them everywhere. */
 export default function Wardrobe() {
@@ -49,6 +50,7 @@ export default function Wardrobe() {
       return;
     }
     haptic.success();
+    sfx('chest', 0.7);
     useApp.getState().setFoxLook({ [tryItem.slot]: tryItem.id });
     toast(t('wardrobe.bought'), 'success');
     setTrying(null);

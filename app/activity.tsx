@@ -48,7 +48,7 @@ export default function ActivityScreen() {
                     <View style={[styles.badge, { backgroundColor: c.background }]}><Icon size={12} color={color} fill={item.kind === 'like' ? color : 'transparent'} /></View>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Txt v="callout"><Txt v="bodyMedium">{item.user.handle}</Txt> {t(item.kind === 'follow' ? 'social.actFollow' : item.kind === 'like' ? 'social.actLike' : 'social.actReply')}</Txt>
+                    <Txt v="callout"><Txt v="bodyMedium">{item.user.handle}</Txt> {t(item.kind === 'follow' ? 'social.actFollow' : item.kind === 'like' ? 'social.actLike' : item.correction ? 'threads.actCorrection' : 'social.actReply')}</Txt>
                     {item.kind !== 'follow' && item.post.body ? <Txt v="caption" color={c.textSecondary} numberOfLines={1}>{item.post.body}</Txt> : null}
                     <Txt v="caption" color={c.textTertiary}>{timeAgo(new Date(item.at).getTime(), t)}</Txt>
                   </View>

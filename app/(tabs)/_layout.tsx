@@ -3,9 +3,12 @@ import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { Tabs, type BottomTabBarProps } from 'expo-router/js-tabs';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import { BookOpen, Dumbbell, MessageCircle, User } from '../../src/components/icons';
 import { FoxArt } from '../../src/components/PathBits';
+import { EmojiArt } from '../../src/components/NoteBits';
+import { useApp } from '../../src/store/useApp';
+import { doneToday } from '../../src/lib/streak';
 import { useTheme, fonts } from '../../src/theme/tokens';
 import { useT } from '../../src/i18n';
 import { Txt } from '../../src/components/ui';
@@ -47,7 +50,7 @@ function TabBar({ state, navigateToTab }: BottomTabBarProps) {
           }
           return (
             <Pressable key={route.key} onPress={onPress} style={styles.item} accessibilityRole="button" accessibilityLabel={t(`tabs.${route.name}`)}>
-              <Icon size={22} color={focused ? fg : muted} strokeWidth={focused ? 2.2 : 1.6} />
+              <TabIcon focused={focused}><Icon size={22} color={focused ? fg : muted} strokeWidth={focused ? 2.2 : 1.6} /></TabIcon>
               <Txt style={{ fontFamily: focused ? fonts.semibold : fonts.medium, fontSize: 10.5, color: focused ? fg : muted, marginTop: 3 }}>{t(`tabs.${route.name}`)}</Txt>
             </Pressable>
           );
@@ -57,13 +60,25 @@ function TabBar({ state, navigateToTab }: BottomTabBarProps) {
   );
 }
 
+/** Tab icons hop when you switch to them. */
+function TabIcon({ focused, children }: { focused: boolean; children: React.ReactNode }) {
+  const y = useSharedValue(0);
+  React.useEffect(() => {
+    if (focused) y.value = withSequence(withTiming(-6, { duration: 120 }), withSpring(0, { damping: 6 }));
+  }, [focused]);
+  const st = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }, { scale: 1 + Math.abs(y.value) / 30 }] }));
+  return <Animated.View style={st}>{children}</Animated.View>;
+}
+
 /** The middle button opens the learning path — the fox lives there. */
 function CamButton({ focused }: { focused: boolean }) {
   const { c } = useTheme();
+  const asleep = !doneToday(useApp((s) => s.learnStreak));
   const a = useAnimatedStyle(() => ({ transform: [{ scale: withSpring(focused ? 1.08 : 1) }] }));
   return (
     <Animated.View style={[styles.cam, { backgroundColor: focused ? '#2FB574' : c.ink, borderColor: focused ? '#23905C' : 'transparent' }, a]}>
       <FoxArt size={34} />
+      {asleep && <View style={{ position: 'absolute', top: -6, right: -8 }}><EmojiArt emoji="💤" size={20} /></View>}
     </Animated.View>
   );
 }

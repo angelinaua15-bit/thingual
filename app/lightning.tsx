@@ -18,6 +18,7 @@ import { NODES } from '../src/data/path';
 import type { LangCode } from '../src/data/languages';
 import { haptic, speak } from '../src/lib/feedback';
 import { goBack } from '../src/lib/nav';
+import { sfx } from '../src/lib/sfx';
 
 const SECONDS = 60;
 const PENALTY = 3;
@@ -85,6 +86,7 @@ export default function Lightning() {
     if (phase === 'play' && left <= 0) {
       setPhase('done');
       haptic.success();
+      sfx('fanfare');
       setResult(useApp.getState().finishLightning(target, { score, total: answered.current, minutes: 1 }));
     }
   }, [left, phase]);
@@ -97,11 +99,13 @@ export default function Lightning() {
     if (ok) {
       haptic.light();
       const c = combo + 1;
+      sfx(c === 5 || c === 10 ? 'combo' : 'pop');
       setCombo(c);
       setMaxCombo((m) => Math.max(m, c));
       setScore((x) => x + (c >= 10 ? 3 : c >= 5 ? 2 : 1));
     } else {
       haptic.error();
+      sfx('wrong', 0.6);
       setCombo(0);
       setLeft((x) => Math.max(0, x - PENALTY));
       missed.current = [...new Set([...missed.current, q.word])];

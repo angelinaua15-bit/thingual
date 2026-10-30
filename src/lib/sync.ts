@@ -4,6 +4,7 @@ import { resetSession } from './api';
 import { useApp, withLedger, crystalBalance } from '../store/useApp';
 import type { StoredCard } from './srs';
 import { spentOn } from '../data/wordPacks';
+import { migratePathKeys } from '../data/path';
 
 /**
  * Progress sync between devices (Supabase table user_state, one JSON row per account).
@@ -13,7 +14,7 @@ import { spentOn } from '../data/wordPacks';
 type S = ReturnType<typeof useApp.getState>;
 const KEYS = [
   'onboarded', 'goal', 'quizScore', 'settings', 'words', 'collections', 'history', 'learnStreak', 'dropStreak', 'bestStreak',
-  'activeDays', 'frozenDays', 'sparks', 'freezes', 'claimed', 'flames', 'flame', 'achievements', 'exprs', 'drops', 'quests', 'weekXp', 'grammar', 'maxUntil', 'trialUsed', 'maxFreezeMonth', 'maxWaitlist', 'lostStreak', 'notebook', 'noteTomb', 'books', 'crystals', 'crystalEarn', 'unlocks', 'timeToday', 'path', 'lightningBest', 'stories', 'foxLook',
+  'activeDays', 'frozenDays', 'sparks', 'freezes', 'claimed', 'flames', 'flame', 'achievements', 'exprs', 'drops', 'quests', 'weekXp', 'grammar', 'maxUntil', 'trialUsed', 'maxFreezeMonth', 'maxWaitlist', 'lostStreak', 'notebook', 'noteTomb', 'books', 'crystals', 'crystalEarn', 'unlocks', 'timeToday', 'path', 'lightningBest', 'stories', 'foxLook', 'mistakes',
 ] as const;
 const QUIET: readonly string[] = ['timeToday', 'crystals', 'crystalEarn'];
 type Snapshot = Partial<Pick<S, (typeof KEYS)[number]>> & { profile?: Partial<S['profile']> };
@@ -122,9 +123,10 @@ function merge(local: S, remote: Snapshot, remoteNewer: boolean): Partial<S> {
     ...mergeCrystals(local, remote),
     timeToday: mergeTime(local.timeToday, remote.timeToday),
     lightningBest: maxMerge(local.lightningBest, remote.lightningBest),
+    mistakes: { ...(remote.mistakes ?? {}), ...Object.fromEntries(Object.entries(local.mistakes ?? {}).filter(([k, v]) => !remote.mistakes?.[k] || v.at >= remote.mistakes[k].at)) },
     stories: maxMerge(local.stories, remote.stories),
     foxLook: remoteNewer ? remote.foxLook ?? local.foxLook : local.foxLook,
-    path: Object.fromEntries([...new Set([...Object.keys(local.path ?? {}), ...Object.keys(remote.path ?? {})])].map((k) => [k, Math.max(local.path?.[k] ?? 0, remote.path?.[k] ?? 0)])),
+    path: maxMerge(migratePathKeys(local.path), migratePathKeys(remote.path)),
     books: Object.fromEntries(
       [...new Set([...Object.keys(local.books), ...Object.keys(remote.books ?? {})])].map((id) => {
         const a = local.books[id];

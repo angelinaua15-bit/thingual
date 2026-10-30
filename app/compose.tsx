@@ -11,7 +11,7 @@ import { toast } from '../src/components/Overlay';
 import { useTheme, fonts, radius, space } from '../src/theme/tokens';
 import { useT, languageName } from '../src/i18n';
 import { useApp } from '../src/store/useApp';
-import { createPost, getPost, PhotoRejected, PhotoUnchecked, POST_TOPICS, type PostTopic } from '../src/lib/api';
+import { createPost, getPost, PhotoRejected, PhotoUnchecked, POST_TOPICS, TextRejected, type PostTopic } from '../src/lib/api';
 import { useMe } from '../src/lib/queries';
 import { pickImage } from '../src/lib/pickImage';
 import { ensureCanPublish } from '../src/lib/publish';
@@ -75,7 +75,7 @@ export default function Compose() {
       toast(isCorrection ? t('threads.correctionSent') : t('social.posted'));
       goBack();
     } catch (e) {
-      toast(e instanceof PhotoRejected ? t('safety.rejected') : e instanceof PhotoUnchecked ? t('safety.unchecked') : t('social.offline'), 'default');
+      toast(e instanceof TextRejected ? t('threads.textRejected') : e instanceof PhotoRejected ? t('safety.rejected') : e instanceof PhotoUnchecked ? t('safety.unchecked') : t('social.offline'), 'default');
     } finally {
       setPosting(false);
     }

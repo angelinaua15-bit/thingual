@@ -743,6 +743,7 @@ export const pl: Strings = {
     how: 'Jak zdobywać', how1: 'Ucz się w aplikacji: powtórki, zwroty, gramatyka, audiobooki — co 2 aktywne minuty to 1 kryształ (do 30 dziennie).', how2: 'Otwieraj prezenty po 5, 15, 30 i 60 minutach — w środku są dodatkowe kryształy.', how3: 'Czas bez aktywności się nie liczy — tylko gdy naprawdę się uczysz lub słuchasz.',
   },
   path: {
+    sleepy: 'Chrrr… obudź mnie lekcją!',
     section: 'Sekcja {level}', unit: 'Dział {n}', words: 'Słowa z tego działu', levelTitle: '{level} · {name}', unitProgress: 'Ukończono {done} z {n}',
     mixed: 'Różne słowa {level}', start: 'START', lessonN: 'Lekcja {n} z {total}', phrasesTitle: 'Zwroty: {s}', chest: 'Skrzynia skarbów', review: 'Powtórka działu',
     lessonSub: '{n} {n:nowe słowo|nowe słowa|nowych słów} z obrazkami, wymową i ćwiczeniami', phrasesSub: '{n} {n:zwrot|zwroty|zwrotów} do zrozumienia i ułożenia', chestSub: 'Otwórz — w środku kryształy', reviewSub: 'Wszystko z tego działu — pokaż, że to umiesz',
@@ -750,6 +751,7 @@ export const pl: Strings = {
     mascot: ['Do dzieła!', 'Dasz radę', 'Trzy minuty — jedna lekcja', 'Podtrzymaj płomień 🔥', 'Każda lekcja się liczy', 'Lecimy z następną?'],
   },
   lesson: {
+    sayIt: 'Powiedz to na głos', tapToSpeak: 'Stuknij i mów', listening: 'Słucham…', notHeard: 'Nie dosłyszałem — spróbuj jeszcze raz', cantSpeak: 'Nie mogę teraz mówić',
     check: 'Sprawdź', typo: 'Uważaj na pisownię!', wrong: 'Nie do końca', correctIs: 'Poprawna odpowiedź:', matchHint: 'Stuknij pary',
     great: 'Świetnie!', nice: 'Super!', perfect: 'Idealnie!', yes: 'Tak!', newWord: 'Nowe słowo',
     whichIs: 'Które z nich to…?', whatMeans: 'Co to znaczy?', whatHear: 'Co słyszysz?', howSay: 'Jak to powiedzieć w języku: {lang}?', writeIn: 'Napisz w języku: {lang}',
@@ -759,12 +761,14 @@ export const pl: Strings = {
     done: 'Lekcja ukończona!', donePerfect: 'Bezbłędnie!', doneSub: 'Słowa są już w twoim słowniku do powtórek.', donePerfectSub: 'Ani jednego błędu — bonusowe XP są twoje.',
   },
   hearts: {
+    practice: 'Przećwicz swoje błędy', practiceSub: 'Odzyskaj jedno serce',
     title: '{n:Zostało|Zostały|Zostało} {n} {n:serce|serca|serc}', out: 'Brak serc', unlimited: 'Nielimitowane serca', unlimitedSub: 'Z Max możesz popełniać tyle błędów, ile potrzebujesz.',
     fullSub: 'Wszystkie serca pełne — do nauki!', nextIn: 'Następne serce za {n} min', how: 'Błąd w lekcji na ścieżce kosztuje jedno serce. Serce wraca co 30 minut.',
     refill: 'Uzupełnij serca', refillSub: 'Wszystkie 5 od razu', max: 'Nielimitowane serca', maxSub: 'Thingual Max — koniec z czekaniem', refilled: 'Serca uzupełnione ❤️',
     back: 'Wróć do ścieżki', wait: 'Poczekam',
   },
   threads: {
+    actCorrection: 'poprawił(a) twój tekst', textRejected: 'Ten tekst narusza zasady społeczności — sformułuj go inaczej, proszę.', native: 'native',
     title: 'Wątki', sub: 'Pisz w języku, którego się uczysz. Inni odpowiadają i poprawiają twoje błędy.',
     today: 'Temat dnia', todayCta: 'Napisz w języku: {lang}', allLangs: 'Wszystkie języki', new: 'Nowy wątek',
     empty: 'Brak wątków w języku: {lang}', emptySub: 'Zacznij pierwszy — przywitaj się, zadaj pytanie albo odpowiedz na temat dnia.',
@@ -791,5 +795,10 @@ export const pl: Strings = {
     buy: 'Kup: {name} · {n} 💎', hint: 'Stuknij swoją rzecz, żeby ją założyć lub zdjąć.',
   },
   reward: { crystals: 'kryształów!', collect: 'Odbierz' },
+  mistakes: { title: 'Moje błędy · {n}', sub: 'Szybka lekcja ze słów, które sprawiły ci kłopot — i serce z powrotem' },
+  notify: {
+    tingo: ['Psst! Tingo zostawił ci 3-minutową lekcję 🦊', 'Tingo nudzi się bez ciebie. Jedna lekcja?', 'Twój płomień tęskni 🔥 Tingo też.', 'Nowe słowa czekają na ścieżce!', 'Tingo założył najlepszy kapelusz na dzisiejszą lekcję 🎩', 'Trzy minuty. Jedna lekcja. Szczęśliwy lis.'],
+    riskTitle: 'Twoja seria {n} {n:dnia|dni|dni} kończy się dziś w nocy!', riskBody: 'Tingo się martwi 🦊 Jedna szybka lekcja ją uratuje.',
+  },
   limits: { left: 'Zostało dziś: {n}' },
 };

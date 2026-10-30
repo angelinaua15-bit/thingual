@@ -5,6 +5,7 @@ import { LangCode } from '../data/languages';
 import { newCard, review as srsReview, StoredCard, Answer } from '../lib/srs';
 import { dateKey, nicknameFor } from '../data/social';
 import { conceptById, Place } from '../data/concepts';
+import { migratePathKeys } from '../data/path';
 import { needsPersist, persistPhoto } from '../lib/photoStore';
 import { questsFor, CHEST_REWARD, CHEST_CRYSTALS_DAILY, type QuestField } from '../lib/quests';
 import { LIMITS } from '../lib/limits';
@@ -131,6 +132,8 @@ type State = {
   path: Record<string, number>;
   /** hearts for path lessons: count and when the last refill was counted (Max has unlimited) */
   hearts: { n: number; at: number };
+  /** words the learner got wrong in path lessons: concept id → how many times and when (cleared when answered right) */
+  mistakes: Record<string, { n: number; at: number }>;
   /** best Lightning score per language */
   lightningBest: Record<string, number>;
   /** finished Tingo stories: "lang:storyId" → times */
@@ -188,6 +191,8 @@ type Actions = {
   finishLightning: (lang: string, r: { score: number; total: number; minutes: number }) => { xp: number; best: number; record: boolean };
   finishStory: (key: string, r: { correct: number; total: number; minutes: number; phrases: string[] }) => number;
   setFoxLook: (p: Partial<State['foxLook']>) => void;
+  noteMistake: (id: string) => void;
+  forgiveMistake: (id: string) => void;
   loseHeart: () => void;
   refillHearts: (price: number) => 'ok' | 'funds';
   saveBookProgress: (id: string, p: Partial<BookProgress>) => void;
@@ -298,6 +303,7 @@ const initialState = (): State => {
     unlocks: [],
     path: {},
     lightningBest: {},
+    mistakes: {},
     stories: {},
     foxLook: {},
     hearts: { n: HEARTS_MAX, at: Date.now() },
@@ -623,7 +629,13 @@ export const useApp = create<State & Actions>()(
         get().logSession(r.total, r.correct, r.minutes);
         // finishing a node is worth a little extra; a lesson without mistakes even more
         const bonus = (r.perfect ? 10 : 5) * (isMaxNow(s) ? 2 : 1);
-        set((x) => ({ path: { ...x.path, [key]: (x.path[key] ?? 0) + 1 }, sparks: x.sparks + bonus, weekXp: addXp(x.weekXp, bonus) }));
+        // practising your mistakes wins a heart back
+        if (key.startsWith('practice:')) {
+          const h = heartsOf(s);
+          if (h.n < HEARTS_MAX) set({ hearts: { n: h.n + 1, at: h.at } });
+        }
+        // practice (e.g. 'My mistakes') gives XP but isn't a step on the path
+        set((x) => ({ ...(key.startsWith('practice:') ? {} : { path: { ...x.path, [key]: (x.path[key] ?? 0) + 1 } }), sparks: x.sparks + bonus, weekXp: addXp(x.weekXp, bonus) }));
         if (Object.keys(get().path).length >= 10) get().unlock('lessons-10');
         get().questBump('lessons');
         if (r.perfect) get().questBump('perfect');
@@ -664,6 +676,17 @@ export const useApp = create<State & Actions>()(
         return xp;
       },
       setFoxLook: (p) => set((s) => ({ foxLook: { ...s.foxLook, ...p } })),
+      noteMistake: (id) => set((s) => ({ mistakes: { ...s.mistakes, [id]: { n: (s.mistakes[id]?.n ?? 0) + 1, at: Date.now() } } })),
+      forgiveMistake: (id) =>
+        set((s) => {
+          const m = s.mistakes[id];
+          if (!m) return {};
+          const mistakes = { ...s.mistakes };
+          // one right answer makes it lighter; it leaves the list when it reaches zero
+          if (m.n <= 1) delete mistakes[id];
+          else mistakes[id] = { n: m.n - 1, at: m.at };
+          return { mistakes };
+        }),
       loseHeart: () => {
         const s = get();
         if (isMaxNow(s)) return;
@@ -717,9 +740,11 @@ export const useApp = create<State & Actions>()(
     }),
     {
       name: 'thingual-v1',
-      version: 3,
+      version: 4,
       migrate: (persisted, version) => {
         const p = persisted as State & Actions;
+        // v4: path progress keyed by stable lesson ids
+        if (version < 4 && p?.path) p.path = migratePathKeys(p.path);
         if (version < 3 && p?.learnStreak) {
           p.bestStreak = p.learnStreak.count;
           p.activeDays = p.learnStreak.last ? [p.learnStreak.last] : [];

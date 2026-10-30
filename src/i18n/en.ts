@@ -584,6 +584,7 @@ export const en = {
     how: 'How to earn', how1: 'Learn in the app: reviews, phrases, grammar, audiobooks — every 2 active minutes give 1 crystal (up to 30 a day).', how2: 'Open the gifts at 5, 15, 30 and 60 minutes for bonus crystals.', how3: 'Idle time doesn’t count — only when you’re actually learning or listening.',
   },
   path: {
+    sleepy: 'Zzz… wake me up with a lesson!',
     section: 'Section {level}', unit: 'Unit {n}', words: 'Words of this unit', levelTitle: '{level} · {name}', unitProgress: '{done} of {n} done',
     mixed: 'Mixed words {level}', start: 'START', lessonN: 'Lesson {n} of {total}', phrasesTitle: 'Phrases: {s}', chest: 'Treasure chest', review: 'Unit review',
     lessonSub: '{n} new words with pictures, sound and practice', phrasesSub: '{n} phrases to understand and build', chestSub: 'Open it for crystals', reviewSub: 'Everything from this unit — prove you know it',
@@ -591,6 +592,7 @@ export const en = {
     mascot: ['Let’s go!', 'You’ve got this', 'Three minutes — one lesson', 'Keep the flame alive 🔥', 'Every lesson counts', 'Ready for the next one?'],
   },
   lesson: {
+    sayIt: 'Say it out loud', tapToSpeak: 'Tap and speak', listening: 'Listening…', notHeard: 'Didn’t catch that — try again', cantSpeak: 'Can’t speak now',
     check: 'Check', typo: 'Watch the spelling!', wrong: 'Not quite', correctIs: 'Correct answer:', matchHint: 'Tap the pairs',
     great: 'Great!', nice: 'Nice!', perfect: 'Perfect!', yes: 'Yes!', newWord: 'New word',
     whichIs: 'Which one is', whatMeans: 'What does it mean?', whatHear: 'What do you hear?', howSay: 'How do you say it in {lang}?', writeIn: 'Write it in {lang}',
@@ -600,12 +602,14 @@ export const en = {
     done: 'Lesson complete!', donePerfect: 'Flawless!', doneSub: 'The words are now in your dictionary for reviews.', donePerfectSub: 'Not a single mistake — bonus XP is yours.',
   },
   hearts: {
+    practice: 'Practise your mistakes', practiceSub: 'Win a heart back',
     title: '{n} {n:heart|hearts} left', out: 'Out of hearts', unlimited: 'Unlimited hearts', unlimitedSub: 'With Max you can make as many mistakes as you need.',
     fullSub: 'All hearts are full — go learn!', nextIn: 'Next heart in {n} min', how: 'A mistake in a path lesson costs one heart. A heart comes back every 30 minutes.',
     refill: 'Refill hearts', refillSub: 'All 5 right now', max: 'Unlimited hearts', maxSub: 'Thingual Max — never wait again', refilled: 'Hearts refilled ❤️',
     back: 'Back to the path', wait: 'I’ll wait',
   },
   threads: {
+    actCorrection: 'corrected your text', textRejected: 'This text breaks the community rules — please rephrase it.', native: 'native',
     title: 'Threads', sub: 'Write in the language you learn. Others answer and fix your mistakes.',
     today: 'Topic of the day', todayCta: 'Write in {lang}', allLangs: 'All languages', new: 'New thread',
     empty: 'No threads in {lang} yet', emptySub: 'Start the first one — say hi, ask a question or answer the topic of the day.',
@@ -632,6 +636,11 @@ export const en = {
     buy: 'Buy {name} · {n} 💎', hint: 'Tap something you own to put it on or take it off.',
   },
   reward: { crystals: 'crystals!', collect: 'Collect' },
+  mistakes: { title: 'My mistakes · {n}', sub: 'A quick lesson from the words you got wrong — and a heart back' },
+  notify: {
+    tingo: ['Psst! Tingo saved you a 3-minute lesson 🦊', 'Tingo is bored without you. One lesson?', 'Your flame misses you 🔥 Tingo too.', 'New words are waiting on the path!', 'Tingo put on his best hat for today’s lesson 🎩', 'Three minutes. One lesson. A happy fox.'],
+    riskTitle: 'Your {n}-day streak ends tonight!', riskBody: 'Tingo is worried 🦊 One quick lesson saves it.',
+  },
   limits: { left: '{n} left today' },
 };
 

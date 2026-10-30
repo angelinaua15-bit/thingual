@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { Floaty } from '../../src/components/Fx';
+import { Sky } from '../../src/components/Sky';
 import { SCENERY } from '../../src/data/scenery';
 import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 import { ArrowRight, ChevronDown, Trophy } from '../../src/components/icons';
@@ -20,6 +21,7 @@ import { useT, languageName } from '../../src/i18n';
 import { useApp } from '../../src/store/useApp';
 import { UNITS, NODES, nodeIndex, pathState, type PathNode, type Unit } from '../../src/data/path';
 import { haptic } from '../../src/lib/feedback';
+import { doneToday } from '../../src/lib/streak';
 import type { CEFR } from '../../src/data/concepts';
 
 const HEADER_H = 150;
@@ -29,7 +31,7 @@ const unitHeight = (u: Unit) => HEADER_H + u.nodes.length * NODE_H + 24;
 
 /** The learning path: units A1 → C2, one lesson after another. */
 export default function PathTab() {
-  const { c } = useTheme();
+  const { c, isDark } = useTheme();
   const { t } = useT();
   const insets = useSafeAreaInsets();
   const s = useApp((x) => x.settings);
@@ -42,6 +44,8 @@ export default function PathTab() {
   const [topUnit, setTopUnit] = useState(currentUnit);
   const list = useRef<FlatList<Unit>>(null);
   const line = useMascotLine();
+  // Tingo sleeps until you learn something today
+  const asleep = !doneToday(useApp((x) => x.learnStreak));
   const hearts = useHearts();
   const narrow = useWindowDimensions().width < 360;
 
@@ -73,8 +77,9 @@ export default function PathTab() {
   const unit = UNITS[topUnit];
   return (
     <View style={{ flex: 1, backgroundColor: c.background }}>
+      <Sky />
       {/* top bar: language, streak, crystals, hearts */}
-      <View style={[styles.bar, { paddingTop: insets.top + 6, backgroundColor: c.background, borderBottomColor: c.divider }]}>
+      <View style={[styles.bar, { paddingTop: insets.top + 6, backgroundColor: isDark ? 'rgba(11,33,41,.92)' : 'rgba(250,250,248,.9)', borderBottomColor: c.divider }]}>
         <View style={styles.barRow}>
           <PressableScale onPress={() => router.push('/settings')} style={[styles.lang, { backgroundColor: c.surfaceAlt }]}>
             <Txt v="captionMedium" numberOfLines={1}>{s.active.toUpperCase()}</Txt>
@@ -113,7 +118,7 @@ export default function PathTab() {
         viewabilityConfig={{ itemVisiblePercentThreshold: 30 }}
         contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + 60 }}
         renderItem={({ item: u }) => (
-          <UnitBlock unit={u} status={st.status} onNode={open} mascot={u.n === currentUnit ? line || ' ' : undefined} t={t} />
+          <UnitBlock unit={u} status={st.status} onNode={open} mascot={u.n === currentUnit ? (asleep ? t('path.sleepy') : line || ' ') : undefined} asleep={asleep} t={t} />
         )}
       />
 
@@ -153,7 +158,7 @@ type T = (k: string, v?: Record<string, string | number>) => string;
 export const unitTitle = (u: Unit, t: T) =>
   u.topic ? `${t(`explore.topics.${u.topic}`)}${u.part > 1 ? ` ${u.part}` : ''}` : u.situation ? t(`phr.situations.${u.situation}`) : t('path.mixed', { level: u.level });
 
-function UnitBlock({ unit, status, onNode, mascot, t }: { unit: Unit; status: (i: number) => 'done' | 'current' | 'open' | 'locked'; onNode: (n: PathNode) => void; mascot?: string; t: T }) {
+function UnitBlock({ unit, status, onNode, mascot, asleep, t }: { unit: Unit; status: (i: number) => 'done' | 'current' | 'open' | 'locked'; onNode: (n: PathNode) => void; mascot?: string; asleep?: boolean; t: T }) {
   const { c, isDark } = useTheme();
   const firstOfLevel = unit.n === 0 || UNITS[unit.n - 1].level !== unit.level;
   const done = unit.nodes.filter((n) => status(nodeIndex(n.id)) === 'done').length;
@@ -206,11 +211,13 @@ function UnitBlock({ unit, status, onNode, mascot, t }: { unit: Unit; status: (i
         return (
           <View key={n.id} style={{ height: NODE_H, alignItems: 'center', justifyContent: 'center' }}>
             <View style={{ transform: [{ translateX: x }] }}>
-              <PathNodeButton kind={n.kind} status={stt} color={unit.color} onPress={() => onNode(n)} label={t('path.start')} />
+              <Animated.View entering={ZoomIn.delay(80 + i * 70).springify().damping(11)}>
+                <PathNodeButton kind={n.kind} status={stt} color={unit.color} onPress={() => onNode(n)} label={t('path.start')} />
+              </Animated.View>
             </View>
             {mascot && i === 1 && (
               <View style={[styles.mascot, x >= 0 ? { left: 18 } : { right: 18 }]} pointerEvents="box-none">
-                <Mascot size={76} say={mascot.trim() || undefined} />
+                <Mascot size={76} say={mascot.trim() || undefined} mood={asleep ? 'sleep' : 'idle'} />
               </View>
             )}
           </View>

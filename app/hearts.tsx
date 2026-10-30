@@ -6,6 +6,7 @@ import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { Crown, Gem, Heart, X } from '../src/components/icons';
 import { Txt } from '../src/components/ui';
 import { toast } from '../src/components/Overlay';
+import { EmojiArt } from '../src/components/NoteBits';
 import { ChunkyButton, useHearts } from '../src/components/PathBits';
 import { useTheme, fonts, radius, space } from '../src/theme/tokens';
 import { useT } from '../src/i18n';
@@ -23,6 +24,7 @@ export default function Hearts() {
   const insets = useSafeAreaInsets();
   const h = useHearts();
   const crystals = useApp((s) => s.crystals);
+  const mistakes = useApp((s) => Object.keys(s.mistakes).length);
   const mins = h.next ? Math.max(1, Math.ceil((h.next - Date.now()) / 60000)) : 0;
 
   const refill = () => {
@@ -65,6 +67,15 @@ export default function Hearts() {
               </View>
               <View style={styles.price}><Gem size={14} color="#7C5CFF" /><Txt v="captionMedium" color="#7C5CFF">{REFILL_PRICE}</Txt></View>
             </Pressable>
+            {mistakes >= 3 && (
+              <Pressable onPress={() => router.replace({ pathname: '/lesson', params: { node: 'mistakes' } })} style={[styles.opt, { backgroundColor: c.surface, borderColor: c.divider }]}>
+                <EmojiArt emoji="🎯" size={28} />
+                <View style={{ flex: 1 }}>
+                  <Txt v="bodyMedium">{t('hearts.practice')}</Txt>
+                  <Txt v="caption" color={c.textSecondary}>{t('hearts.practiceSub')}</Txt>
+                </View>
+              </Pressable>
+            )}
             <Pressable onPress={() => requireMax('hearts')} style={[styles.opt, { backgroundColor: '#2B1B6B', borderColor: '#2B1B6B' }]}>
               <Crown size={24} color="#FCD34D" />
               <View style={{ flex: 1 }}>

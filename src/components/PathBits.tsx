@@ -10,7 +10,7 @@ import { useT } from '../i18n';
 import { useApp, heartsOf, HEARTS_MAX } from '../store/useApp';
 import { useIsMax } from '../lib/premium';
 import { haptic } from '../lib/feedback';
-import { useMoodStyle, type Mood } from './Fx';
+import { Floaty, Typewriter, useMoodStyle, type Mood } from './Fx';
 import type { NodeKind } from '../data/path';
 import { wearById } from '../data/wardrobe';
 
@@ -138,12 +138,17 @@ export function Mascot({ size = 84, say, mood = 'idle', moodKey, tappable = true
     <View style={{ alignItems: 'center' }}>
       {say ? (
         <View style={[styles.say, { backgroundColor: c.surface, borderColor: c.divider }]}>
-          <Txt v="caption" center>{say}</Txt>
+          <Typewriter text={say} center />
         </View>
       ) : null}
       {/* room above for a hat */}
       <Pressable disabled={!tappable} onPress={() => { haptic.light(); setPoke(Date.now()); }} style={{ marginTop: say ? size * 0.28 : 0, alignItems: 'center' }}>
         <Animated.View style={a}><FoxArt size={size} /></Animated.View>
+        {current === 'sleep' && (
+          <Floaty amp={8} period={1800} style={{ position: 'absolute', right: -size * 0.18, top: -size * 0.12 }}>
+            <EmojiArt emoji="💤" size={size * 0.38} />
+          </Floaty>
+        )}
         <View style={{ width: size * 0.6, height: size * 0.08, borderRadius: size, backgroundColor: 'rgba(0,0,0,.12)', marginTop: 2 }} />
       </Pressable>
     </View>

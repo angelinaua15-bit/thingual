@@ -191,7 +191,7 @@ test('the chest on the path gives crystals once', async ({ page }) => {
   await page.getByText('Відкрити', { exact: true }).click();
   const st = await page.evaluate(() => JSON.parse(localStorage.getItem('thingual-v1')!).state);
   expect(st.crystals).toBe(15);
-  expect(st.path['es:u0-3']).toBe(1);
+  expect(st.path['es:c:A1-people-1']).toBe(1);
   expect(errs).toEqual([]);
 });
 
@@ -230,4 +230,30 @@ test('Lightning starts a 60-second round and counts answers', async ({ page }) =
   await page.getByText('Погнали!').click();
   await expect(page.getByText('60').or(page.getByText('59')).first()).toBeVisible();
   expect(errs).toEqual([]);
+});
+
+test('My mistakes: a lesson from words answered wrong, wins a heart back', async ({ page }) => {
+  const errs = errors(page);
+  await page.goto('/');
+  await page.evaluate((s) => {
+    const st = JSON.parse(s);
+    st.state.mistakes = { cat: { n: 2, at: 1 }, cup: { n: 1, at: 2 }, window: { n: 3, at: 3 }, bread: { n: 1, at: 4 } };
+    localStorage.setItem('thingual-v1', JSON.stringify(st));
+  }, seed());
+  await page.goto('/learn');
+  await page.getByText(/Мої помилки · 4/).click();
+  await expect(page).toHaveURL(/lesson\?node=mistakes/);
+  await expect(page.getByText('Перевірити').or(page.getByText('Знайди пари')).first()).toBeVisible();
+  expect(errs).toEqual([]);
+});
+
+test('old progress (position ids) moves to stable lesson ids', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate((s) => { const st = JSON.parse(s); st.state.path = { 'es:u0-0': 1, 'es:u0-3': 1 }; localStorage.setItem('thingual-v1', JSON.stringify(st)); }, seed());
+  await page.goto('/path');
+  await page.waitForTimeout(1200);
+  const st = await page.evaluate(() => JSON.parse(localStorage.getItem('thingual-v1')!));
+  expect(st.version).toBe(4);
+  expect(st.state.path['es:l:family']).toBe(1);
+  expect(st.state.path['es:c:A1-people-1']).toBe(1);
 });

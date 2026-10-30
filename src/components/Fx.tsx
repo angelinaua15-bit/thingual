@@ -99,7 +99,7 @@ export function CountUp({ to, from = 0, duration = 900, style, prefix = '' }: { 
 }
 
 /** Fox moods for the mascot: idle bob, happy jump, sad droop, dance. */
-export type Mood = 'idle' | 'happy' | 'sad' | 'dance';
+export type Mood = 'idle' | 'happy' | 'sad' | 'dance' | 'sleep';
 export function useMoodStyle(mood: Mood, key?: unknown) {
   const y = useSharedValue(0);
   const r = useSharedValue(0);
@@ -119,6 +119,11 @@ export function useMoodStyle(mood: Mood, key?: unknown) {
       y.value = withSpring(6, { damping: 12 });
       r.value = withSequence(withTiming(-6, { duration: 90 }), withTiming(6, { duration: 90 }), withTiming(-4, { duration: 90 }), withTiming(0, { duration: 90 }));
       s.value = withSpring(0.94);
+    } else if (mood === 'sleep') {
+      // slow breathing, head on one side
+      y.value = withTiming(4);
+      r.value = withTiming(10, { duration: 600 });
+      s.value = withRepeat(withSequence(withTiming(1.04, { duration: 1600, easing: Easing.inOut(Easing.sin) }), withTiming(0.97, { duration: 1600, easing: Easing.inOut(Easing.sin) })), -1);
     } else {
       y.value = withRepeat(withSequence(withTiming(-18, { duration: 260, easing: Easing.out(Easing.quad) }), withTiming(0, { duration: 260, easing: Easing.in(Easing.quad) })), -1);
       r.value = withRepeat(withSequence(withTiming(-12, { duration: 260 }), withTiming(12, { duration: 260 })), -1, true);
@@ -149,6 +154,25 @@ export function useAfter(ms: number, onEnd: () => void, deps: unknown[] = []) {
     const id = setTimeout(onEnd, ms);
     return () => clearTimeout(id);
   }, deps);
+}
+
+/** Text that types itself out (Tingo's speech bubbles). */
+export function Typewriter({ text, speed = 28, style, v = 'caption', center }: { text: string; speed?: number; style?: object; v?: 'caption' | 'callout' | 'body'; center?: boolean }) {
+  const calm = useCalm();
+  const [n, setN] = useState(calm ? text.length : 0);
+  useEffect(() => {
+    if (calm) { setN(text.length); return; }
+    setN(0);
+    const id = setInterval(() => setN((k) => { if (k >= text.length) { clearInterval(id); return k; } return k + 1; }), speed);
+    return () => clearInterval(id);
+  }, [text, calm]);
+  return (
+    <View>
+      {/* invisible full text keeps the bubble from jumping while typing */}
+      <Txt v={v} center={center} style={[style, { opacity: 0 }]}>{text}</Txt>
+      <Txt v={v} center={center} style={[style, { position: 'absolute', left: 0, right: 0 }]}>{text.slice(0, n)}</Txt>
+    </View>
+  );
 }
 
 export { runOnJS };

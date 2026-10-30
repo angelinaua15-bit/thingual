@@ -12,7 +12,8 @@ export type Exercise =
   | { t: 'match'; words: string[] }
   | { t: 'type'; word: string }
   | { t: 'build'; prompt: string; say: string; answer: string[]; tiles: string[]; listen?: boolean }
-  | { t: 'phrase'; phrase: string; options: string[] };
+  | { t: 'phrase'; phrase: string; options: string[] }
+  | { t: 'speak'; say: string; meaning: string; word?: string };
 
 const shuffle = <T,>(xs: T[]) => {
   const a = [...xs];
@@ -119,7 +120,7 @@ function tilePool(ctx: Ctx, words: string[], phrases: string[]) {
 }
 
 /** Builds a lesson of ~10–14 steps for a path node. */
-export function makeLesson(node: PathNode, target: LangCode, native: LangCode, opts: { female?: boolean; known?: string[] } = {}): Exercise[] {
+export function makeLesson(node: PathNode, target: LangCode, native: LangCode, opts: { female?: boolean; known?: string[]; speak?: boolean } = {}): Exercise[] {
   const ctx: Ctx = { target, native, female: opts.female, known: new Set(opts.known ?? []) };
   const pool = tilePool(ctx, node.words, node.phrases);
   const out: Exercise[] = [];
@@ -132,7 +133,12 @@ export function makeLesson(node: PathNode, target: LangCode, native: LangCode, o
       push({ t: 'phrase', phrase: id, options: shuffle([id, ...pickN(ids.filter((x) => x !== id), 2)]) });
       push(phraseBuild(id, ctx, pool, i % 2 === 1));
     });
-    return out.slice(0, 12);
+    const lesson = out.slice(0, 12);
+    // say one phrase out loud near the end
+    const sp = ids[ids.length - 1];
+    const e = exprById(sp);
+    if (opts.speak && e) lesson.splice(Math.max(1, lesson.length - 2), 0, { t: 'speak', say: exprTarget(e, target, opts.female).text, meaning: exprMeaning(e, native, opts.female) });
+    return lesson;
   }
 
   if (node.kind === 'review') {
@@ -164,6 +170,10 @@ export function makeLesson(node: PathNode, target: LangCode, native: LangCode, o
   const b = pickN(ws, 4).map((w) => exampleBuild(w, ctx, pool)).find(Boolean);
   if (b) tail.push(b);
   tail.push({ t: 'type', word: pickN(ws, 1)[0] });
+  if (opts.speak) {
+    const w = pickN(ws, 1)[0];
+    tail.splice(1, 0, { t: 'speak', say: fullWord(w, target), meaning: labelOf(w, native)?.word ?? '', word: w });
+  }
   return [...mixed.slice(0, 16 - tail.length), ...tail];
 }
 

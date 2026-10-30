@@ -222,6 +222,8 @@ export function Avatar({ seed, size = 40, label, uri }: { seed: string; size?: n
 }
 
 /* ---------------- Progress bar ---------------- */
+const SWEEP = { from: { left: '-20%' }, '60%': { left: '110%' }, to: { left: '110%' } };
+
 export function ProgressBar({ value, color, height = 4, track }: { value: number; color?: string; height?: number; track?: string }) {
   const { c } = useTheme();
   const w = useSharedValue(0);
@@ -231,7 +233,16 @@ export function ProgressBar({ value, color, height = 4, track }: { value: number
   const a = useAnimatedStyle(() => ({ width: `${w.value * 100}%` }));
   return (
     <View style={{ height, borderRadius: height, backgroundColor: track ?? c.divider, overflow: 'hidden' }}>
-      <Animated.View style={[{ height, borderRadius: height, backgroundColor: color ?? c.accent }, a]} />
+      <Animated.View style={[{ height, borderRadius: height, backgroundColor: color ?? c.accent, overflow: 'hidden' }, a]}>
+        {height >= 10 && (
+          <>
+            {/* a glossy stripe and a light sweep on thick bars (lesson progress) */}
+            <View style={{ position: 'absolute', left: height / 2, right: height / 2, top: height * 0.22, height: height * 0.24, borderRadius: height, backgroundColor: 'rgba(255,255,255,.35)' }} />
+            <Animated.View style={[{ position: 'absolute', top: 0, bottom: 0, width: 40, backgroundColor: 'rgba(255,255,255,.35)', transform: [{ skewX: '-20deg' }] },
+              { animationName: SWEEP, animationDuration: 2400, animationIterationCount: 'infinite', animationTimingFunction: 'ease-in-out' } as never]} />
+          </>
+        )}
+      </Animated.View>
     </View>
   );
 }

@@ -71,6 +71,9 @@ export function PostCard({ post, liked = false, i = 0, threadLine, big, onDelete
           <Pressable onPress={openUser} style={{ flexShrink: 1, flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
             <Txt v="bodyMedium" numberOfLines={1} style={{ flexShrink: 1 }}>{author?.name || author?.handle}</Txt>
             <Txt v="caption" color={c.textTertiary} numberOfLines={1}>@{author?.handle}</Txt>
+            {author?.native_lang && post.lang && author.native_lang === post.lang ? (
+              <View style={[styles.native, { backgroundColor: c.successSoft }]}><Txt v="caption" color={c.success} style={{ fontSize: 10 }}>{t('threads.native')}</Txt></View>
+            ) : null}
           </Pressable>
           <Txt v="caption" color={c.textTertiary}>· {timeAgo(new Date(post.created_at).getTime(), t).replace(/ ago| тому/, '')}</Txt>
           <View style={{ flex: 1 }} />
@@ -212,6 +215,7 @@ const styles = StyleSheet.create({
   line: { width: 2, flex: 1, marginTop: 6, borderRadius: 1 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 },
   tag: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
+  native: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6, alignSelf: 'center' },
   fix: { padding: 10, borderRadius: radius.s, gap: 6 },
   photo: { borderRadius: radius.m, overflow: 'hidden', maxHeight: 460, width: '100%' },
   word: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, paddingLeft: 12, paddingRight: 6, paddingVertical: 6, borderRadius: radius.s },

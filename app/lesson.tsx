@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { Easing, FadeInDown, SlideInDown, ZoomIn, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withSpring, withTiming } from 'react-native-reanimated';
-import { Check, Heart, Timer, Turtle, Volume2, X, Zap } from '../src/components/icons';
+import { Check, Heart, Mic, Timer, Turtle, Volume2, X, Zap } from '../src/components/icons';
 import { Txt, Button, ProgressBar, PressableScale } from '../src/components/ui';
 import { EmojiArt } from '../src/components/NoteBits';
 import { Sheet } from '../src/components/Overlay';
@@ -16,9 +16,12 @@ import { useApp, heartsOf } from '../src/store/useApp';
 import { conceptById, fullWord, labelOf } from '../src/data/concepts';
 import { exprById, exprMeaning, exprTarget } from '../src/data/expressions';
 import { lang as langInfo, type LangCode } from '../src/data/languages';
-import { UNITS, nodeById } from '../src/data/path';
+import { UNITS, nodeById, type PathNode } from '../src/data/path';
 import { builtOk, makeLesson, typedOk, type Exercise } from '../src/lib/lesson';
 import { haptic, speak } from '../src/lib/feedback';
+import { listenOnce, similarity, speechRecognitionAvailable } from '../src/lib/speech';
+import { PronunciationDiff } from '../src/components/Pronunciation';
+import { sfx } from '../src/lib/sfx';
 import { goBack } from '../src/lib/nav';
 
 type Verdict = { ok: boolean; typo?: boolean; answer?: string };
@@ -29,14 +32,19 @@ export default function Lesson() {
   const { t } = useT();
   const insets = useSafeAreaInsets();
   const { node: nodeId } = useLocalSearchParams<{ node: string }>();
-  const node = nodeById(nodeId ?? '');
+  const mistakesMode = nodeId === 'mistakes';
+  const node = useMemo<PathNode | undefined>(() => {
+    if (!mistakesMode) return nodeById(nodeId ?? '');
+    const words = Object.entries(useApp.getState().mistakes).sort((a, b) => b[1].n - a[1].n || b[1].at - a[1].at).map(([id]) => id).filter((id) => conceptById(id)).slice(0, 8);
+    return words.length >= 3 ? { id: 'mistakes', kind: 'review', unit: 0, words, phrases: [] } : undefined;
+  }, [nodeId]);
   const s = useApp((x) => x.settings);
   const hearts = useHearts();
   const target = s.active;
   const native = s.native === target ? (target === 'en' ? 'uk' : 'en') : s.native;
   const female = s.speakerGender === 'female';
   const [queue, setQueue] = useState<Exercise[]>(() =>
-    node ? makeLesson(node, target, native, { female, known: Object.keys(useApp.getState().words) }) : [],
+    node ? makeLesson(node, target, native, { female, known: Object.keys(useApp.getState().words), speak: speechRecognitionAvailable() && Date.now() > speakOffUntil }) : [],
   );
   const total = useRef(queue.length);
   const [i, setI] = useState(0);
@@ -84,7 +92,7 @@ export default function Lesson() {
     } else if (ex.t === 'phrase') {
       const e = exprById(ex.phrase)!;
       v = { ok: sel === ex.phrase, answer: exprMeaning(e, native, female) };
-    } else if (ex.t === 'match') {
+    } else if (ex.t === 'match' || ex.t === 'speak') {
       v = { ok: true };
     } else {
       const w = ex.word;
@@ -97,17 +105,23 @@ export default function Lesson() {
     setVerdict(v);
     if (v.ok) {
       haptic.success();
+      const run = streakRun + 1;
+      sfx(run === 5 || run === 10 || run === 15 ? 'combo' : 'correct');
       if (!firstTry.current.has(i)) correct.current++;
-      setStreakRun((n) => n + 1);
+      setStreakRun(run);
+      if ('word' in ex && ex.word) useApp.getState().forgiveMistake(ex.word);
       const say = sayOf(ex, target, female);
-      if (say && ex.t !== 'listen') speak(say, target);
+      if (say && ex.t !== 'listen') setTimeout(() => speak(say, target), 350);
     } else {
       haptic.error();
+      sfx('wrong');
+      if ('word' in ex && ex.word) useApp.getState().noteMistake(ex.word);
       mistakes.current++;
       firstTry.current.add(i);
       setStreakRun(0);
       useApp.getState().loseHeart();
       if (!hearts.unlimited) {
+        setTimeout(() => sfx('heart', 0.7), 250);
         setLost((n) => n + 1);
         heartShake.value = withSequence(withTiming(1.4, { duration: 120 }), withTiming(0.85, { duration: 120 }), withSpring(1, { damping: 6 }));
       }
@@ -131,7 +145,7 @@ export default function Lesson() {
       const perfect = mistakes.current === 0;
       // missed steps come back and get solved, so accuracy counts first tries only
       const right = Math.max(0, total.current - mistakes.current);
-      const xp = useApp.getState().finishNode(`${target}:${node.id}`, { words: node.words, total: total.current, correct: right, minutes: min, perfect });
+      const xp = useApp.getState().finishNode(mistakesMode ? 'practice:mistakes' : `${target}:${node.id}`, { words: node.words, total: total.current, correct: right, minutes: min, perfect });
       setFinished({ xp, acc: Math.round((right / Math.max(1, total.current)) * 100), min, perfect });
       setI(queue.length);
       return;
@@ -148,7 +162,12 @@ export default function Lesson() {
       <View style={styles.bar}>
         <Pressable onPress={() => setQuit(true)} hitSlop={12} accessibilityLabel={t('common.close')}><X size={24} color={c.textSecondary} /></Pressable>
         <View style={{ flex: 1 }}><ProgressBar value={progress} color={accent} height={14} /></View>
-        {streakRun >= 3 && <Animated.View key={streakRun} entering={ZoomIn.springify().damping(8)}><Txt v="captionMedium" color="#F97316">🔥{streakRun}</Txt></Animated.View>}
+        {streakRun >= 3 && (
+          <Animated.View key={streakRun} entering={ZoomIn.springify().damping(8)}>
+            <Txt v="captionMedium" color="#F97316">🔥{streakRun}</Txt>
+            {streakRun % 5 === 0 && <View style={{ position: 'absolute', left: 12, top: 10 }}><Burst emoji={['🔥', '⭐', '✨']} count={14} size={20} radius={110} /></View>}
+          </Animated.View>
+        )}
         <Animated.View style={[styles.hearts, heartStyle]}>
           <Heart size={20} color="#F43F5E" fill="#F43F5E" />
           <Txt v="bodyMedium" color="#F43F5E">{hearts.unlimited ? '∞' : hearts.n}</Txt>
@@ -168,7 +187,16 @@ export default function Lesson() {
       <ScrollView key={i} contentContainerStyle={{ flexGrow: 1, padding: space.m, paddingBottom: 24, maxWidth: 620, width: '100%', alignSelf: 'center' }} keyboardShouldPersistTaps="handled">
         <Animated.View entering={FadeInDown.duration(260)} style={{ flex: 1 }}>
           <Body ex={ex} target={target} native={native} female={female} sel={sel} setSel={setSel} built={built} setBuilt={setBuilt} typed={typed} setTyped={setTyped}
-            locked={!!verdict} onMatched={() => grade({ ok: true })} onSubmit={() => canCheck && !verdict && check()} accent={accent} t={t} />
+            locked={!!verdict} onMatched={() => grade({ ok: true })}
+            onSpoken={(ok, skipped) => {
+              if (skipped) {
+                speakOffUntil = Date.now() + 15 * 60_000;
+                setQueue((q) => q.filter((x, k) => k <= i || x.t !== 'speak'));
+                grade({ ok: true });
+                return;
+              }
+              grade(ok ? { ok: true } : { ok: false, answer: ex.t === 'speak' ? ex.say : '' });
+            }} onSubmit={() => canCheck && !verdict && check()} accent={accent} t={t} />
         </Animated.View>
       </ScrollView>
 
@@ -221,7 +249,10 @@ type T = (k: string, v?: Record<string, string | number>) => string;
 const praise = (t: T, i: number) => [t('lesson.great'), t('lesson.nice'), t('lesson.perfect'), t('lesson.yes')][i % 4];
 
 const sayOf = (ex: Exercise, target: LangCode, female: boolean) =>
-  ex.t === 'build' ? ex.say : ex.t === 'phrase' ? exprTarget(exprById(ex.phrase)!, target, female).text : ex.t === 'match' ? '' : fullWord(ex.word, target);
+  ex.t === 'build' || ex.t === 'speak' ? ex.say : ex.t === 'phrase' ? exprTarget(exprById(ex.phrase)!, target, female).text : ex.t === 'match' ? '' : fullWord(ex.word, target);
+
+/** "Can't speak now" turns speaking exercises off for 15 minutes. */
+let speakOffUntil = 0;
 
 function Word({ id, code, size = 30 }: { id: string; code: LangCode; size?: number }) {
   const { c } = useTheme();
@@ -253,7 +284,7 @@ function SpeakBig({ text, code, small }: { text: string; code: LangCode; small?:
 type BodyProps = {
   ex: Exercise; target: LangCode; native: LangCode; female: boolean; accent: string; t: T;
   sel: string | null; setSel: (s: string) => void; built: number[]; setBuilt: (b: number[]) => void; typed: string; setTyped: (s: string) => void;
-  locked: boolean; onMatched: () => void; onSubmit: () => void;
+  locked: boolean; onMatched: () => void; onSubmit: () => void; onSpoken: (ok: boolean, skipped?: boolean) => void;
 };
 
 function Body(p: BodyProps) {
@@ -386,14 +417,76 @@ function Body(p: BodyProps) {
     );
   }
 
+  if (ex.t === 'speak') return <Speak ex={ex} target={target} t={t} locked={p.locked} onDone={p.onSpoken} />;
+
   // match pairs
   return <Match words={ex.words} target={target} native={native} t={t} onDone={p.onMatched} />;
+}
+
+/** Say it out loud: the phone listens, shows which sounds it heard, and grades it. */
+function Speak({ ex, target, t, locked, onDone }: { ex: Extract<Exercise, { t: 'speak' }>; target: LangCode; t: T; locked: boolean; onDone: (ok: boolean, skipped?: boolean) => void }) {
+  const { c } = useTheme();
+  const [state, setState] = useState<'idle' | 'listening' | 'heard'>('idle');
+  const [heard, setHeard] = useState('');
+  const stop = useRef<() => void>(() => {});
+  const ring = useSharedValue(0);
+  useEffect(() => () => stop.current(), []);
+  useEffect(() => {
+    ring.value = state === 'listening' ? withRepeat(withTiming(1, { duration: 900 }), -1) : 0;
+  }, [state]);
+  const ringSt = useAnimatedStyle(() => ({ transform: [{ scale: 1 + ring.value * 0.6 }], opacity: 0.5 - ring.value * 0.5 }));
+  const score = heard ? similarity(heard, ex.say) : 0;
+  const listen = () => {
+    if (locked || state === 'listening') return;
+    sfx('tap');
+    setHeard('');
+    setState('listening');
+    let got = '';
+    stop.current = listenOnce(langInfo(target).voice, (txt) => { got = txt; setHeard(txt); }, () => {
+      setState('heard');
+      const sc = got ? similarity(got, ex.say) : 0;
+      if (got) onDone(sc >= 70);
+    });
+  };
+  return (
+    <View style={{ flex: 1 }}>
+      <Txt v="headline">{t('lesson.sayIt')}</Txt>
+      <View style={[styles.bubbleRow]}>
+        <Mascot size={70} tappable={false} />
+        <View style={[styles.speech, { backgroundColor: c.surface, borderColor: c.divider }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <SpeakBig text={ex.say} code={target} small />
+            <View style={{ flex: 1 }}>
+              <Txt style={{ fontFamily: fonts.serif, fontSize: 24, lineHeight: 30, color: c.text }}>{ex.say}</Txt>
+              <Txt v="caption" color={c.textSecondary}>{ex.meaning}</Txt>
+            </View>
+          </View>
+        </View>
+      </View>
+      <View style={{ alignItems: 'center', marginTop: 10 }}>
+        {heard ? <View style={{ marginBottom: 16 }}><PronunciationDiff heard={heard} target={ex.say} score={score} /></View> : null}
+        <View style={{ width: 120, height: 120, alignItems: 'center', justifyContent: 'center' }}>
+          <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: 60, backgroundColor: '#3B82F6' }, ringSt]} />
+          <Pressable onPress={listen} accessibilityLabel={t('lesson.tapToSpeak')} style={[styles.mic, { backgroundColor: state === 'listening' ? '#EF4444' : '#3B82F6', borderBottomColor: shade(state === 'listening' ? '#EF4444' : '#3B82F6') }]}>
+            <Mic size={38} color="#fff" />
+          </Pressable>
+        </View>
+        <Txt v="captionMedium" color={c.textSecondary} style={{ marginTop: 10 }}>{state === 'listening' ? t('lesson.listening') : t('lesson.tapToSpeak')}</Txt>
+        {state === 'heard' && !heard && <Txt v="caption" color={c.error} style={{ marginTop: 6 }}>{t('lesson.notHeard')}</Txt>}
+        {!locked && (
+          <Pressable onPress={() => { stop.current(); onDone(true, true); }} style={{ marginTop: 18, padding: 8 }}>
+            <Txt v="captionMedium" color={c.textTertiary}>{t('lesson.cantSpeak')}</Txt>
+          </Pressable>
+        )}
+      </View>
+    </View>
+  );
 }
 
 function Option({ on, locked, onPress, style, children }: { on: boolean; locked: boolean; onPress: () => void; style?: object; children: React.ReactNode }) {
   const { c } = useTheme();
   return (
-    <PressableScale onPress={locked ? undefined : () => { haptic.light(); onPress(); }} scaleTo={0.97}
+    <PressableScale onPress={locked ? undefined : () => { haptic.light(); sfx('tap', 0.6); onPress(); }} scaleTo={0.97}
       style={[styles.opt, { backgroundColor: on ? 'rgba(59,130,246,0.10)' : c.surface, borderColor: on ? '#3B82F6' : c.divider, borderBottomColor: on ? '#2563EB' : c.divider }, style]}>
       {children}
     </PressableScale>
@@ -424,6 +517,7 @@ function Match({ words, target, native, t, onDone }: { words: string[]; target: 
     if (!a || !b) return;
     if (a === b) {
       haptic.success();
+      sfx('pop');
       const m = [...matched, a];
       setMatched(m);
       setA(null);
@@ -431,6 +525,7 @@ function Match({ words, target, native, t, onDone }: { words: string[]; target: 
       if (m.length === words.length) setTimeout(onDone, 250);
     } else {
       haptic.error();
+      sfx('wrong', 0.6);
       setWrong([a, `r:${b}`]);
       shake.value = withSequence(withTiming(-6, { duration: 50 }), withTiming(6, { duration: 50 }), withTiming(0, { duration: 50 }));
       setTimeout(() => { setWrong([]); setA(null); setB(null); }, 500);
@@ -462,6 +557,7 @@ function Match({ words, target, native, t, onDone }: { words: string[]; target: 
 /** End of the lesson: XP, accuracy, time and the fox. */
 function Done({ r, onContinue }: { r: { xp: number; acc: number; min: number; perfect: boolean }; onContinue: () => void }) {
   const { c } = useTheme();
+  useEffect(() => { sfx('fanfare'); }, []);
   const { t } = useT();
   const insets = useSafeAreaInsets();
   const stats = [
@@ -515,6 +611,7 @@ const styles = StyleSheet.create({
   bar: { flexDirection: 'row', alignItems: 'center', gap: 14, height: 56, paddingHorizontal: 16, maxWidth: 680, width: '100%', alignSelf: 'center' },
   hearts: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   foot: { paddingHorizontal: space.m, paddingTop: 16, borderTopWidth: StyleSheet.hairlineWidth },
+  mic: { width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 5 },
   mark: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   chunky: { height: 54, borderRadius: 16, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 4 },
   newTag: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginBottom: 10 },

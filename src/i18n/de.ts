@@ -586,6 +586,7 @@ export const de: Strings = {
     how: 'So verdienst du sie', how1: 'Lerne in der App: Wiederholungen, Sätze, Grammatik, Hörbücher – alle 2 aktiven Minuten gibt es 1 Kristall (bis zu 30 pro Tag).', how2: 'Öffne die Geschenke nach 5, 15, 30 und 60 Minuten für Bonuskristalle.', how3: 'Zeit ohne Aktivität zählt nicht – nur, wenn du wirklich lernst oder zuhörst.',
   },
   path: {
+    sleepy: 'Zzz… weck mich mit einer Lektion!',
     section: 'Abschnitt {level}', unit: 'Einheit {n}', words: 'Wörter dieser Einheit', levelTitle: '{level} · {name}', unitProgress: '{done} von {n} geschafft',
     mixed: 'Gemischte Wörter {level}', start: 'START', lessonN: 'Lektion {n} von {total}', phrasesTitle: 'Sätze: {s}', chest: 'Schatztruhe', review: 'Wiederholung der Einheit',
     lessonSub: '{n} {n:neues Wort|neue Wörter} mit Bildern, Ton und Übungen', phrasesSub: '{n} {n:Satz|Sätze} zum Verstehen und Selberbauen', chestSub: 'Öffne sie für Kristalle', reviewSub: 'Alles aus dieser Einheit — zeig, was du kannst',
@@ -593,6 +594,7 @@ export const de: Strings = {
     mascot: ['Los geht’s!', 'Du schaffst das', 'Drei Minuten — eine Lektion', 'Halt die Flamme am Leben 🔥', 'Jede Lektion zählt', 'Bereit für die nächste?'],
   },
   lesson: {
+    sayIt: 'Sag es laut', tapToSpeak: 'Tippen und sprechen', listening: 'Ich höre zu…', notHeard: 'Hab ich nicht verstanden — versuch’s nochmal', cantSpeak: 'Kann gerade nicht sprechen',
     check: 'Überprüfen', typo: 'Achte auf die Schreibweise!', wrong: 'Nicht ganz', correctIs: 'Richtige Antwort:', matchHint: 'Tippe die Paare an',
     great: 'Super!', nice: 'Gut gemacht!', perfect: 'Perfekt!', yes: 'Ja!', newWord: 'Neues Wort',
     whichIs: 'Welches ist…?', whatMeans: 'Was bedeutet das?', whatHear: 'Was hörst du?', howSay: 'Wie sagt man das auf {lang}?', writeIn: 'Schreib es auf {lang}',
@@ -602,12 +604,14 @@ export const de: Strings = {
     done: 'Lektion geschafft!', donePerfect: 'Fehlerfrei!', doneSub: 'Die Wörter sind jetzt in deinem Wörterbuch zum Wiederholen.', donePerfectSub: 'Kein einziger Fehler — die Bonus-XP gehören dir.',
   },
   hearts: {
+    practice: 'Übe deine Fehler', practiceSub: 'Hol dir ein Herz zurück',
     title: 'Noch {n} {n:Herz|Herzen}', out: 'Keine Herzen mehr', unlimited: 'Unbegrenzte Herzen', unlimitedSub: 'Mit Max darfst du so viele Fehler machen, wie du brauchst.',
     fullSub: 'Alle Herzen sind voll — ab ans Lernen!', nextIn: 'Nächstes Herz in {n} Min.', how: 'Ein Fehler in einer Pfad-Lektion kostet ein Herz. Alle 30 Minuten kommt ein Herz zurück.',
     refill: 'Herzen auffüllen', refillSub: 'Alle 5 sofort', max: 'Unbegrenzte Herzen', maxSub: 'Thingual Max — nie wieder warten', refilled: 'Herzen aufgefüllt ❤️',
     back: 'Zurück zum Pfad', wait: 'Ich warte',
   },
   threads: {
+    actCorrection: 'hat deinen Text korrigiert', textRejected: 'Dieser Text verstößt gegen die Community-Regeln — bitte formulier ihn um.', native: 'Muttersprachler',
     title: 'Threads', sub: 'Schreib in der Sprache, die du lernst. Andere antworten und korrigieren deine Fehler.',
     today: 'Thema des Tages', todayCta: 'Schreib auf {lang}', allLangs: 'Alle Sprachen', new: 'Neuer Thread',
     empty: 'Noch keine Threads auf {lang}', emptySub: 'Starte den ersten — sag Hallo, stell eine Frage oder antworte auf das Thema des Tages.',
@@ -634,5 +638,10 @@ export const de: Strings = {
     buy: '{name} kaufen · {n} 💎', hint: 'Tippe auf etwas, das dir gehört, um es an- oder auszuziehen.',
   },
   reward: { crystals: 'Kristalle!', collect: 'Einsammeln' },
+  mistakes: { title: 'Meine Fehler · {n}', sub: 'Eine schnelle Lektion mit den Wörtern, die du falsch hattest — und ein Herz zurück' },
+  notify: {
+    tingo: ['Psst! Tingo hat dir eine 3-Minuten-Lektion aufgehoben 🦊', 'Tingo langweilt sich ohne dich. Eine Lektion?', 'Deine Flamme vermisst dich 🔥 Tingo auch.', 'Neue Wörter warten auf dem Lernpfad!', 'Tingo hat für die heutige Lektion seinen besten Hut aufgesetzt 🎩', 'Drei Minuten. Eine Lektion. Ein glücklicher Fuchs.'],
+    riskTitle: 'Deine {n}-Tage-Serie endet heute Nacht!', riskBody: 'Tingo macht sich Sorgen 🦊 Eine kurze Lektion rettet sie.',
+  },
   limits: { left: 'Heute noch {n}' },
 };

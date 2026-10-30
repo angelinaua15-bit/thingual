@@ -276,12 +276,18 @@ export async function reportError(message: string, stack?: string) {
   });
 }
 
+/** Obvious slurs and spam are stopped before posting (everything else can be reported). */
+const BLOCKED = [/\bn[i1]gg/i, /\bf[a@]gg?[o0]t/i, /\bхуй/i, /\bпизд/i, /\bєба|\bеба/i, /\bблят/i, /\bfuck/i, /\bcunt/i, /(https?:\/\/\S+){3,}/i, /\b(viagra|casino|crypto ?airdrop)\b/i];
+export class TextRejected extends Error { constructor() { super('text_rejected'); } }
+export const textAllowed = (s: string) => !BLOCKED.some((r) => r.test(s));
+
 export async function createPost(p: {
   body?: string; photoUri?: string | null; concept_id?: string | null; lang?: string | null; parent_id?: string | null;
   place?: string | null; lat?: number | null; lng?: number | null; is_drop?: boolean; drop_day?: string | null; late_minutes?: number | null;
   topic?: PostTopic | null; level?: string | null; kind?: 'post' | 'correction'; quote?: string | null;
 }): Promise<PostRow> {
   const id = await ensureSession();
+  if (!textAllowed(`${p.body ?? ''}`)) throw new TextRejected();
   if (p.photoUri && !p.photoUri.startsWith('https://')) await moderatePhoto(p.photoUri);
   const photo_url = p.photoUri ? (p.photoUri.startsWith('https://') ? p.photoUri : await uploadImage('posts', p.photoUri)) : null;
   const { data, error } = await supabase
@@ -328,7 +334,7 @@ export async function setLike(postId: string, on: boolean) {
 export type Activity =
   | { kind: 'follow'; at: string; user: Profile }
   | { kind: 'like'; at: string; user: Profile; post: { id: string; body: string; photo_url: string | null } }
-  | { kind: 'reply'; at: string; user: Profile; post: { id: string; body: string; photo_url: string | null }; parentId: string };
+  | { kind: 'reply'; at: string; user: Profile; post: { id: string; body: string; photo_url: string | null }; parentId: string; correction?: boolean };
 
 export async function activity(): Promise<Activity[]> {
   const me = await ensureSession();
@@ -341,13 +347,13 @@ export async function activity(): Promise<Activity[]> {
   ]);
   const ids = (m.data ?? []).map((x) => x.id as string);
   const r = ids.length
-    ? await supabase.from('posts').select('id, created_at, body, photo_url, parent_id, user:profiles!posts_author_id_fkey(*)').in('parent_id', ids).neq('author_id', me).order('created_at', { ascending: false }).limit(30)
+    ? await supabase.from('posts').select('id, created_at, body, photo_url, parent_id, kind, user:profiles!posts_author_id_fkey(*)').in('parent_id', ids).neq('author_id', me).order('created_at', { ascending: false }).limit(30)
     : { data: [] as Record<string, unknown>[] };
   const out: Activity[] = [];
   (f.data ?? []).forEach((x) => out.push({ kind: 'follow', at: x.created_at as string, user: x.user as unknown as Profile }));
   (l.data ?? []).forEach((x) => out.push({ kind: 'like', at: x.created_at as string, user: x.user as unknown as Profile, post: x.post as unknown as { id: string; body: string; photo_url: string | null } }));
   (r.data ?? []).forEach((x) =>
-    out.push({ kind: 'reply', at: x.created_at as string, user: x.user as unknown as Profile, post: { id: x.id as string, body: x.body as string, photo_url: x.photo_url as string | null }, parentId: x.parent_id as string }),
+    out.push({ kind: 'reply', at: x.created_at as string, user: x.user as unknown as Profile, post: { id: x.id as string, body: x.body as string, photo_url: x.photo_url as string | null }, parentId: x.parent_id as string, correction: x.kind === 'correction' }),
   );
   return out.sort((a, b) => b.at.localeCompare(a.at));
 }

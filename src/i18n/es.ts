@@ -743,6 +743,7 @@ export const es: Strings = {
     how: 'Cómo ganarlos', how1: 'Aprende en la app: repasos, frases, gramática, audiolibros — cada 2 minutos activos dan 1 cristal (hasta 30 al día).', how2: 'Abre los regalos a los 5, 15, 30 y 60 minutos para cristales extra.', how3: 'El tiempo sin actividad no cuenta, solo cuando de verdad aprendes o escuchas.',
   },
   path: {
+    sleepy: 'Zzz… ¡despiértame con una lección!',
     section: 'Sección {level}', unit: 'Unidad {n}', words: 'Palabras de esta unidad', levelTitle: '{level} · {name}', unitProgress: '{done} de {n} hechas',
     mixed: 'Palabras variadas {level}', start: 'EMPEZAR', lessonN: 'Lección {n} de {total}', phrasesTitle: 'Frases: {s}', chest: 'Cofre del tesoro', review: 'Repaso de la unidad',
     lessonSub: '{n} {n:palabra nueva|palabras nuevas} con imágenes, audio y práctica', phrasesSub: '{n} {n:frase|frases} para entender y construir', chestSub: 'Ábrelo y gana cristales', reviewSub: 'Todo lo de esta unidad — demuestra que lo sabes',
@@ -750,6 +751,7 @@ export const es: Strings = {
     mascot: ['¡Vamos!', 'Tú puedes', 'Tres minutos, una lección', 'Mantén viva la llama 🔥', 'Cada lección cuenta', '¿Vamos a por la siguiente?'],
   },
   lesson: {
+    sayIt: 'Dilo en voz alta', tapToSpeak: 'Toca y habla', listening: 'Escuchando…', notHeard: 'No te he oído bien — inténtalo otra vez', cantSpeak: 'Ahora no puedo hablar',
     check: 'Comprobar', typo: '¡Ojo con la ortografía!', wrong: 'No del todo', correctIs: 'Respuesta correcta:', matchHint: 'Toca las parejas',
     great: '¡Genial!', nice: '¡Bien hecho!', perfect: '¡Perfecto!', yes: '¡Sí!', newWord: 'Palabra nueva',
     whichIs: '¿Cuál es…?', whatMeans: '¿Qué significa?', whatHear: '¿Qué escuchas?', howSay: '¿Cómo se dice en {lang}?', writeIn: 'Escríbelo en {lang}',
@@ -759,12 +761,14 @@ export const es: Strings = {
     done: '¡Lección completada!', donePerfect: '¡Sin errores!', doneSub: 'Las palabras ya están en tu diccionario para repasar.', donePerfectSub: 'Ni un solo error — los XP extra son tuyos.',
   },
   hearts: {
+    practice: 'Practica tus errores', practiceSub: 'Recupera un corazón',
     title: 'Te {n:queda|quedan} {n} {n:corazón|corazones}', out: 'Sin corazones', unlimited: 'Corazones ilimitados', unlimitedSub: 'Con Max puedes equivocarte todas las veces que necesites.',
     fullSub: 'Tienes todos los corazones — ¡a aprender!', nextIn: 'Próximo corazón en {n} min', how: 'Cada error en una lección del camino cuesta un corazón. Recuperas uno cada 30 minutos.',
     refill: 'Recargar corazones', refillSub: 'Los 5 ahora mismo', max: 'Corazones ilimitados', maxSub: 'Thingual Max — no vuelvas a esperar', refilled: 'Corazones recargados ❤️',
     back: 'Volver al camino', wait: 'Esperaré',
   },
   threads: {
+    actCorrection: 'corrigió tu texto', textRejected: 'Este texto no cumple las normas de la comunidad — reformúlalo, por favor.', native: 'nativo',
     title: 'Hilos', sub: 'Escribe en el idioma que aprendes. Otros responden y corrigen tus errores.',
     today: 'Tema del día', todayCta: 'Escribe en {lang}', allLangs: 'Todos los idiomas', new: 'Nuevo hilo',
     empty: 'Aún no hay hilos en {lang}', emptySub: 'Empieza el primero — saluda, haz una pregunta o responde al tema del día.',
@@ -791,5 +795,10 @@ export const es: Strings = {
     buy: 'Comprar {name} · {n} 💎', hint: 'Toca algo tuyo para ponérselo o quitárselo.',
   },
   reward: { crystals: '¡cristales!', collect: 'Recoger' },
+  mistakes: { title: 'Mis errores · {n}', sub: 'Una lección rápida con las palabras que fallaste — y un corazón de vuelta' },
+  notify: {
+    tingo: ['¡Psst! Tingo te guardó una lección de 3 minutos 🦊', 'Tingo se aburre sin ti. ¿Una lección?', 'Tu llama te echa de menos 🔥 Y Tingo también.', '¡Hay palabras nuevas esperándote en el camino!', 'Tingo se puso su mejor sombrero para la lección de hoy 🎩', 'Tres minutos. Una lección. Un zorro feliz.'],
+    riskTitle: '¡Tu racha de {n} días termina esta noche!', riskBody: 'Tingo está preocupado 🦊 Una lección rápida la salva.',
+  },
   limits: { left: 'Quedan {n} hoy' },
 };
